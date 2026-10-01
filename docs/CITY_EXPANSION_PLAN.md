@@ -245,5 +245,56 @@ struct CityRecord {
   - `+0x08`: `officer_obj_ptr` (무장 풀 내의 대상 무장 오브젝트 원본 주소로 직결)
 - **검증 결론:** Step 4에서 `+0x0A` 단순 역색인이 기각되었던 이유가 완전히 해명됨. 게임 엔진은 도시별 소속 인물을 STL `std::list` 형태의 노드 체인으로 도시 구조체에 직접 관리하고 있음!
 
+---
+
+## 8. Phase 2.5 상세 작업 명세서 (도시 명칭 및 자원 모델 정밀 재정의)
+
+> **원칙 준수:**
+> 1. 실측으로 확정된 사실(`+0x58` 자금, `+0x5C` 군량, `+0x60` 기초 민간 인구, `+0x64` 병력, ID 23 낙양)에 기반하여 코드베이스를 정확히 동기화한다.
+> 2. `sizeof(San13CityRaw) == 0x170` (368 바이트) 및 컴파일 타임 `static_assert`를 완벽히 유지한다.
+> 3. `test_city_manager.cpp` 및 전체 단위 테스트 스위트의 회귀를 100% 통과하도록 갱신한다.
+
+### 8.1. `San13CityRaw` 구조체 개정안 (`include/game/City.hpp`)
+```cpp
+struct San13CityRaw {
+    uint8_t  head_pad[0x18];          // +0x00 ~ +0x17: VTable, force_id, 소속 헤더
+    uint8_t  settlement_ids[4];       // +0x018 ~ +0x01B: 관할 부락 ID 4개 슬롯 [확정]
+    uint8_t  head_pad2[0x3C];         // +0x01C ~ +0x057: 지역/좌표/태수/군주 정보
+    uint32_t gold;                    // +0x058: 도시 자금 [확정] (낙양 4,000, 양평 2,200)
+    uint32_t provisions;              // +0x05C: 도시 군량 [확정] (낙양 44,400, 양평 4,240)
+    uint32_t civilian_population;     // +0x060: 기초 민간 인구 [확정] (낙양 200,000, 양평 95,000)
+    uint32_t troops;                  // +0x064: 주둔 병력 [확정] (낙양 22,200, 양평 2,120)
+    uint8_t  pad_0x68[0x6A];          // +0x068 ~ +0x0D1: 부상병/귀환병 후보 영역 (106B)
+    uint16_t public_order;            // +0x0D2: 민심 [확정] (양평 100, 낙양 350)
+    uint8_t  pad_0xD4[2];             // +0x0D4 ~ +0x0D5: 패딩 (2B)
+    uint16_t commerce;                // +0x0D6: 상업 기본 개발치 [유력] (양평 1000, 낙양 1800)
+    uint8_t  pad_0xD8[8];             // +0x0D8 ~ +0x0DF: 패딩 (8B)
+    uint16_t agriculture;             // +0x0E0: 농업 기본 개발치 [확정] (양평 1050, 낙양 2000)
+    uint8_t  pad_0xE2[8];             // +0x0E2 ~ +0x0E9: 패딩 (8B)
+    uint16_t culture;                 // +0x0EA: 문화 기본 개발치 [확정] (양평 1000, 낙양 2400)
+    uint8_t  pad_0xEC[0x10];          // +0x0EC ~ +0x0FB: 패딩 (16B)
+    uint16_t spear_proficiency;       // +0x0FC: 창병 숙련도 [확정] (양평 200, 낙양 700)
+    uint16_t horse_proficiency;       // +0x0FE: 기병 숙련도 [확정] (양평 300, 낙양 700)
+    uint16_t bow_proficiency;         // +0x100: 궁병 숙련도 [확정] (양평 200, 낙양 700)
+    uint8_t  pad_0x102[0x3A];         // +0x102 ~ +0x13B: 내구도/방어시설 후보 영역 (58B)
+    uint32_t settlement_count;        // +0x13C: 관할 부락 수 [확정] (양평 1, 낙양 4)
+    uint32_t officer_list_ptr;        // +0x140: 소속 무장 링크드 리스트 헤드 포인터 [확정]
+    uint32_t officer_count;           // +0x144: 소속 무장 수 [유력] (낙양 12명)
+    uint32_t prisoner_list_ptr;       // +0x148: 수감 포로 링크드 리스트 헤드 포인터
+    uint32_t prisoner_count;          // +0x14C: 수감 포로 수 [유력] (낙양 0명)
+    uint32_t free_officer_list_ptr;   // +0x150: 재야 무장 링크드 리스트 헤드 포인터
+    uint32_t free_officer_count;      // +0x154: 재야 무장 수 [유력] (낙양 1명 - 항적)
+    uint8_t  tail_pad[0x18];          // +0x158 ~ +0x16F: 청크 말미 패딩 (24B)
+};
+```
+
+### 8.2. `CityRecord` DTO 개정안
+- `civilian_population` 및 `total_population` 공식 필드 추가.
+- `settlement_count` 추가.
+
+### 8.3. `CITY_NAMES` 명칭 테이블 정정안 (`src/game/CityManager.cpp`)
+- 도시 23번을 "낙양 (Luoyang)"으로 공식 정정.
+
+
 
 
