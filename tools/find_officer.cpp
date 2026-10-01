@@ -43,16 +43,16 @@ int main() {
                       << " 무력: " << (int)header.stats.base_war
                       << " 지력: " << (int)header.stats.base_intel
                       << " 정치: " << (int)header.stats.base_politics
-                      << " | FaceID(+0x08): " << header.internal_id
+                      << " | FaceID(+0x08): " << header.face_id
                       << " | 소속세력(+0x3C): " << header.force_id
                       << " | 상태(+0x4F): 0x" << std::hex << (int)header.activity_flag
-                      << " | 성격(+0x4E): " << std::dec << (int)header.unknown_4e
+                      << " | 성격(+0x4E): " << std::dec << (int)header.personality
                       << "\n";
 
-            // +0x26 ~ +0x39 특기 14바이트 덤프
-            std::cout << "   -> 특기[14]: ";
-            for (int k = 1; k <= 14; ++k) {
-                std::cout << (int)header.pad_25_3b[k] << " ";
+            // +0x26 ~ +0x39 특기 20개 레벨 덤프
+            std::cout << "   -> 특기[20]: ";
+            for (int k = 0; k < 20; ++k) {
+                std::cout << (int)header.skills[k] << " ";
             }
             std::cout << "\n";
 

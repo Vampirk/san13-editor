@@ -1,0 +1,7 @@
+Repository: https://github.com/ocornut/imgui.git
+Branch: docking
+Commit: 64944b4520b30772de8dbf0b37d0311746477a32
+Date: Fri Sep 25 15:38:34 2026 +0200
+Message: Merge remote-tracking branch 'origin/master' into docking
+Author: ocornut
+Pruned: Yes (retained core library, glfw/opengl3 backends, LICENSE.txt)

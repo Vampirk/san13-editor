@@ -135,6 +135,21 @@ $(APP_BIN): $(ALL_OBJS) $(UI_OBJS) $(IMGUI_OBJS) $(APP_SRC)
 	@mkdir -p $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) $(APP_SRC) $(ALL_OBJS) $(UI_OBJS) $(IMGUI_OBJS) -o $@ $(UI_LDFLAGS)
 
+TOOL_SRCS = $(wildcard tools/*.cpp)
+TOOL_BINS = $(patsubst tools/%.cpp, $(BIN_DIR)/%, $(TOOL_SRCS))
+TOOL_COMMON_OBJS = $(BUILD_DIR)/core/LinuxMemoryDriver.o $(BUILD_DIR)/game/GameVersion.o $(BUILD_DIR)/game/OfficerNameTable.o $(BUILD_DIR)/game/CityManager.o
+
+$(BIN_DIR)/san13_tool: tools/san13_tool.c
+	@mkdir -p $(BIN_DIR)
+	gcc -O2 $< -o $@
+
+$(BIN_DIR)/%: tools/%.cpp $(CORE_OBJS) $(GAME_OBJS)
+	@mkdir -p $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) $< $(TOOL_COMMON_OBJS) -o $@ $(LDFLAGS)
+
+tools: $(ALL_OBJS) $(TOOL_BINS) $(BIN_DIR)/san13_tool
+	@echo "=== All Reverse-Engineering Tools Built Successfully in $(BIN_DIR)/ ==="
+
 editor: $(APP_BIN)
 	@echo "=== Starting San13PK Korean Memory Editor & Trainer ==="
 	./$(APP_BIN)
@@ -151,6 +166,7 @@ package: $(APP_BIN)
 	@cp $(DIST_DIR)/README_LINUX.md $(PACKAGE_DIR)/
 	@cp assets/fonts/NanumGothic.ttf $(PACKAGE_DIR)/assets/fonts/
 	@tar -czf $(PACKAGE_TAR) -C $(DIST_DIR) san13_editor_linux_x86_64
+	@rm -rf $(PACKAGE_DIR)
 	@echo "=== Package Created: $(PACKAGE_TAR) ==="
 	@ls -lh $(PACKAGE_TAR)
 
@@ -210,4 +226,4 @@ gui: $(TEST_GUI_BIN)
 clean:
 	rm -rf $(BUILD_DIR) $(BIN_DIR)/test_memory_driver $(BIN_DIR)/test_bounds $(BIN_DIR)/test_officer_manager $(BIN_DIR)/test_city_manager $(BIN_DIR)/test_gui_window $(BIN_DIR)/test_officer_table $(BIN_DIR)/test_officer_edit $(BIN_DIR)/test_city_table $(BIN_DIR)/test_batch_actions $(BIN_DIR)/test_hangul_automata $(BIN_DIR)/test_hangul_input_widget $(BIN_DIR)/test_officer_names $(APP_BIN) $(PACKAGE_DIR) $(PACKAGE_TAR)
 
-.PHONY: all test_memory test_bounds test_officer test_city test_gui test_officer_table test_officer_edit test_city_table test_batch test_hangul test_hangul_widget test_officer_names test gui editor package clean
+.PHONY: all test_memory test_bounds test_officer test_city test_gui test_officer_table test_officer_edit test_city_table test_batch test_hangul test_hangul_widget test_officer_names test gui editor package tools clean
