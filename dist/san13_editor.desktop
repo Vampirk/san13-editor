@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=삼국지 13 PK 에디터 & 트레이너
+GenericName=San13PK Memory Editor
+Comment=Romance of the Three Kingdoms 13 PK Cross-Platform Korean Memory Editor & Trainer
+Exec=bash -c "$(dirname "%k")/run.sh"
+Path=${PWD}
+Icon=applications-games
+Terminal=false
+Categories=Game;Utility;
+Keywords=San13;San13PK;삼국지;에디터;트레이너;VanEditor;
+StartupNotify=true

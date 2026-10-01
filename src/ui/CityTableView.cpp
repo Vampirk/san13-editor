@@ -1,0 +1,473 @@
+#include "ui/CityTableView.hpp"
+#include "imgui.h"
+#include <algorithm>
+#include <cstring>
+#include <cstdio>
+#include <chrono>
+
+namespace San13::UI {
+
+CityTableView::CityTableView() = default;
+CityTableView::~CityTableView() = default;
+
+void CityTableView::Initialize(Game::CityManager* cityMgr) {
+    m_cityMgr = cityMgr;
+    RefreshData();
+}
+
+void CityTableView::RefreshData() {
+    if (!m_cityMgr) return;
+
+    m_cachedCities.clear();
+    m_cityMgr->LoadAllCities(m_cachedCities);
+
+    ApplyFilter();
+}
+
+void CityTableView::SetSearchQuery(const char* query) {
+    if (query) {
+        std::strncpy(m_searchQuery, query, sizeof(m_searchQuery) - 1);
+        m_searchQuery[sizeof(m_searchQuery) - 1] = '\0';
+        m_searchAutomata.SetText(m_searchQuery);
+    } else {
+        m_searchQuery[0] = '\0';
+        m_searchAutomata.Clear();
+    }
+    ApplyFilter();
+}
+
+void CityTableView::SortByColumn(int columnId, bool ascending) {
+    ApplySort(columnId, ascending);
+}
+
+const Game::CityRecord* CityTableView::GetCityAt(size_t filteredIndex) const {
+    if (filteredIndex >= m_filteredIndices.size()) return nullptr;
+    size_t actualIdx = m_filteredIndices[filteredIndex];
+    if (actualIdx >= m_cachedCities.size()) return nullptr;
+    return &m_cachedCities[actualIdx];
+}
+
+void CityTableView::ApplyFilter() {
+    m_filteredIndices.clear();
+    m_filteredIndices.reserve(m_cachedCities.size());
+
+    std::string query = m_searchQuery;
+    bool hasQuery = !query.empty();
+    std::string queryLower = query;
+    if (hasQuery) {
+        std::transform(queryLower.begin(), queryLower.end(), queryLower.begin(), ::tolower);
+    }
+
+    for (size_t i = 0; i < m_cachedCities.size(); i++) {
+        const auto& city = m_cachedCities[i];
+
+        if (hasQuery) {
+            std::string idStr = std::to_string(city.id);
+            std::string nameLower = city.name;
+            std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
+
+            if (nameLower.find(queryLower) == std::string::npos && idStr.find(query) == std::string::npos) {
+                continue;
+            }
+        }
+
+        m_filteredIndices.push_back(i);
+    }
+
+    if (m_lastSortColumn >= 0) {
+        ApplySort(m_lastSortColumn, m_lastSortAscending);
+    }
+}
+
+void CityTableView::ApplySort(int columnId, bool ascending) {
+    m_lastSortColumn = columnId;
+    m_lastSortAscending = ascending;
+
+    std::stable_sort(m_filteredIndices.begin(), m_filteredIndices.end(),
+        [this, columnId, ascending](size_t aIdx, size_t bIdx) {
+            const auto& a = m_cachedCities[aIdx];
+            const auto& b = m_cachedCities[bIdx];
+
+            int cmp = 0;
+            switch (columnId) {
+                case 0: // ID
+                    cmp = (a.id < b.id) ? -1 : (a.id > b.id ? 1 : 0);
+                    break;
+                case 1: // 도시명
+                    cmp = a.name.compare(b.name);
+                    break;
+                case 2: // 자금
+                    cmp = (a.gold < b.gold) ? -1 : (a.gold > b.gold ? 1 : 0);
+                    break;
+                case 3: // 군량
+                    cmp = (a.provisions < b.provisions) ? -1 : (a.provisions > b.provisions ? 1 : 0);
+                    break;
+                case 4: // 병력
+                    cmp = (a.troops < b.troops) ? -1 : (a.troops > b.troops ? 1 : 0);
+                    break;
+                case 5: // 내구도
+                    cmp = (a.durability < b.durability) ? -1 : (a.durability > b.durability ? 1 : 0);
+                    break;
+                default:
+                    break;
+            }
+
+            if (cmp != 0) {
+                return ascending ? (cmp < 0) : (cmp > 0);
+            }
+            return a.id < b.id; // 동점 시 ID 오름차순 안정 정렬
+        });
+}
+
+void CityTableView::OpenEditModal(int cityId) {
+    if (!m_cityMgr || cityId < 0 || cityId >= Game::CityMemoryLayout::MAX_CITY_COUNT) return;
+    if (m_cityMgr->LoadCity(static_cast<uint8_t>(cityId), m_editingRecord)) {
+        m_editingCityId = cityId;
+        m_selectedCityId = cityId;
+        m_showEditModal = true;
+        m_syncStatusMsg.clear();
+    }
+}
+
+bool CityTableView::CommitEditToMemory() {
+    if (!m_cityMgr || m_editingCityId < 0) return false;
+
+    auto policy = m_limitBreakMode ? Game::ClampingPolicy::LimitBreak : Game::ClampingPolicy::SafeVanilla;
+    uint8_t id = static_cast<uint8_t>(m_editingCityId);
+
+    auto startTime = std::chrono::high_resolution_clock::now();
+
+    bool ok1 = m_cityMgr->SetCityGold(id, m_editingRecord.gold, policy);
+    bool ok2 = m_cityMgr->SetCityProvisions(id, m_editingRecord.provisions, policy);
+    bool ok3 = m_cityMgr->SetCityTroops(id, m_editingRecord.troops, policy);
+    bool ok4 = m_cityMgr->SetCityDurability(id, m_editingRecord.durability, policy);
+
+    auto endTime = std::chrono::high_resolution_clock::now();
+    m_lastSyncTimeMs = std::chrono::duration<float, std::milli>(endTime - startTime).count();
+
+    bool allOk = ok1 && ok2 && ok3 && ok4;
+    if (allOk) {
+        // 게임 메모리에서 최신화된 데이터 재로드
+        m_cityMgr->LoadCity(id, m_editingRecord);
+
+        // 캐시 목록 동기화
+        for (auto& city : m_cachedCities) {
+            if (city.id == id) {
+                city = m_editingRecord;
+                break;
+            }
+        }
+        char buf[64];
+        std::snprintf(buf, sizeof(buf), "● 실시간 핫싱크 성공 (%.3fms)", m_lastSyncTimeMs);
+        m_syncStatusMsg = buf;
+    } else {
+        m_syncStatusMsg = "× 도시 자원 메모리 쓰기 실패";
+    }
+
+    return allOk;
+}
+
+bool CityTableView::QuickCheatMaxResources(uint8_t cityId) {
+    if (!m_cityMgr || cityId >= Game::CityMemoryLayout::MAX_CITY_COUNT) return false;
+    bool ok = m_cityMgr->MaximizeCityResources(cityId);
+    if (ok) {
+        for (auto& city : m_cachedCities) {
+            if (city.id == cityId) {
+                m_cityMgr->LoadCity(cityId, city);
+                if (m_editingCityId == cityId) {
+                    m_editingRecord = city;
+                }
+                break;
+            }
+        }
+    }
+    return ok;
+}
+
+bool CityTableView::QuickCheatDepleteResources(uint8_t cityId) {
+    if (!m_cityMgr || cityId >= Game::CityMemoryLayout::MAX_CITY_COUNT) return false;
+    m_cityMgr->SetCityGold(cityId, 0, Game::ClampingPolicy::SafeVanilla);
+    m_cityMgr->SetCityProvisions(cityId, 0, Game::ClampingPolicy::SafeVanilla);
+    m_cityMgr->SetCityTroops(cityId, 0, Game::ClampingPolicy::SafeVanilla);
+
+    for (auto& city : m_cachedCities) {
+        if (city.id == cityId) {
+            m_cityMgr->LoadCity(cityId, city);
+            if (m_editingCityId == cityId) {
+                m_editingRecord = city;
+            }
+            break;
+        }
+    }
+    return true;
+}
+
+bool CityTableView::QuickCheatAllCitiesMax() {
+    if (!m_cityMgr) return false;
+    for (uint8_t i = 0; i < Game::CityMemoryLayout::MAX_CITY_COUNT; i++) {
+        m_cityMgr->MaximizeCityResources(i);
+    }
+    RefreshData();
+    return true;
+}
+
+static void RenderResourceValue(uint32_t val, uint32_t highThresh) {
+    if (val >= highThresh) {
+        ImGui::TextColored(ImVec4(0.95f, 0.82f, 0.40f, 1.0f), "%u", val); // 최대치 황금색
+    } else if (val == 0) {
+        ImGui::TextColored(ImVec4(0.85f, 0.30f, 0.30f, 1.0f), "0 (고갈)"); // 0일 때 붉은색 경고
+    } else {
+        ImGui::Text("%u", val);
+    }
+}
+
+void CityTableView::Render() {
+    // 1. 상단 컨트롤 바
+    ImGui::BeginGroup();
+
+    ImGui::SetNextItemWidth(260.0f);
+    if (HangulInputText("##CitySearch", "도시명 또는 ID 검색...", m_searchQuery, sizeof(m_searchQuery), m_searchAutomata)) {
+        ApplyFilter();
+    }
+    if (m_searchQuery[0] != '\0') {
+        ImGui::SameLine();
+        if (ImGui::SmallButton("×##ClearCitySearch")) {
+            m_searchQuery[0] = '\0';
+            m_searchAutomata.Clear();
+            ApplyFilter();
+        }
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetTooltip("검색어 초기화 (전체 목록 보기)");
+        }
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("새로고침 (F5)")) {
+        RefreshData();
+    }
+
+    if (m_selectedCityId >= 0) {
+        ImGui::SameLine();
+        if (ImGui::Button("선택 도시 편집")) {
+            OpenEditModal(m_selectedCityId);
+        }
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("전 도시 자원 최대화 (All Max) ★")) {
+        QuickCheatAllCitiesMax();
+    }
+
+    ImGui::SameLine();
+    ImGui::TextDisabled("| 총 %zu개 도시 중 %zu개 표시", m_cachedCities.size(), m_filteredIndices.size());
+
+    ImGui::EndGroup();
+    ImGui::Spacing();
+
+    // 2. 도시 목록 테이블
+    static ImGuiTableFlags flags =
+        ImGuiTableFlags_Resizable |
+        ImGuiTableFlags_Reorderable |
+        ImGuiTableFlags_Hideable |
+        ImGuiTableFlags_Sortable |
+        ImGuiTableFlags_ScrollY |
+        ImGuiTableFlags_RowBg |
+        ImGuiTableFlags_BordersOuter |
+        ImGuiTableFlags_BordersV;
+
+    if (ImGui::BeginTable("CityVirtualTable", 6, flags, ImVec2(0, 0))) {
+        ImGui::TableSetupColumn("ID",     ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthFixed, 50.0f, 0);
+        ImGui::TableSetupColumn("도시명", ImGuiTableColumnFlags_WidthFixed, 120.0f, 1);
+        ImGui::TableSetupColumn("자금",   ImGuiTableColumnFlags_WidthFixed, 100.0f, 2);
+        ImGui::TableSetupColumn("군량",   ImGuiTableColumnFlags_WidthFixed, 100.0f, 3);
+        ImGui::TableSetupColumn("병력",   ImGuiTableColumnFlags_WidthFixed, 90.0f, 4);
+        ImGui::TableSetupColumn("내구도", ImGuiTableColumnFlags_WidthFixed, 90.0f, 5);
+        ImGui::TableSetupScrollFreeze(0, 1);
+        ImGui::TableHeadersRow();
+
+        // 정렬 처리
+        if (ImGuiTableSortSpecs* sortSpecs = ImGui::TableGetSortSpecs()) {
+            if (sortSpecs->SpecsDirty && sortSpecs->SpecsCount > 0) {
+                ApplySort(sortSpecs->Specs[0].ColumnIndex,
+                          sortSpecs->Specs[0].SortDirection == ImGuiSortDirection_Ascending);
+                sortSpecs->SpecsDirty = false;
+            }
+        }
+
+        for (size_t row = 0; row < m_filteredIndices.size(); row++) {
+            size_t actualIdx = m_filteredIndices[row];
+            const auto& city = m_cachedCities[actualIdx];
+
+            ImGui::TableNextRow();
+
+            // Column 0: ID
+            ImGui::TableSetColumnIndex(0);
+            char label[32];
+            std::snprintf(label, sizeof(label), "%02d##city_%d", city.id, city.id);
+            bool isSelected = (m_selectedCityId == static_cast<int>(city.id));
+            if (ImGui::Selectable(label, isSelected, ImGuiSelectableFlags_SpanAllColumns)) {
+                m_selectedCityId = city.id;
+            }
+            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+                OpenEditModal(city.id);
+            }
+            if (ImGui::BeginPopupContextItem()) {
+                m_selectedCityId = city.id;
+                ImGui::TextColored(ImVec4(0.95f, 0.82f, 0.40f, 1.0f), "■ %s (ID %02d)", city.name.c_str(), city.id);
+                ImGui::Separator();
+                if (ImGui::MenuItem("상세 자원 편집...")) {
+                    OpenEditModal(city.id);
+                }
+                if (ImGui::MenuItem("자금/군량 999,999 풀충전")) {
+                    QuickCheatMaxResources(city.id);
+                }
+                if (ImGui::MenuItem("성벽 내구도 5,000 완충")) {
+                    m_cityMgr->SetCityDurability(city.id, 5000);
+                    m_cityMgr->LoadCity(city.id, m_cachedCities[actualIdx]);
+                }
+                if (ImGui::MenuItem("자원 고갈 치트 (자금/군량 0)")) {
+                    QuickCheatDepleteResources(city.id);
+                }
+                ImGui::EndPopup();
+            }
+
+            // Column 1: 도시명
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%s", city.name.c_str());
+
+            // Column 2: 자금
+            ImGui::TableSetColumnIndex(2);
+            RenderResourceValue(city.gold, 900000);
+
+            // Column 3: 군량
+            ImGui::TableSetColumnIndex(3);
+            RenderResourceValue(city.provisions, 900000);
+
+            // Column 4: 병력
+            ImGui::TableSetColumnIndex(4);
+            RenderResourceValue(city.troops, 100000);
+
+            // Column 5: 내구도
+            ImGui::TableSetColumnIndex(5);
+            RenderResourceValue(city.durability, 4500);
+        }
+
+        ImGui::EndTable();
+    }
+
+    RenderEditModal();
+}
+
+void CityTableView::RenderEditModal() {
+    if (m_showEditModal && !ImGui::IsPopupOpen("도시 자원 상세 편집##CityEditModal")) {
+        ImGui::OpenPopup("도시 자원 상세 편집##CityEditModal");
+    }
+
+    if (ImGui::BeginPopupModal("도시 자원 상세 편집##CityEditModal", &m_showEditModal, ImGuiWindowFlags_AlwaysAutoResize)) {
+        // 1. 헤더 정보
+        ImGui::TextColored(ImVec4(0.95f, 0.82f, 0.40f, 1.0f), "■ %s (ID %02d)",
+                           m_editingRecord.name.c_str(), m_editingRecord.id);
+        ImGui::SameLine();
+        ImGui::TextDisabled("| 메모리 주소: 0x%lX", (unsigned long)m_editingRecord.memory_address);
+
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        // 2. 제어 옵션
+        ImGui::Checkbox("한계 돌파 모드 (자금/군량 9,999,999 허용)", &m_limitBreakMode);
+        ImGui::SameLine();
+        ImGui::Checkbox("실시간 자동 핫싱크 (Auto-Sync)", &m_autoSync);
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        int maxGold = m_limitBreakMode ? 9999999 : 999999;
+        int maxProv = m_limitBreakMode ? 9999999 : 999999;
+        int maxTroops = m_limitBreakMode ? 999999 : 200000;
+        int maxDur = m_limitBreakMode ? 10000 : 5000;
+        bool valueChanged = false;
+
+        // 3. 자원 슬라이더 및 입력창
+        ImGui::TextColored(ImVec4(0.4f, 0.85f, 1.0f, 1.0f), "▶ 도시 경제 및 군사 자원 수치");
+
+        int gold = static_cast<int>(m_editingRecord.gold);
+        int prov = static_cast<int>(m_editingRecord.provisions);
+        int troops = static_cast<int>(m_editingRecord.troops);
+        int dur = static_cast<int>(m_editingRecord.durability);
+
+        ImGui::PushItemWidth(260.0f);
+        if (ImGui::SliderInt("자금 (Gold)##EditGold", &gold, 0, maxGold)) {
+            m_editingRecord.gold = gold;
+            valueChanged = true;
+        }
+        if (ImGui::SliderInt("군량 (Provisions)##EditProv", &prov, 0, maxProv)) {
+            m_editingRecord.provisions = prov;
+            valueChanged = true;
+        }
+        if (ImGui::SliderInt("병력 (Troops)##EditTroops", &troops, 0, maxTroops)) {
+            m_editingRecord.troops = troops;
+            valueChanged = true;
+        }
+        if (ImGui::SliderInt("성벽 내구도 (Durability)##EditDur", &dur, 0, maxDur)) {
+            m_editingRecord.durability = dur;
+            valueChanged = true;
+        }
+        ImGui::PopItemWidth();
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        // 4. 빠른 프리셋 치트 버튼
+        ImGui::Text("빠른 치트 프리셋:");
+        ImGui::SameLine();
+        if (ImGui::Button("자금/군량 999,999 풀충전")) {
+            m_editingRecord.gold = 999999;
+            m_editingRecord.provisions = 999999;
+            valueChanged = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("내구도 5,000 완충")) {
+            m_editingRecord.durability = 5000;
+            valueChanged = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("자원 고갈 (자금 0, 군량 0)")) {
+            m_editingRecord.gold = 0;
+            m_editingRecord.provisions = 0;
+            m_editingRecord.troops = 0;
+            valueChanged = true;
+        }
+
+        // 실시간 자동 동기화 활성화 시 값 변경 즉시 커밋
+        if (valueChanged && m_autoSync) {
+            CommitEditToMemory();
+        }
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        // 5. 하단 상태 바 및 버튼
+        if (!m_syncStatusMsg.empty()) {
+            ImGui::TextColored(ImVec4(0.2f, 0.9f, 0.4f, 1.0f), "%s", m_syncStatusMsg.c_str());
+        } else {
+            ImGui::TextDisabled("동기화 대기 중...");
+        }
+
+        ImGui::SameLine(ImGui::GetWindowWidth() - 250.0f);
+        if (ImGui::Button("메모리 적용 (Hot-Sync)", ImVec2(170, 0))) {
+            CommitEditToMemory();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("닫기", ImVec2(60, 0))) {
+            m_showEditModal = false;
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+}
+
+} // namespace San13::UI

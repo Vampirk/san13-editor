@@ -1,0 +1,21 @@
+# Build intermediate outputs
+build/
+*.o
+
+# Compiled binaries and outputs
+bin/
+tools/san13_tool
+
+# Distribution packages and unpacked build
+dist/san13_editor_linux_x86_64/
+dist/*.tar.gz
+
+# Runtime configuration and temporary directories
+imgui.ini
+scratch/
+
+# Proprietary legacy binaries (reverse engineering references, not redistributable)
+legacy_van/
+
+# Editor / workspace metadata
+.obsidian/
