@@ -20,22 +20,28 @@
 
 ---
 
-## 2. 단위 테스트 스위트 (12개 테스트 요약)
+## 2. 단위 테스트 스위트 및 타깃 분리 (12개 테스트 요약)
 
-| 번호 | 바이너리 | 대상 모듈 | 주요 검증 내용 | 실행 방식 |
-| :---: | :--- | :--- | :--- | :---: |
-| 1 | `bin/test_memory_driver` | `LinuxMemoryDriver` | 프로세스 바인딩, 포인터 체인 연산, 패턴 스캔 | 프로세스 필요 |
-| 2 | `bin/test_bounds` | `BoundsValidator` | Safe/LimitBreak 클램핑, 포화 연산, 연도 역전 방지 | 오프라인 가능 |
-| 3 | `bin/test_officer_manager` | `OfficerManager` | 800명 무장 로드, 스탯 읽기/쓰기 클램핑 | 프로세스 필요 |
-| 4 | `bin/test_city_manager` | `CityManager` | 60개 도시 자원 읽기/쓰기, 내구도 오버플로 방지 | 프로세스 필요 |
-| 5 | `bin/test_gui_window` | `UIManager` | GLFW 창 생성, OpenGL3 렌더 루프, 폰트 로드 | GUI 스모크 (120F) |
-| 6 | `bin/test_officer_table` | `OfficerTableView` | 가상 스크롤, 정렬, 검색, EDGE-32 재야 판정식 | GUI 스모크 (120F) |
-| 7 | `bin/test_officer_edit` | `OfficerTableView` | 인라인/모달 편집, 실시간 핫싱크 커밋, 복구 | GUI 스모크 (120F) |
-| 8 | `bin/test_city_table` | `CityTableView` | 도시 가상 스크롤, 자원 수정 및 치트 | GUI 스모크 (120F) |
-| 9 | `bin/test_batch_actions` | `OfficerTableView` | 50인 일괄 버프/수명 연장, 트랜잭션 롤백 | GUI 스모크 (120F) |
-| 10 | `bin/test_hangul_automata` | `HangulAutomata` | 2벌식 조합, 연음, 1자모 백스페이스 역분해 (6/6) | 오프라인 가능 |
-| 11 | `bin/test_hangul_input_widget` | `HangulInputText` | ImGui 입력 위젯 연동, 대소문자 무시 검색 | GUI 스모크 (120F) |
-| 12 | `bin/test_officer_names` | `OfficerNameTable` | 700인 성명, 고대무장, 상태 진리표, 전법/특기/인연 (11/11) | 오프라인 가능 |
+테스트는 게임 프로세스 의존성에 따라 `make test_offline`과 `make test_live`로 분리되어 관리됩니다:
+
+| 번호 | 바이너리 | 대상 모듈 | 주요 검증 내용 | Makefile 타깃 | 프로세스 의존 |
+| :---: | :--- | :--- | :--- | :---: | :---: |
+| 1 | `bin/test_bounds` | `BoundsValidator` | Safe/LimitBreak 클램핑, 포화 연산, 연도 역전 방지 | `test_offline` | **불필요 (오프라인 통과)** |
+| 2 | `bin/test_hangul_automata` | `HangulAutomata` | 2벌식 조합, 연음, 1자모 백스페이스 역분해 (6/6) | `test_offline` | **불필요 (오프라인 통과)** |
+| 3 | `bin/test_hangul_input_widget` | `HangulInputText` | ImGui 입력 위젯 연동, 대소문자 무시 검색 (헤드리스) | `test_offline` | **불필요 (오프라인 통과)** |
+| 4 | `bin/test_officer_names` | `OfficerNameTable` | 700인 성명, 고대무장, 상태 진리표, 전법/특기/인연 (11/11) | `test_offline` | **불필요 (오프라인 통과)** |
+| 5 | `bin/test_memory_driver` | `LinuxMemoryDriver` | 프로세스 바인딩, 포인터 체인 연산, 패턴 스캔 | `test_live` | 필요 (`San13PK_kr.exe`) |
+| 6 | `bin/test_officer_manager` | `OfficerManager` | 800명 무장 로드, 스탯 읽기/쓰기 클램핑 | `test_live` | 필요 (`San13PK_kr.exe`) |
+| 7 | `bin/test_city_manager` | `CityManager` | 60개 도시 자원 읽기/쓰기, 내구도 오버플로 방지 | `test_live` | 필요 (`San13PK_kr.exe`) |
+| 8 | `bin/test_gui_window` | `UIManager` | GLFW 창 생성, OpenGL3 렌더 루프, 폰트 로드 | `test_live` | 필요 (GUI 스모크 120F) |
+| 9 | `bin/test_officer_table` | `OfficerTableView` | 가상 스크롤, 정렬, 검색, EDGE-32 재야 판정식 | `test_live` | 필요 (GUI 스모크 120F) |
+| 10 | `bin/test_officer_edit` | `OfficerTableView` | 인라인/모달 편집, 실시간 핫싱크 커밋, 복구 | `test_live` | 필요 (GUI 스모크 120F) |
+| 11 | `bin/test_city_table` | `CityTableView` | 도시 가상 스크롤, 자원 수정 및 치트 | `test_live` | 필요 (GUI 스모크 120F) |
+| 12 | `bin/test_batch_actions` | `OfficerTableView` | 50인 일괄 버프/수명 연장, 트랜잭션 롤백 | `test_live` | 필요 (GUI 스모크 120F) |
+
+- **`make test_offline`**: CI 환경이나 게임이 미실행 중일 때도 100% 통과할 수 있는 핵심 도메인 로직/오토마타/규격 단위 테스트.
+- **`make test_live`**: Proton 환경에서 실제 게임이 구동 중일 때 `/proc/$PID/mem` 접근 및 메모리 핫싱크 무결성을 검증하는 실시간 테스트.
+- **`make test`**: 두 타깃을 순차적으로 전수 실행.
 
 ---
 

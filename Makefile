@@ -218,7 +218,13 @@ test_officer_names: $(TEST_OFFICER_NAMES_BIN)
 	@echo "=== Running Phase 5.7 Officer Korean Name Table Unit Tests ==="
 	./$(TEST_OFFICER_NAMES_BIN)
 
-test: test_memory test_bounds test_officer test_city test_gui test_officer_table test_officer_edit test_city_table test_batch test_hangul test_hangul_widget test_officer_names
+test_offline: test_bounds test_hangul test_hangul_widget test_officer_names
+	@echo "=== All Offline Unit & Integration Tests Passed (No Live Process Required) ==="
+
+test_live: test_memory test_officer test_city test_gui test_officer_table test_officer_edit test_city_table test_batch
+	@echo "=== All Live In-Game Memory Tests Passed (Active Process Verified) ==="
+
+test: test_offline test_live
 
 gui: $(TEST_GUI_BIN)
 	./$(TEST_GUI_BIN)
@@ -226,4 +232,4 @@ gui: $(TEST_GUI_BIN)
 clean:
 	rm -rf $(BUILD_DIR) $(BIN_DIR)/test_memory_driver $(BIN_DIR)/test_bounds $(BIN_DIR)/test_officer_manager $(BIN_DIR)/test_city_manager $(BIN_DIR)/test_gui_window $(BIN_DIR)/test_officer_table $(BIN_DIR)/test_officer_edit $(BIN_DIR)/test_city_table $(BIN_DIR)/test_batch_actions $(BIN_DIR)/test_hangul_automata $(BIN_DIR)/test_hangul_input_widget $(BIN_DIR)/test_officer_names $(APP_BIN) $(PACKAGE_DIR) $(PACKAGE_TAR)
 
-.PHONY: all test_memory test_bounds test_officer test_city test_gui test_officer_table test_officer_edit test_city_table test_batch test_hangul test_hangul_widget test_officer_names test gui editor package tools clean
+.PHONY: all test_memory test_bounds test_officer test_city test_gui test_officer_table test_officer_edit test_city_table test_batch test_hangul test_hangul_widget test_officer_names test test_offline test_live gui editor package tools clean
