@@ -231,10 +231,10 @@ int main(int argc, char* argv[]) {
             buffers.push_back(buf);
         }
         CompareCities(cityIds, buffers);
-    } else if (mode == "--find") {
+    } else if (mode == "--find" || mode == "--find-value") {
         if (argc < 3) {
-            std::cerr << "[-] Error: --find 모드는 검색할 수치가 필요합니다.\n";
-            std::cerr << "예시: " << argv[0] << " --find 3000\n";
+            std::cerr << "[-] Error: --find (또는 --find-value) 모드는 검색할 수치가 필요합니다.\n";
+            std::cerr << "예시: " << argv[0] << " --find-value 3000\n";
             return 1;
         }
         uint32_t targetVal = static_cast<uint32_t>(std::stoul(argv[2]));
