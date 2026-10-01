@@ -66,6 +66,23 @@ bool CityManager::LoadCity(uint8_t id, CityRecord& outRecord) {
     outRecord.provisions = raw.provisions;
     outRecord.troops = raw.troops;
     outRecord.durability = raw.durability;
+
+    // 신규 발굴 내정 필드 (읽기 전용)
+    outRecord.public_order = raw.public_order;
+    outRecord.commerce = raw.commerce;
+    outRecord.agriculture = raw.agriculture;
+    outRecord.culture = raw.culture;
+
+    // 신규 발굴 병과 숙련도 (읽기 전용)
+    outRecord.spear_proficiency = raw.spear_proficiency;
+    outRecord.horse_proficiency = raw.horse_proficiency;
+    outRecord.bow_proficiency = raw.bow_proficiency;
+
+    // 신규 발굴 소속 인물 통계 (읽기 전용)
+    outRecord.officer_count = raw.officer_count;
+    outRecord.prisoner_count = raw.prisoner_count;
+    outRecord.free_officer_count = raw.free_officer_count;
+
     outRecord.memory_address = cityAddr;
 
     return true;

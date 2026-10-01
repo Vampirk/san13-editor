@@ -63,6 +63,29 @@ int main() {
     TEST_ASSERT(cityMgr.LoadCity(39, c_jianye), "도시 39 (건업) 로드 성공");
     TEST_ASSERT(cityMgr.LoadCity(46, c_chengdu), "도시 46 (성도) 로드 성공");
 
+    // 3-2. 신규 발굴 내정/숙련도/인물 통계 필드 검증 (양평 0번, 금성 23번)
+    std::cout << "\n[Step 3-2] 신규 발굴 내정/숙련도/인물 통계 필드 검증\n";
+    TEST_ASSERT(c0.public_order == 100, "양평 민심 100 실측 일치");
+    TEST_ASSERT(c0.commerce == 1000, "양평 상업 기본치 1,000 실측 일치");
+    TEST_ASSERT(c0.agriculture == 1050, "양평 농업 기본치 1,050 실측 일치");
+    TEST_ASSERT(c0.culture == 1000, "양평 문화 기본치 1,000 실측 일치");
+    TEST_ASSERT(c0.spear_proficiency == 200, "양평 창병 숙련도 200 실측 일치");
+    TEST_ASSERT(c0.horse_proficiency == 300, "양평 기병 숙련도 300 실측 일치");
+    TEST_ASSERT(c0.bow_proficiency == 200, "양평 궁병 숙련도 200 실측 일치");
+
+    CityRecord c_jincheng;
+    TEST_ASSERT(cityMgr.LoadCity(23, c_jincheng), "도시 23 (금성) 로드 성공");
+    TEST_ASSERT(c_jincheng.public_order == 350, "금성 민심 350 실측 일치");
+    TEST_ASSERT(c_jincheng.commerce == 1800, "금성 상업 기본치 1,800 실측 일치");
+    TEST_ASSERT(c_jincheng.agriculture == 2000, "금성 농업 기본치 2,000 실측 일치");
+    TEST_ASSERT(c_jincheng.culture == 2400, "금성 문화 기본치 2,400 실측 일치");
+    TEST_ASSERT(c_jincheng.spear_proficiency == 700, "금성 창병 숙련도 700 실측 일치");
+    TEST_ASSERT(c_jincheng.horse_proficiency == 700, "금성 기병 숙련도 700 실측 일치");
+    TEST_ASSERT(c_jincheng.bow_proficiency == 700, "금성 궁병 숙련도 700 실측 일치");
+    TEST_ASSERT(c_jincheng.officer_count == 12, "금성 소속 무장 수 12명 실측 일치");
+    TEST_ASSERT(c_jincheng.prisoner_count == 0, "금성 수감 포로 수 0명 실측 일치");
+    TEST_ASSERT(c_jincheng.free_officer_count == 1, "금성 재야 무장 수 1명 실측 일치");
+
     // 4. 도시 자원 쓰기 및 Bounds Clamping 검증 (낙양 ID 18 기준)
     std::cout << "\n[Step 4] 도시 자원 실시간 수정 및 Bounds Clamping 검증 (낙양 ID 18)\n";
     uint32_t origGold = c_luoyang.gold;
