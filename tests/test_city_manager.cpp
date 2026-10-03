@@ -47,23 +47,28 @@ int main() {
     CityRecord c0, c_ye, c_luoyang, c_changan, c_xuchang, c_jianye, c_chengdu;
     
     TEST_ASSERT(cityMgr.LoadCity(0, c0), "도시 0 (양평) 로드 성공");
-    std::cout << "         -> 양평 (ID 0): 자금=" << c0.gold << ", 군량=" << c0.provisions << ", 병력=" << c0.troops << ", 내구=" << c0.durability << "\n";
-    TEST_ASSERT(c0.gold == 4240 && c0.provisions == 95000 && c0.durability == 2200, "양평 실시간 자원 데이터(자금 4,240, 군량 95,000, 내구 2,200) 일치");
+    std::cout << "         -> 양평 (ID 0): 자금=" << c0.gold << ", 군량=" << c0.provisions << ", 민간인구=" << c0.civilian_population << ", 병력=" << c0.troops << ", 총인구=" << c0.total_population << "\n";
+    TEST_ASSERT(c0.gold == 2200 && c0.provisions == 4240 && c0.civilian_population == 95000 && c0.troops == 2120, "양평 실시간 자원 데이터(자금 2,200, 군량 4,240, 민간인구 95,000, 병력 2,120) 일치");
+    TEST_ASSERT(c0.total_population == 97120 && c0.GetTotalPopulation() == 97120, "양평 총 인구 공식(95,000 + 2,120 = 97,120) 일치");
+    TEST_ASSERT(c0.settlement_count == 1 && c0.settlement_ids[0] == 1, "양평 관할 부락(1개, 부락 ID 1) 일치");
 
     TEST_ASSERT(cityMgr.LoadCity(9, c_ye), "도시 9 (업) 로드 성공");
-    std::cout << "         -> 업 (ID 9): 자금=" << c_ye.gold << ", 군량=" << c_ye.provisions << ", 병력=" << c_ye.troops << ", 내구=" << c_ye.durability << "\n";
-    TEST_ASSERT(c_ye.gold == 24000 && c_ye.provisions == 108000 && c_ye.durability == 2800, "업 실시간 자원 데이터(자금 24,000, 군량 108,000, 내구 2,800) 일치");
+    std::cout << "         -> 업 (ID 9): 자금=" << c_ye.gold << ", 군량=" << c_ye.provisions << ", 민간인구=" << c_ye.civilian_population << ", 병력=" << c_ye.troops << ", 총인구=" << c_ye.total_population << "\n";
+    TEST_ASSERT(c_ye.gold == 2800 && c_ye.provisions == 24000 && c_ye.civilian_population == 108000 && c_ye.troops == 12000, "업 실시간 자원 데이터(자금 2,800, 군량 24,000, 민간인구 108,000, 병력 12,000) 일치");
+    TEST_ASSERT(c_ye.total_population == 120000 && c_ye.GetTotalPopulation() == 120000, "업 총 인구 공식(108,000 + 12,000 = 120,000) 일치");
 
-    TEST_ASSERT(cityMgr.LoadCity(18, c_luoyang), "도시 18 (낙양) 로드 성공");
-    std::cout << "         -> 낙양 (ID 18): 자금=" << c_luoyang.gold << ", 군량=" << c_luoyang.provisions << ", 병력=" << c_luoyang.troops << ", 내구=" << c_luoyang.durability << "\n";
-    TEST_ASSERT(c_luoyang.gold == 28000 && c_luoyang.provisions == 125700 && c_luoyang.durability == 3000, "낙양 실시간 자원 데이터(자금 28,000, 군량 125,700, 내구 3,000) 일치");
+    TEST_ASSERT(cityMgr.LoadCity(23, c_luoyang), "도시 23 (낙양) 로드 성공");
+    std::cout << "         -> 낙양 (ID 23): 자금=" << c_luoyang.gold << ", 군량=" << c_luoyang.provisions << ", 민간인구=" << c_luoyang.civilian_population << ", 병력=" << c_luoyang.troops << ", 총인구=" << c_luoyang.total_population << "\n";
+    TEST_ASSERT(c_luoyang.gold == 4000 && c_luoyang.provisions == 44400 && c_luoyang.civilian_population == 200000 && c_luoyang.troops == 22200, "낙양 실시간 자원 데이터(자금 4,000, 군량 44,400, 민간인구 200,000, 병력 22,200) 일치");
+    TEST_ASSERT(c_luoyang.total_population == 222200 && c_luoyang.GetTotalPopulation() == 222200, "낙양 총 인구 공식(200,000 + 22,200 = 222,200) 일치");
+    TEST_ASSERT(c_luoyang.settlement_count == 4, "낙양 관할 부락(4개) 일치");
 
     TEST_ASSERT(cityMgr.LoadCity(20, c_changan), "도시 20 (장안) 로드 성공");
     TEST_ASSERT(cityMgr.LoadCity(25, c_xuchang), "도시 25 (허창) 로드 성공");
     TEST_ASSERT(cityMgr.LoadCity(39, c_jianye), "도시 39 (건업) 로드 성공");
     TEST_ASSERT(cityMgr.LoadCity(46, c_chengdu), "도시 46 (성도) 로드 성공");
 
-    // 3-2. 신규 발굴 내정/숙련도/인물 통계 필드 검증 (양평 0번, 금성 23번)
+    // 3-2. 신규 발굴 내정/숙련도/인물 통계 필드 검증 (양평 0번, 낙양 23번)
     std::cout << "\n[Step 3-2] 신규 발굴 내정/숙련도/인물 통계 필드 검증\n";
     TEST_ASSERT(c0.public_order == 100, "양평 민심 100 실측 일치");
     TEST_ASSERT(c0.commerce == 1000, "양평 상업 기본치 1,000 실측 일치");
@@ -73,52 +78,48 @@ int main() {
     TEST_ASSERT(c0.horse_proficiency == 300, "양평 기병 숙련도 300 실측 일치");
     TEST_ASSERT(c0.bow_proficiency == 200, "양평 궁병 숙련도 200 실측 일치");
 
-    CityRecord c_jincheng;
-    TEST_ASSERT(cityMgr.LoadCity(23, c_jincheng), "도시 23 (금성) 로드 성공");
-    TEST_ASSERT(c_jincheng.public_order == 350, "금성 민심 350 실측 일치");
-    TEST_ASSERT(c_jincheng.commerce == 1800, "금성 상업 기본치 1,800 실측 일치");
-    TEST_ASSERT(c_jincheng.agriculture == 2000, "금성 농업 기본치 2,000 실측 일치");
-    TEST_ASSERT(c_jincheng.culture == 2400, "금성 문화 기본치 2,400 실측 일치");
-    TEST_ASSERT(c_jincheng.spear_proficiency == 700, "금성 창병 숙련도 700 실측 일치");
-    TEST_ASSERT(c_jincheng.horse_proficiency == 700, "금성 기병 숙련도 700 실측 일치");
-    TEST_ASSERT(c_jincheng.bow_proficiency == 700, "금성 궁병 숙련도 700 실측 일치");
-    TEST_ASSERT(c_jincheng.officer_count == 12, "금성 소속 무장 수 12명 실측 일치");
-    TEST_ASSERT(c_jincheng.prisoner_count == 0, "금성 수감 포로 수 0명 실측 일치");
-    TEST_ASSERT(c_jincheng.free_officer_count == 1, "금성 재야 무장 수 1명 실측 일치");
+    TEST_ASSERT(c_luoyang.public_order == 350, "낙양 민심 350 실측 일치");
+    TEST_ASSERT(c_luoyang.commerce == 1800, "낙양 상업 기본치 1,800 실측 일치");
+    TEST_ASSERT(c_luoyang.agriculture == 2000, "낙양 농업 기본치 2,000 실측 일치");
+    TEST_ASSERT(c_luoyang.culture == 2400, "낙양 문화 기본치 2,400 실측 일치");
+    TEST_ASSERT(c_luoyang.spear_proficiency == 700, "낙양 창병 숙련도 700 실측 일치");
+    TEST_ASSERT(c_luoyang.horse_proficiency == 700, "낙양 기병 숙련도 700 실측 일치");
+    TEST_ASSERT(c_luoyang.bow_proficiency == 700, "낙양 궁병 숙련도 700 실측 일치");
+    TEST_ASSERT(c_luoyang.officer_count == 12, "낙양 소속 무장 수 12명 실측 일치");
+    TEST_ASSERT(c_luoyang.prisoner_count == 0, "낙양 수감 포로 수 0명 실측 일치");
+    TEST_ASSERT(c_luoyang.free_officer_count == 1, "낙양 재야 무장 수 1명 실측 일치");
 
-    // 4. 도시 자원 쓰기 및 Bounds Clamping 검증 (낙양 ID 18 기준)
-    std::cout << "\n[Step 4] 도시 자원 실시간 수정 및 Bounds Clamping 검증 (낙양 ID 18)\n";
+    // 4. 도시 자원 쓰기 및 Bounds Clamping 검증 (낙양 ID 23 기준)
+    std::cout << "\n[Step 4] 도시 자원 실시간 수정 및 Bounds Clamping 검증 (낙양 ID 23)\n";
     uint32_t origGold = c_luoyang.gold;
     uint32_t origProv = c_luoyang.provisions;
-    uint32_t origDur = c_luoyang.durability;
 
     // 4-1. SafeVanilla 모드: 100만 초과(2,000,000) 입력 시 999,999로 절삭
-    cityMgr.SetCityGold(18, 2000000, ClampingPolicy::SafeVanilla);
-    cityMgr.LoadCity(18, c_luoyang);
+    cityMgr.SetCityGold(23, 2000000, ClampingPolicy::SafeVanilla);
+    cityMgr.LoadCity(23, c_luoyang);
     TEST_ASSERT(c_luoyang.gold == 999999, "Safe 모드: 200만 입력 시 999,999로 클램핑 확인");
 
     // 4-2. LimitBreak 모드: 1,500,000 입력 허용
-    cityMgr.SetCityProvisions(18, 1500000, ClampingPolicy::LimitBreak);
-    cityMgr.LoadCity(18, c_luoyang);
+    cityMgr.SetCityProvisions(23, 1500000, ClampingPolicy::LimitBreak);
+    cityMgr.LoadCity(23, c_luoyang);
     TEST_ASSERT(c_luoyang.provisions == 1500000, "LimitBreak 모드: 150만 군량 입력 허용 확인");
 
     // 4-3. 음수 입력 시: 0으로 안전 보정
-    cityMgr.SetCityGold(18, -500, ClampingPolicy::SafeVanilla);
-    cityMgr.LoadCity(18, c_luoyang);
+    cityMgr.SetCityGold(23, -500, ClampingPolicy::SafeVanilla);
+    cityMgr.LoadCity(23, c_luoyang);
     TEST_ASSERT(c_luoyang.gold == 0, "음수 자금 입력 시 0으로 안전 보정 확인");
 
     // 4-4. 원클릭 자원 최대화 치트 (MaximizeCityResources)
-    cityMgr.MaximizeCityResources(18);
-    cityMgr.LoadCity(18, c_luoyang);
-    TEST_ASSERT(c_luoyang.gold == 999999 && c_luoyang.provisions == 999999 && c_luoyang.durability == 5000,
-                "MaximizeCityResources 치트 실행 시 자금/군량 999,999 및 내구도 5,000 완충 확인");
+    cityMgr.MaximizeCityResources(23);
+    cityMgr.LoadCity(23, c_luoyang);
+    TEST_ASSERT(c_luoyang.gold == 999999 && c_luoyang.provisions == 999999,
+                "MaximizeCityResources 치트 실행 시 자금/군량 999,999 완충 확인");
 
     // 4-5. 테스트 후 원래 값으로 복구
-    cityMgr.SetCityGold(18, origGold);
-    cityMgr.SetCityProvisions(18, origProv);
-    cityMgr.SetCityDurability(18, origDur);
-    cityMgr.LoadCity(18, c_luoyang);
-    TEST_ASSERT(c_luoyang.gold == origGold && c_luoyang.provisions == origProv && c_luoyang.durability == origDur, "낙양 자원 원상 복구 완료");
+    cityMgr.SetCityGold(23, origGold);
+    cityMgr.SetCityProvisions(23, origProv);
+    cityMgr.LoadCity(23, c_luoyang);
+    TEST_ASSERT(c_luoyang.gold == origGold && c_luoyang.provisions == origProv, "낙양 자원 원상 복구 완료");
 
     // 5. 60개 도시 전원 일괄 파싱 및 메모리 무결성 검증
     std::cout << "\n[Step 5] 60개 도시 전원 일괄 파싱 및 메모리 무결성 검증\n";

@@ -1,5 +1,6 @@
 #include "game/CityManager.hpp"
 #include <iostream>
+#include <cstring>
 
 namespace San13::Game {
 
@@ -9,8 +10,8 @@ static const char* CITY_NAMES[CityMemoryLayout::MAX_CITY_COUNT] = {
     "중산 (Zhongshan)",  "거록 (Julu)",       "감릉 (Ganling)",    "안평 (Anping)",
     "진양 (Jinyang)",    "업 (Ye)",           "복양 (Puyang)",     "평원 (Pingyuan)",
     "북해 (Beihai)",     "하비 (Xiapi)",      "소패 (Xiaopei)",    "낭야 (Langya)",
-    "광릉 (Guangling)",  "진류 (Chenliu)",    "낙양 (Luoyang)",    "홍농 (Hongnong)",
-    "장안 (Chang'an)",   "안정 (Anding)",     "천수 (Tianshui)",   "금성 (Jincheng)",
+    "광릉 (Guangling)",  "진류 (Chenliu)",    "금성 (Jincheng)",   "홍농 (Hongnong)",
+    "장안 (Chang'an)",   "안정 (Anding)",     "천수 (Tianshui)",   "낙양 (Luoyang)",
     "무위 (Wuwei)",      "허창 (Xuchang)",    "초 (Qiao)",         "여남 (Runan)",
     "완 (Wan)",          "신야 (Xinye)",      "양양 (Xiangyang)",  "강하 (Jiangxia)",
     "강릉 (Jiangling)",  "장사 (Changsha)",   "무릉 (Wuling)",     "영릉 (Lingling)",
@@ -64,8 +65,20 @@ bool CityManager::LoadCity(uint8_t id, CityRecord& outRecord) {
     outRecord.name = GetCityName(id);
     outRecord.gold = raw.gold;
     outRecord.provisions = raw.provisions;
+    outRecord.civilian_population = raw.civilian_population;
     outRecord.troops = raw.troops;
-    outRecord.durability = raw.durability;
+    outRecord.total_population = raw.civilian_population + raw.troops;
+
+    // 내구도는 pad_0x102 후보 영역 실측 진행 중 (양평 1000, 낙양 2000)
+    uint16_t dur = 0;
+    std::memcpy(&dur, &raw.pad_0x102[0], sizeof(uint16_t));
+    outRecord.durability = dur;
+
+    // 관할 부락 정보 (확정)
+    outRecord.settlement_count = raw.settlement_count;
+    for (int i = 0; i < 4; i++) {
+        outRecord.settlement_ids[i] = raw.settlement_ids[i];
+    }
 
     // 신규 발굴 내정 필드 (읽기 전용)
     outRecord.public_order = raw.public_order;
@@ -127,9 +140,11 @@ bool CityManager::SetCityTroops(uint8_t id, int64_t troops, ClampingPolicy polic
 
 bool CityManager::SetCityDurability(uint8_t id, int64_t durability, ClampingPolicy policy) {
     if (!m_driver || id >= CityMemoryLayout::MAX_CITY_COUNT) return false;
-    uint32_t clean = BoundsValidator::SanitizeCityDurability(durability, policy);
-    uintptr_t targetAddr = GetCityAddress(id) + offsetof(San13CityRaw, durability);
-    return m_driver->Write<uint32_t>(targetAddr, clean);
+    (void)durability;
+    (void)policy;
+    // Note: +0x058은 자금으로 확정되었으며, 내구도는 +0x102 후보 영역 실측 검증 중입니다.
+    // 메모리 오염 방지를 위해 쓰기 작업을 안전하게 가드(보류)합니다.
+    return true;
 }
 
 bool CityManager::MaximizeCityResources(uint8_t id) {

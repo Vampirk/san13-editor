@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
     if (verOk) {
         officerMgr.LoadOfficer(333, caocao);
         officerMgr.LoadOfficer(94, guanyu);
-        cityMgr.LoadCity(18, luoyang);
+        cityMgr.LoadCity(23, luoyang);
         officerTable.Initialize(&officerMgr);
         cityTable.Initialize(&cityMgr);
     }
