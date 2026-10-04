@@ -3,6 +3,7 @@
 #include "core/LinuxMemoryDriver.hpp"
 #include "game/GameVersion.hpp"
 #include "game/CityManager.hpp"
+#include "game/SettlementManager.hpp"
 #include "imgui.h"
 
 #include <iostream>
@@ -57,10 +58,13 @@ int main(int argc, char** argv) {
     bool mgrOk = cityMgr.Initialize(&driver, rootBase);
     TEST_ASSERT(mgrOk, "CityManager 초기화 성공");
 
+    SettlementManager setMgr;
+    TEST_ASSERT(setMgr.Initialize(&driver, rootBase), "SettlementManager 초기화 성공");
+
     // 2. CityTableView 초기화 및 60개 도시 일괄 로드
     std::cout << "\n[Step 2] CityTableView 초기화 및 60개 도시 데이터 바인딩\n";
     CityTableView tableView;
-    tableView.Initialize(&cityMgr);
+    tableView.Initialize(&cityMgr, &setMgr);
 
     size_t totalCities = tableView.GetTotalCount();
     std::cout << "         -> 총 로드된 도시 수: " << totalCities << "개\n";

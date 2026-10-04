@@ -715,15 +715,7 @@ static const char* const HISTORICAL_OFFICER_NAMES[HISTORICAL_OFFICER_NAME_COUNT]
     /* 699 */ "미당대왕",
 };
 
-// ID 700 이상 고대무장 및 특수 무장 매핑
-static const std::unordered_map<uint16_t, const char*> SPECIAL_OFFICER_NAMES = {
-    { 700, "백기" },
-    { 701, "항우" },
-    { 702, "유방" },
-    { 703, "장량" },
-    { 704, "한신" },
-    { 705, "소하" },
-};
+// 구형 오리지널 가설 700~705 고대무장 슬롯은 PK에서 850~899로 이동되었으므로 제거됨 (EDGE-24 & Phase 6.6)
 
 // 삼국지 13 PK 공식 고대무장 (ID 850 ~ 899, 총 50명, 인게임 공식 슬롯 실측 검증 완료 - EDGE-24)
 static const char* const ANCIENT_OFFICER_NAMES[50] = {
@@ -891,22 +883,23 @@ std::string_view GetOfficerKoreanName(uint16_t id) {
     if (id < HISTORICAL_OFFICER_NAME_COUNT) {
         return HISTORICAL_OFFICER_NAMES[id];
     }
-    auto it = SPECIAL_OFFICER_NAMES.find(id);
-    if (it != SPECIAL_OFFICER_NAMES.end()) {
-        return it->second;
-    }
 
     // EDGE-24: 삼국지 13 PK 공식 고대무장 50인 (ID 850 ~ 899) 한글 성명 지원
     if (id >= 850 && id < 900) {
         return ANCIENT_OFFICER_NAMES[id - 850];
     }
 
-    // Phase 5.9-A: 신무장 슬롯(800+) 한글 성명 지원
+    // Phase 5.9-A & Phase 6.6: 등록 신무장 슬롯(ID 700+) 한글 성명 지원
     if (!s_customOfficerNamesLoaded) {
         LoadCustomOfficerNames();
     }
-    if (id >= 800) {
-        size_t customIdx = id - 800;
+    if (id >= 700 && id < 850) {
+        size_t customIdx = id - 700;
+        if (customIdx < s_customOfficerNames.size()) {
+            return s_customOfficerNames[customIdx];
+        }
+    } else if (id >= 900) {
+        size_t customIdx = (id - 900) + 150;
         if (customIdx < s_customOfficerNames.size()) {
             return s_customOfficerNames[customIdx];
         }
@@ -919,9 +912,6 @@ bool HasOfficerKoreanName(uint16_t id) {
     if (id < HISTORICAL_OFFICER_NAME_COUNT) {
         return true;
     }
-    if (SPECIAL_OFFICER_NAMES.find(id) != SPECIAL_OFFICER_NAMES.end()) {
-        return true;
-    }
     // EDGE-24: 삼국지 13 PK 공식 고대무장 50인 (ID 850 ~ 899)
     if (id >= 850 && id < 900) {
         return true;
@@ -929,8 +919,11 @@ bool HasOfficerKoreanName(uint16_t id) {
     if (!s_customOfficerNamesLoaded) {
         LoadCustomOfficerNames();
     }
-    if (id >= 800) {
-        size_t customIdx = id - 800;
+    if (id >= 700 && id < 850) {
+        size_t customIdx = id - 700;
+        return (customIdx < s_customOfficerNames.size());
+    } else if (id >= 900) {
+        size_t customIdx = (id - 900) + 150;
         return (customIdx < s_customOfficerNames.size());
     }
     return false;

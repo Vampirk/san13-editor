@@ -14,8 +14,10 @@ namespace San13::Game {
  */
 struct San13CityRaw {
     uint8_t  head_pad[0x18];          // +0x00 ~ +0x17: VTable(0x10), 세력/군주/태수 소속 정보
-    uint8_t  settlement_ids[4];       // +0x018 ~ +0x01B: 관할 부락 ID 4개 슬롯 [확정]
-    uint8_t  head_pad2[0x3C];         // +0x01C ~ +0x057: 지역/좌표/태수/군주 정보 (60B)
+    uint8_t  connected_city_ids[4];   // +0x018 ~ +0x01B: 도로망으로 직결된 인접 도시 ID 목록 (구 settlement_ids 오독 정정) [확정]
+    uint8_t  head_pad2[0x22];         // +0x01C ~ +0x03D: 지역/좌표 정보 (34B)
+    uint16_t ruler_id;                // +0x03E: 도시 태수/군주 무장 ID (0xFFFF=공백지) [확정]
+    uint8_t  head_pad3[0x18];         // +0x040 ~ +0x057: 기타 헤더 정보 (24B)
     uint32_t gold;                    // +0x058: 도시 자금 [확정] (낙양 4,000, 양평 2,200)
     uint32_t provisions;              // +0x05C: 도시 군량 [확정] (낙양 44,400, 양평 4,240)
     uint32_t civilian_population;     // +0x060: 기초 민간 인구 [확정] (낙양 200,000, 양평 95,000)
@@ -46,7 +48,8 @@ struct San13CityRaw {
 #pragma pack(pop)
 
 static_assert(sizeof(San13CityRaw) == 0x170, "San13CityRaw size must be exactly 0x170 (368 bytes)");
-static_assert(offsetof(San13CityRaw, settlement_ids) == 0x18, "settlement_ids offset mismatch");
+static_assert(offsetof(San13CityRaw, connected_city_ids) == 0x18, "connected_city_ids offset mismatch");
+static_assert(offsetof(San13CityRaw, ruler_id) == 0x3E, "ruler_id offset mismatch");
 static_assert(offsetof(San13CityRaw, gold) == 0x58, "gold offset mismatch");
 static_assert(offsetof(San13CityRaw, provisions) == 0x5C, "provisions offset mismatch");
 static_assert(offsetof(San13CityRaw, civilian_population) == 0x60, "civilian_population offset mismatch");
@@ -66,6 +69,48 @@ static_assert(offsetof(San13CityRaw, prisoner_count) == 0x14C, "prisoner_count o
 static_assert(offsetof(San13CityRaw, free_officer_list_ptr) == 0x150, "free_officer_list_ptr offset mismatch");
 static_assert(offsetof(San13CityRaw, free_officer_count) == 0x154, "free_officer_count offset mismatch");
 
+#pragma pack(push, 1)
+
+/**
+ * @brief 삼국지 13 PK 도시 소속 무장 연결 리스트 노드 구조체 (12 바이트)
+ * City +0x140(현역), +0x148(포로), +0x150(재야)의 std::list 순회용 노드
+ */
+struct San13CityOfficerNodeRaw {
+    uint32_t next_node;        // +0x00: 다음 노드 주소
+    uint32_t prev_node;        // +0x04: 이전 노드 주소
+    uint32_t officer_obj_ptr;  // +0x08: 무장 풀 오브젝트 가상 주소
+};
+
+#pragma pack(pop)
+
+static_assert(sizeof(San13CityOfficerNodeRaw) == 12, "San13CityOfficerNodeRaw size must be exactly 12 bytes");
+static_assert(offsetof(San13CityOfficerNodeRaw, next_node) == 0x00, "next_node offset mismatch");
+static_assert(offsetof(San13CityOfficerNodeRaw, prev_node) == 0x04, "prev_node offset mismatch");
+static_assert(offsetof(San13CityOfficerNodeRaw, officer_obj_ptr) == 0x08, "officer_obj_ptr offset mismatch");
+
+enum class CityOfficerCategory {
+    Active,    // 현역 소속 (+0x140, count: +0x144)
+    Prisoner,  // 수감 포로 (+0x148, count: +0x14C)
+    Free       // 재야 무장 (+0x150, count: +0x154)
+};
+
+/**
+ * @brief 도시 인스펙터 4탭 및 비즈니스 로직용 무장 정보 엔트리
+ */
+struct CityOfficerEntry {
+    uint16_t    officer_id = 0;
+    std::string name;
+    uint8_t     rank = 0;              // 품관/신분 (0: 군주, 1~9: 1~9품관, 재야 등)
+    std::string status_desc;           // "군주", "일반 (5품관)", "재야", "포로" 등
+    uint8_t     curr_leadership = 0;
+    uint8_t     curr_war = 0;
+    uint8_t     curr_intel = 0;
+    uint8_t     curr_politics = 0;
+    uint8_t     loyalty = 0;
+    uint16_t    force_id = 0;
+    uintptr_t   officer_addr = 0;
+};
+
 struct CityMemoryLayout {
     static constexpr uintptr_t CHUNK_OFFSET = 0x007178;  // RootBase로부터의 오프셋
     static constexpr size_t    OBJECT_STRIDE = 0x170;    // 단일 도시 크기 (368 바이트)
@@ -79,6 +124,11 @@ struct CityRecord {
     uint8_t id = 0;
     std::string name;
 
+    // 지배 세력 및 군주 (확정)
+    uint16_t ruler_id = 0xFFFF;           // 태수/군주 무장 ID (+0x3E, 0xFFFF=공백지)
+    std::string ruler_name;               // 태수/군주 한글 성명 (예: "조조")
+    std::string force_name;               // 지배 세력명 (예: "조조군", "공백지 / 무소속")
+
     // 기본 자원 및 인구 (확정)
     uint32_t gold = 0;                    // 자금 (+0x58)
     uint32_t provisions = 0;              // 군량 (+0x5C)
@@ -87,9 +137,9 @@ struct CityRecord {
     uint32_t total_population = 0;        // 총 인구 (civilian_population + troops)
     uint32_t durability = 0;              // 내구도
 
-    // 관할 부락 정보 (확정)
+    // 관할 부락 및 인접 도로망 정보
     uint32_t settlement_count = 0;        // 관할 부락 수 (+0x13C)
-    uint8_t  settlement_ids[4] = {255, 255, 255, 255}; // 부락 ID 목록 (+0x018)
+    uint8_t  connected_city_ids[4] = {255, 255, 255, 255}; // 도로망 인접 도시 ID 목록 (+0x018)
 
     // 내정 4대치 (읽기 전용)
     uint16_t public_order = 0;            // 민심 (+0x0D2)

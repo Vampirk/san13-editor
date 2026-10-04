@@ -1,5 +1,9 @@
 #include "ui/OfficerTableView.hpp"
 #include "game/OfficerNameTable.hpp"
+#include "game/TacticManager.hpp"
+#include "game/ForceManager.hpp"
+#include "game/ItemManager.hpp"
+#include "game/City.hpp"
 #include "imgui.h"
 #include <algorithm>
 #include <cstring>
@@ -13,8 +17,9 @@ using namespace San13::Game;
 OfficerTableView::OfficerTableView() = default;
 OfficerTableView::~OfficerTableView() = default;
 
-void OfficerTableView::Initialize(Game::OfficerManager* officerMgr) {
+void OfficerTableView::Initialize(Game::OfficerManager* officerMgr, Game::ItemManager* itemMgr) {
     m_officerMgr = officerMgr;
+    m_itemMgr = itemMgr;
     RefreshData();
 }
 
@@ -63,6 +68,15 @@ void OfficerTableView::ApplyFilter() {
             if (!off.is_extended) continue;
         }
 
+        // 1-2. 출신/분류 필터 검사 (역사 / 등록 신무장 / 고대)
+        if (m_originFilter == OfficerOriginFilter::Historical) {
+            if (off.id >= 700) continue;
+        } else if (m_originFilter == OfficerOriginFilter::Created) {
+            if (off.id < 700 || (off.id >= 850 && off.id < 900)) continue;
+        } else if (m_originFilter == OfficerOriginFilter::Ancient) {
+            if (off.id < 850 || off.id >= 900) continue;
+        }
+
         // 2. 검색어 필터 검사 (이름 또는 ID, 대소문자 무시, EDGE-31 항적/항우 별칭 지원)
         if (hasQuery) {
             std::string idStr = std::to_string(off.id);
@@ -72,6 +86,12 @@ void OfficerTableView::ApplyFilter() {
             bool matched = (nameLower.find(queryLower) != std::string::npos || idStr.find(query) != std::string::npos);
             // EDGE-31: 항우로 검색해도 항적이 매칭되도록 별칭 지원
             if (!matched && queryLower == "항우" && nameLower.find("항적") != std::string::npos) {
+                matched = true;
+            }
+            if (!matched && (queryLower == "신무장" || queryLower == "등록무장") && (off.id >= 700 && (off.id < 850 || off.id >= 900))) {
+                matched = true;
+            }
+            if (!matched && (queryLower == "고대" || queryLower == "고대무장") && (off.id >= 850 && off.id < 900)) {
                 matched = true;
             }
             if (!matched) {
@@ -104,6 +124,11 @@ void OfficerTableView::SetFilterMode(OfficerFilterMode mode) {
     ApplyFilter();
 }
 
+void OfficerTableView::SetOriginFilter(OfficerOriginFilter filter) {
+    m_originFilter = filter;
+    ApplyFilter();
+}
+
 void OfficerTableView::SortByColumn(int columnId, bool ascending) {
     ApplySort(columnId, ascending);
 }
@@ -121,6 +146,12 @@ void OfficerTableView::OpenEditModal(int officerId) {
         m_editingOfficerId = officerId;
         m_selectedOfficerId = officerId;
         m_editStats = m_editingRecord.stats;
+        if (m_officerMgr->IsProtagonist(officerId)) {
+            Game::ProtagonistRecord prot;
+            if (m_officerMgr->GetProtagonistInfo(prot)) {
+                m_editProtagonistGold = prot.personal_gold;
+            }
+        }
         m_showEditModal = true;
         m_syncStatusMsg.clear();
     }
@@ -142,6 +173,12 @@ bool OfficerTableView::CommitEditToMemory() {
     ok &= m_officerMgr->SetCharacter(id, m_editingRecord.character);
     ok &= m_officerMgr->SetRelations(id, m_editingRecord.father_id, m_editingRecord.mother_id, m_editingRecord.spouse_1_id, m_editingRecord.sworn_brother_id,
                                      m_editingRecord.spouse_2_id, m_editingRecord.spouse_3_id, m_editingRecord.rival_id);
+    ok &= m_officerMgr->SetSwornBrothers(id, m_editingRecord.sworn_brothers);
+    ok &= m_officerMgr->SetFriends(id, m_editingRecord.friends);
+    ok &= m_officerMgr->SetRivals(id, m_editingRecord.rivals);
+    if (m_officerMgr->IsProtagonist(id)) {
+        ok &= m_officerMgr->SetProtagonistGold(m_editProtagonistGold);
+    }
     auto endTime = std::chrono::high_resolution_clock::now();
     m_lastSyncTimeMs = std::chrono::duration<float, std::milli>(endTime - startTime).count();
 
@@ -598,8 +635,20 @@ void OfficerTableView::Render() {
     if (ImGui::RadioButton("재야", &currentFilter, 2)) { m_filterMode = OfficerFilterMode::Free; ApplyFilter(); }
     ImGui::SameLine();
     if (ImGui::RadioButton("미등장", &currentFilter, 3)) { m_filterMode = OfficerFilterMode::Unappeared; ApplyFilter(); }
+
     ImGui::SameLine();
-    if (ImGui::RadioButton("신무장/자녀 (800+)", &currentFilter, 4)) { m_filterMode = OfficerFilterMode::Extended; ApplyFilter(); }
+    ImGui::TextDisabled("|");
+    ImGui::SameLine();
+    ImGui::TextColored(ImVec4(0.95f, 0.82f, 0.40f, 1.0f), "출신:");
+    ImGui::SameLine();
+    int currentOrigin = static_cast<int>(m_originFilter);
+    if (ImGui::RadioButton("전체##origAll", &currentOrigin, 0)) { m_originFilter = OfficerOriginFilter::All; ApplyFilter(); }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("역사##origHist", &currentOrigin, 1)) { m_originFilter = OfficerOriginFilter::Historical; ApplyFilter(); }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("신무장##origCreate", &currentOrigin, 2)) { m_originFilter = OfficerOriginFilter::Created; ApplyFilter(); }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("고대##origAnc", &currentOrigin, 3)) { m_originFilter = OfficerOriginFilter::Ancient; ApplyFilter(); }
 
     ImGui::SameLine();
     if (ImGui::Button("새로고침 (F5)")) {
@@ -749,7 +798,13 @@ void OfficerTableView::Render() {
                     if (ImGui::MenuItem(isRowChecked ? "이 무장 선택 해제" : "이 무장 선택")) {
                         ToggleSelectOfficer(off.id);
                     }
-                    if (ImGui::MenuItem("이 무장 소속 세력(아군) 전체 선택")) {
+                    char forceSelectLabel[64];
+                    if (ForceManager::IsValidForce(off.force_id)) {
+                        std::snprintf(forceSelectLabel, sizeof(forceSelectLabel), "소속 세력 [%s] 전체 선택", ForceManager::GetForceName(off.force_id).c_str());
+                    } else {
+                        std::snprintf(forceSelectLabel, sizeof(forceSelectLabel), "이 무장 소속 세력 전체 선택");
+                    }
+                    if (ImGui::MenuItem(forceSelectLabel)) {
                         SelectSameForceAs(off.id);
                     }
                     if (!m_selectedOfficerIds.empty()) {
@@ -775,10 +830,25 @@ void OfficerTableView::Render() {
                     ImGui::EndPopup();
                 }
 
-                // Column 1: 성명
+                // Column 1: 성명 및 출신 뱃지
                 ImGui::TableSetColumnIndex(1);
-                if (off.is_extended) {
-                    ImGui::TextColored(ImVec4(0.35f, 0.85f, 0.95f, 1.0f), "★ %s", off.name.c_str());
+                bool isProtagonist = m_officerMgr && m_officerMgr->IsProtagonist(off.id);
+                if (isProtagonist) {
+                    ImGui::TextColored(ImVec4(1.0f, 0.84f, 0.0f, 1.0f), "[★주인공]");
+                    ImGui::SameLine();
+                    ImGui::TextColored(ImVec4(1.0f, 0.95f, 0.5f, 1.0f), "%s", off.name.c_str());
+                } else if (off.id >= 850 && off.id < 900) {
+                    ImGui::TextColored(ImVec4(0.85f, 0.55f, 0.95f, 1.0f), "[고대]");
+                    ImGui::SameLine();
+                    ImGui::Text("%s", off.name.c_str());
+                } else if (off.id >= 700) {
+                    ImGui::TextColored(ImVec4(0.35f, 0.85f, 0.95f, 1.0f), "[신무장]");
+                    ImGui::SameLine();
+                    ImGui::Text("%s", off.name.c_str());
+                } else if (off.is_extended) {
+                    ImGui::TextColored(ImVec4(0.95f, 0.70f, 0.30f, 1.0f), "[특수]");
+                    ImGui::SameLine();
+                    ImGui::Text("%s", off.name.c_str());
                 } else {
                     ImGui::Text("%s", off.name.c_str());
                 }
@@ -840,10 +910,12 @@ void OfficerTableView::RenderEditModal() {
         ImGui::TextColored(ImVec4(0.95f, 0.82f, 0.40f, 1.0f), "■ %s (ID %03d)",
                            m_editingRecord.name.c_str(), m_editingRecord.id);
         ImGui::SameLine();
-        ImGui::TextDisabled("| 소속: %s | 신분: %s | 소재: 도시 %d",
-                            m_editingRecord.force_id == 0xFFFF ? "재야" : ("세력 " + std::to_string(m_editingRecord.force_id)).c_str(),
+        std::string forceName = ForceManager::GetForceName(m_editingRecord.force_id);
+        const char* cityName = (m_editingRecord.city_id < CityMemoryLayout::MAX_CITY_COUNT) ? GetCityName(m_editingRecord.city_id) : "-";
+        ImGui::TextDisabled("| 소속: %s | 신분: %s | 소재: %s",
+                            forceName.c_str(),
                             m_editingRecord.GetStatusDescription(m_gameYear),
-                            m_editingRecord.city_id);
+                            cityName ? cityName : "-");
 
         ImGui::Separator();
 
@@ -851,6 +923,39 @@ void OfficerTableView::RenderEditModal() {
         ImGui::Checkbox("한계 돌파 모드 (1~255 허용)", &m_limitBreakMode);
         ImGui::SameLine();
         ImGui::Checkbox("실시간 자동 핫싱크 (Auto-Sync)", &m_autoSync);
+
+        // 주인공 무장일 경우: 개인 소지 금 편집 배너
+        bool isProtagonist = m_officerMgr && m_officerMgr->IsProtagonist(m_editingOfficerId);
+        if (isProtagonist) {
+            ImGui::Spacing();
+            ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(1.0f, 0.85f, 0.2f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.25f, 0.20f, 0.05f, 0.4f));
+            ImGui::BeginChild("ProtagonistGoldBanner", ImVec2(0, 42), true, ImGuiWindowFlags_NoScrollbar);
+            ImGui::AlignTextToFramePadding();
+            ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.2f, 1.0f), "★ [플레이어 무장] 개인 소지 금:");
+            ImGui::SameLine();
+            int goldVal = static_cast<int>(m_editProtagonistGold);
+            ImGui::PushItemWidth(130.0f);
+            if (ImGui::InputInt("##EditProtGoldModal", &goldVal, 1000, 10000)) {
+                if (goldVal < 0) goldVal = 0;
+                if (goldVal > 999999) goldVal = 999999;
+                m_editProtagonistGold = static_cast<uint32_t>(goldVal);
+                if (m_autoSync) CommitEditToMemory();
+            }
+            ImGui::PopItemWidth();
+            ImGui::SameLine();
+            ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.9f, 1.0f), "금");
+            ImGui::SameLine(0, 15.0f);
+            if (ImGui::SmallButton("10,000")) { m_editProtagonistGold = 10000; if (m_autoSync) CommitEditToMemory(); }
+            ImGui::SameLine();
+            if (ImGui::SmallButton("50,000")) { m_editProtagonistGold = 50000; if (m_autoSync) CommitEditToMemory(); }
+            ImGui::SameLine();
+            if (ImGui::SmallButton("100,000")) { m_editProtagonistGold = 100000; if (m_autoSync) CommitEditToMemory(); }
+            ImGui::SameLine();
+            if (ImGui::SmallButton("999,999 (MAX)")) { m_editProtagonistGold = 999999; if (m_autoSync) CommitEditToMemory(); }
+            ImGui::EndChild();
+            ImGui::PopStyleColor(2);
+        }
 
         ImGui::Spacing();
 
@@ -982,16 +1087,19 @@ void OfficerTableView::RenderEditModal() {
             // ----------------------------------------------------
             if (ImGui::BeginTabItem("전법 및 20대 특기##TabSkills")) {
                 ImGui::Spacing();
-                ImGui::TextColored(ImVec4(0.4f, 0.85f, 1.0f, 1.0f), "▶ 보유 전법 (Tactics, 0~140)");
+                ImGui::TextColored(ImVec4(0.4f, 0.85f, 1.0f, 1.0f), "▶ 보유 전법 (기본 141개 + 등록 전법)");
                 int tacticId = m_editingRecord.tactic_id;
                 ImGui::PushItemWidth(260.0f);
                 if (ImGui::BeginCombo("전법 선택##EditTactic", OfficerRecord::GetTacticName(tacticId))) {
-                    for (int i = 0; i < 141; ++i) {
-                        bool isSel = (tacticId == i);
-                        char itemLabel[64];
-                        std::snprintf(itemLabel, sizeof(itemLabel), "%03d: %s", i, OfficerRecord::GetTacticName(i));
+                    const auto& tactics = San13::Game::TacticManager::GetAvailableTactics();
+                    for (const auto& t : tactics) {
+                        bool isSel = (tacticId == t.first);
+                        char itemLabel[96];
+                        std::snprintf(itemLabel, sizeof(itemLabel), "%03d: %s", t.first, t.second.c_str());
                         if (ImGui::Selectable(itemLabel, isSel)) {
-                            m_editingRecord.tactic_id = static_cast<uint8_t>(i);
+                            m_editingRecord.tactic_id = static_cast<uint8_t>(t.first);
+                            m_editingRecord.stats.tactic_id = static_cast<uint8_t>(t.first);
+                            m_editStats.tactic_id = static_cast<uint8_t>(t.first);
                             valueChanged = true;
                         }
                         if (isSel) ImGui::SetItemDefaultFocus();
@@ -1189,10 +1297,98 @@ void OfficerTableView::RenderEditModal() {
                 ImGui::Separator();
                 ImGui::Spacing();
 
-                ImGui::TextColored(ImVec4(0.4f, 0.85f, 1.0f, 1.0f), "▶ 특수 인연");
-                DrawOfficerIdSelector("의형제 / 단짝", m_editingRecord.sworn_brother_id);
-                DrawOfficerIdSelector("원수 무장", m_editingRecord.rival_id);
+                ImGui::TextColored(ImVec4(0.4f, 0.85f, 1.0f, 1.0f), "▶ 의형제 (도원결의, 최대 3인)");
+                DrawOfficerIdSelector("의형제 1", m_editingRecord.sworn_brothers[0]);
+                DrawOfficerIdSelector("의형제 2", m_editingRecord.sworn_brothers[1]);
+                DrawOfficerIdSelector("의형제 3", m_editingRecord.sworn_brothers[2]);
+                m_editingRecord.sworn_brother_id = m_editingRecord.sworn_brothers[0];
 
+                ImGui::Spacing();
+                ImGui::Separator();
+                ImGui::Spacing();
+
+                ImGui::TextColored(ImVec4(0.4f, 0.85f, 1.0f, 1.0f), "▶ 친애 무장 (최대 6인)");
+                ImGui::Columns(2, "FriendsGrid", false);
+                DrawOfficerIdSelector("친애 1", m_editingRecord.friends[0]);
+                DrawOfficerIdSelector("친애 2", m_editingRecord.friends[1]);
+                DrawOfficerIdSelector("친애 3", m_editingRecord.friends[2]);
+                ImGui::NextColumn();
+                DrawOfficerIdSelector("친애 4", m_editingRecord.friends[3]);
+                DrawOfficerIdSelector("친애 5", m_editingRecord.friends[4]);
+                DrawOfficerIdSelector("친애 6", m_editingRecord.friends[5]);
+                ImGui::Columns(1);
+
+                ImGui::Spacing();
+                ImGui::Separator();
+                ImGui::Spacing();
+
+                ImGui::TextColored(ImVec4(0.4f, 0.85f, 1.0f, 1.0f), "▶ 원수 및 혐오 무장 (최대 3인)");
+                DrawOfficerIdSelector("원수 1", m_editingRecord.rivals[0]);
+                DrawOfficerIdSelector("원수 2", m_editingRecord.rivals[1]);
+                DrawOfficerIdSelector("원수 3", m_editingRecord.rivals[2]);
+                m_editingRecord.rival_id = m_editingRecord.rivals[0];
+
+                ImGui::EndTabItem();
+            }
+
+            // ----------------------------------------------------
+            // 탭 5: 소유 명품 (Items Owned)
+            // ----------------------------------------------------
+            if (ImGui::BeginTabItem("소유 명품##TabItems")) {
+                ImGui::Spacing();
+                if (m_itemMgr) {
+                    std::vector<Game::ItemRecord> myItems;
+                    m_itemMgr->GetOfficerItems(static_cast<uint16_t>(m_editingOfficerId), myItems);
+
+                    ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.3f, 1.0f), "▶ %s 님의 소유 명품 (총 %zu종)", 
+                                       m_editingRecord.name.c_str(), myItems.size());
+                    ImGui::Spacing();
+
+                    if (myItems.empty()) {
+                        ImGui::TextDisabled("현재 소유 중인 명품이 없습니다.");
+                    } else {
+                        if (ImGui::BeginTable("OfficerItemTable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+                            ImGui::TableSetupColumn("ID", ImGuiTableColumnFlags_WidthFixed, 40.0f);
+                            ImGui::TableSetupColumn("명품 이름", ImGuiTableColumnFlags_WidthFixed, 140.0f);
+                            ImGui::TableSetupColumn("분류", ImGuiTableColumnFlags_WidthFixed, 80.0f);
+                            ImGui::TableSetupColumn("능력치 보정", ImGuiTableColumnFlags_WidthFixed, 90.0f);
+                            ImGui::TableSetupColumn("부가 특기", ImGuiTableColumnFlags_WidthFixed, 95.0f);
+                            ImGui::TableSetupColumn("조작", ImGuiTableColumnFlags_WidthFixed, 70.0f);
+                            ImGui::TableHeadersRow();
+
+                            for (const auto& it : myItems) {
+                                ImGui::TableNextRow();
+                                ImGui::TableSetColumnIndex(0);
+                                ImGui::Text("%u", it.id);
+
+                                ImGui::TableSetColumnIndex(1);
+                                ImGui::TextColored(ImVec4(1.0f, 0.9f, 0.6f, 1.0f), "%s", it.name.c_str());
+                                if (ImGui::IsItemHovered() && !it.description.empty()) {
+                                    ImGui::SetTooltip("%s", it.description.c_str());
+                                }
+
+                                ImGui::TableSetColumnIndex(2);
+                                ImGui::Text("%s", it.category_name.c_str());
+
+                                ImGui::TableSetColumnIndex(3);
+                                ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.5f, 1.0f), "%s", it.stat_boost_desc.c_str());
+
+                                ImGui::TableSetColumnIndex(4);
+                                ImGui::Text("%s", it.skill_desc.c_str());
+
+                                ImGui::TableSetColumnIndex(5);
+                                ImGui::PushID(it.id);
+                                if (ImGui::SmallButton("몰수")) {
+                                    m_itemMgr->ConfiscateItem(it.id);
+                                }
+                                ImGui::PopID();
+                            }
+                            ImGui::EndTable();
+                        }
+                    }
+                } else {
+                    ImGui::TextDisabled("ItemManager가 연결되지 않았습니다.");
+                }
                 ImGui::EndTabItem();
             }
 

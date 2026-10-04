@@ -1,6 +1,8 @@
 #pragma once
 
 #include "game/CityManager.hpp"
+#include "game/SettlementManager.hpp"
+#include "ui/CityDetailModal.hpp"
 #include "ui/HangulAutomata.hpp"
 #include <vector>
 #include <string>
@@ -8,7 +10,7 @@
 namespace San13::UI {
 
 /**
- * @brief 60개 도시 자원 그리드 뷰 및 실시간 자원 편집기 (Phase 5.4)
+ * @brief 60개 도시 자원 그리드 뷰 및 실시간 자원 편집기 (Phase 5.4 & Phase 3)
  */
 class CityTableView {
 public:
@@ -16,9 +18,9 @@ public:
     ~CityTableView();
 
     /**
-     * @brief CityManager 바인딩 및 60개 도시 초기 데이터 로드
+     * @brief CityManager 및 SettlementManager 바인딩 및 60개 도시 초기 데이터 로드
      */
-    void Initialize(Game::CityManager* cityMgr);
+    void Initialize(Game::CityManager* cityMgr, Game::SettlementManager* setMgr = nullptr);
 
     /**
      * @brief 실시간 메모리 데이터 재로드 (새로고침)
@@ -65,11 +67,17 @@ public:
     // --- Phase 5.4 도시 자원 편집 & 핫싱크(Hot-Sync) 메서드 ---
 
     /**
-     * @brief 도시 자원 상세 편집 모달 열기
+     * @brief 도시 상세 4탭 종합 인스펙터 모달 객체 참조
+     */
+    CityDetailModal& GetDetailModal() { return m_detailModal; }
+    const CityDetailModal& GetDetailModal() const { return m_detailModal; }
+
+    /**
+     * @brief 도시 상세 4탭 편집 모달 열기
      */
     void OpenEditModal(int cityId);
-    bool IsEditModalOpen() const { return m_showEditModal; }
-    void CloseEditModal() { m_showEditModal = false; }
+    bool IsEditModalOpen() const;
+    void CloseEditModal();
 
     /**
      * @brief 현재 편집 중인 도시 자원 게임 메모리에 즉시 커밋 (핫싱크)
@@ -94,22 +102,22 @@ public:
     /**
      * @brief 한계 돌파(LimitBreak) 모드 설정/조회
      */
-    void SetLimitBreakMode(bool enabled) { m_limitBreakMode = enabled; }
-    bool IsLimitBreakMode() const { return m_limitBreakMode; }
+    void SetLimitBreakMode(bool enabled);
+    bool IsLimitBreakMode() const;
 
     /**
      * @brief 실시간 자동 동기화(Live Auto-Sync) 설정/조회
      */
-    void SetAutoSync(bool enabled) { m_autoSync = enabled; }
-    bool IsAutoSync() const { return m_autoSync; }
+    void SetAutoSync(bool enabled);
+    bool IsAutoSync() const;
 
     /**
      * @brief 편집용 임시 도시 레코드 참조
      */
-    Game::CityRecord& GetEditRecord() { return m_editingRecord; }
-    const Game::CityRecord& GetEditRecord() const { return m_editingRecord; }
-    int GetEditingCityId() const { return m_editingCityId; }
-    float GetLastSyncTimeMs() const { return m_lastSyncTimeMs; }
+    Game::CityRecord& GetEditRecord();
+    const Game::CityRecord& GetEditRecord() const;
+    int GetEditingCityId() const;
+    float GetLastSyncTimeMs() const;
 
 private:
     void ApplyFilter();
@@ -117,6 +125,7 @@ private:
     void RenderEditModal();
 
     Game::CityManager*               m_cityMgr = nullptr;
+    Game::SettlementManager*         m_setMgr = nullptr;
     std::vector<Game::CityRecord>    m_cachedCities;
     std::vector<size_t>              m_filteredIndices;
 
@@ -128,14 +137,8 @@ private:
     int                              m_lastSortColumn = -1;
     bool                             m_lastSortAscending = true;
 
-    // 편집 모달 상태
-    bool                             m_showEditModal = false;
-    int                              m_editingCityId = -1;
-    Game::CityRecord                 m_editingRecord;
-    bool                             m_limitBreakMode = false;
-    bool                             m_autoSync = true;
-    std::string                      m_syncStatusMsg;
-    float                            m_lastSyncTimeMs = 0.0f;
+    // 4탭 도시 종합 인스펙터 모달 (Phase 3)
+    CityDetailModal                  m_detailModal;
 };
 
 } // namespace San13::UI

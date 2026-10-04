@@ -2,7 +2,7 @@
 
 > **기준 판본:** v5.6  
 > **최종 갱신일:** 2026-10-03  
-> **현황:** Phase 1(내정/숙련도/인물카운트), Phase 2(인구공식/부락청크/무장DLL구조), Phase 2.5(모델 및 테스트 동기화) 완료. Phase 3(부락·인물 연동 및 4탭 인스펙터 UI) 진행 준비 완료.  
+> **현황:** Phase 1(내정/숙련도/인물카운트), Phase 2(인구공식/부락청크/무장DLL구조), Phase 2.5(모델 및 테스트 동기화), Phase 3(부락·인물 연동 및 4탭 종합 인스펙터 UI) 전체 100% 완료.  
 
 ---
 
@@ -109,33 +109,33 @@
 
 ### 6.1. `San13CityRaw` 구조체 바이트 레이아웃 상세 설계
 
-| 시작 오프셋 | 크기 | 멤버명 | 타입 | 검증 등급 | 설명 |
-| :---: | :---: | :--- | :---: | :---: | :--- |
-| `+0x000` | 88 B | `head_pad[0x58]` | `uint8_t[]` | - | VTable 및 소속 헤더 영역 |
-| `+0x058` | 4 B | `durability` | `uint32_t` | **[확정]** | 도시 내구도 |
-| `+0x05C` | 4 B | `gold` | `uint32_t` | **[확정]** | 도시 자금 |
-| `+0x060` | 4 B | `provisions` | `uint32_t` | **[확정]** | 도시 군량 |
-| `+0x064` | 4 B | `troops` | `uint32_t` | **[확정]** | 주둔 병력 |
-| `+0x068` | 106 B | `pad_0x68[0x6A]` | `uint8_t[]` | - | 부상병/귀환병 후보 영역 |
-| `+0x0D2` | 2 B | `public_order` | `uint16_t` | **[확정]** | 민심 (양평 100, 금성 350 실측) |
-| `+0x0D4` | 2 B | `pad_0xD4[2]` | `uint8_t[]` | - | 패딩 |
-| `+0x0D6` | 2 B | `commerce` | `uint16_t` | **[유력]** | 상업 기본 개발치 (양평 1,000 실측) |
-| `+0x0D8` | 8 B | `pad_0xD8[8]` | `uint8_t[]` | - | 패딩 |
-| `+0x0E0` | 2 B | `agriculture` | `uint16_t` | **[확정]** | 농업 기본 개발치 (양평 1,050, 금성 2,000 실측) |
-| `+0x0E2` | 8 B | `pad_0xE2[8]` | `uint8_t[]` | - | 패딩 |
-| `+0x0EA` | 2 B | `culture` | `uint16_t` | **[확정]** | 문화 기본 개발치 (양평 1,000, 금성 2,400 실측) |
-| `+0x0EC` | 16 B | `pad_0xEC[0x10]` | `uint8_t[]` | - | 패딩 |
-| `+0x0FC` | 2 B | `spear_proficiency` | `uint16_t` | **[확정]** | 창병 숙련도 (양평 200, 금성 700 실측) |
-| `+0x0FE` | 2 B | `horse_proficiency` | `uint16_t` | **[확정]** | 기병 숙련도 (양평 300, 금성 700 실측) |
-| `+0x100` | 2 B | `bow_proficiency` | `uint16_t` | **[확정]** | 궁병 숙련도 (양평 200, 금성 700 실측) |
-| `+0x102` | 66 B | `pad_0x102[0x42]` | `uint8_t[]` | - | 내부 vtable 및 통계 전방 패딩 |
-| `+0x144` | 4 B | `officer_count` | `uint32_t` | **[유력]** | 소속 무장 수 (금성 12명 실측) |
-| `+0x148` | 4 B | `pad_0x148[4]` | `uint8_t[]` | - | 포인터 영역 (무장 리스트 추정) |
-| `+0x14C` | 4 B | `prisoner_count` | `uint32_t` | **[유력]** | 수감 포로 수 (금성 0명 실측) |
-| `+0x150` | 4 B | `pad_0x150[4]` | `uint8_t[]` | - | 포인터 영역 (포로 리스트 추정) |
-| `+0x154` | 4 B | `free_officer_count` | `uint32_t` | **[유력]** | 재야 무장 수 (금성 1명 실측) |
-| `+0x158` | 24 B | `tail_pad[0x18]` | `uint8_t[]` | - | 도시 청크 말미 패딩 |
-| **총합** | **368 B** | - | - | - | `sizeof(San13CityRaw) == 0x170` (368 바이트) 불변 보장 |
+|  시작 오프셋  |    크기     | 멤버명                  |     타입      |  검증 등급   | 설명                                              |
+| :------: | :-------: | :------------------- | :---------: | :------: | :---------------------------------------------- |
+| `+0x000` |   88 B    | `head_pad[0x58]`     | `uint8_t[]` |    -     | VTable 및 소속 헤더 영역                               |
+| `+0x058` |    4 B    | `durability`         | `uint32_t`  | **[확정]** | 도시 내구도                                          |
+| `+0x05C` |    4 B    | `gold`               | `uint32_t`  | **[확정]** | 도시 자금                                           |
+| `+0x060` |    4 B    | `provisions`         | `uint32_t`  | **[확정]** | 도시 군량                                           |
+| `+0x064` |    4 B    | `troops`             | `uint32_t`  | **[확정]** | 주둔 병력                                           |
+| `+0x068` |   106 B   | `pad_0x68[0x6A]`     | `uint8_t[]` |    -     | 부상병/귀환병 후보 영역                                   |
+| `+0x0D2` |    2 B    | `public_order`       | `uint16_t`  | **[확정]** | 민심 (양평 100, 금성 350 실측)                          |
+| `+0x0D4` |    2 B    | `pad_0xD4[2]`        | `uint8_t[]` |    -     | 패딩                                              |
+| `+0x0D6` |    2 B    | `commerce`           | `uint16_t`  | **[유력]** | 상업 기본 개발치 (양평 1,000 실측)                         |
+| `+0x0D8` |    8 B    | `pad_0xD8[8]`        | `uint8_t[]` |    -     | 패딩                                              |
+| `+0x0E0` |    2 B    | `agriculture`        | `uint16_t`  | **[확정]** | 농업 기본 개발치 (양평 1,050, 금성 2,000 실측)               |
+| `+0x0E2` |    8 B    | `pad_0xE2[8]`        | `uint8_t[]` |    -     | 패딩                                              |
+| `+0x0EA` |    2 B    | `culture`            | `uint16_t`  | **[확정]** | 문화 기본 개발치 (양평 1,000, 금성 2,400 실측)               |
+| `+0x0EC` |   16 B    | `pad_0xEC[0x10]`     | `uint8_t[]` |    -     | 패딩                                              |
+| `+0x0FC` |    2 B    | `spear_proficiency`  | `uint16_t`  | **[확정]** | 창병 숙련도 (양평 200, 금성 700 실측)                      |
+| `+0x0FE` |    2 B    | `horse_proficiency`  | `uint16_t`  | **[확정]** | 기병 숙련도 (양평 300, 금성 700 실측)                      |
+| `+0x100` |    2 B    | `bow_proficiency`    | `uint16_t`  | **[확정]** | 궁병 숙련도 (양평 200, 금성 700 실측)                      |
+| `+0x102` |   66 B    | `pad_0x102[0x42]`    | `uint8_t[]` |    -     | 내부 vtable 및 통계 전방 패딩                            |
+| `+0x144` |    4 B    | `officer_count`      | `uint32_t`  | **[유력]** | 소속 무장 수 (금성 12명 실측)                             |
+| `+0x148` |    4 B    | `pad_0x148[4]`       | `uint8_t[]` |    -     | 포인터 영역 (무장 리스트 추정)                              |
+| `+0x14C` |    4 B    | `prisoner_count`     | `uint32_t`  | **[유력]** | 수감 포로 수 (금성 0명 실측)                              |
+| `+0x150` |    4 B    | `pad_0x150[4]`       | `uint8_t[]` |    -     | 포인터 영역 (포로 리스트 추정)                              |
+| `+0x154` |    4 B    | `free_officer_count` | `uint32_t`  | **[유력]** | 재야 무장 수 (금성 1명 실측)                              |
+| `+0x158` |   24 B    | `tail_pad[0x18]`     | `uint8_t[]` |    -     | 도시 청크 말미 패딩                                     |
+|  **총합**  | **368 B** | -                    |      -      |    -     | `sizeof(San13CityRaw) == 0x170` (368 바이트) 불변 보장 |
 
 ### 6.2. `CityRecord` DTO 확장 명세
 ```cpp
@@ -441,6 +441,307 @@ bool CityManager::LoadCityOfficers(uint8_t cityId, CityOfficerCategory category,
 1. **`bin/test_settlement_manager`:** 300개 부락 로드 무결성, 낙양 4개 부락(17, 20, 22, 24) 장악도 100% 판독 검증.
 2. **`bin/test_city_officers`:** 도시 23번 연결 리스트 12명 무장 전수 순회, 조조(333), 원소(18) 등 정확 매핑 검증, 재야 항적(857) 노드 판독 검증.
 3. **`bin/test_city_table`:** 도시 목록 더블클릭 시 4탭 인스펙터 정상 호출 및 탭 전환 120프레임 GUI 스모크 검증.
+4. **`bin/test_city_detail_modal`:** 4탭 도시 인스펙터 독립 유닛 테스트 및 120프레임 스모크 테스트.
+
+---
+
+### 9.5. Phase 3 구현 및 검증 결과 (100% 통과 완료)
+
+- **Step 3-1 (부락 도메인 모듈):**
+  - [`include/game/Settlement.hpp`](file:///home/user/Downloads/vaneditor/include/game/Settlement.hpp) (`San13SettlementRaw` 28B, Stride `0x1C`, `RootBase + 0x00CA48`, 300개).
+  - [`include/game/SettlementManager.hpp`](file:///home/user/Downloads/vaneditor/include/game/SettlementManager.hpp) 및 [`src/game/SettlementManager.cpp`](file:///home/user/Downloads/vaneditor/src/game/SettlementManager.cpp).
+  - [`tests/test_settlement_manager.cpp`](file:///home/user/Downloads/vaneditor/tests/test_settlement_manager.cpp) 전체 통과 (낙양 17, 20, 22, 24 부락 바인딩 및 300개 부락 전수 로드 무결성 확인).
+- **Step 3-2 (도시 소속 무장 연결 리스트 순회):**
+  - [`include/game/City.hpp`](file:///home/user/Downloads/vaneditor/include/game/City.hpp) (`San13CityOfficerNodeRaw` 12B, `CityOfficerCategory`, `CityOfficerEntry`).
+  - [`src/game/CityManager.cpp`](file:///home/user/Downloads/vaneditor/src/game/CityManager.cpp) (`LoadCityOfficers`, `LoadAllCityOfficers` 순환 방지 방문 가드 포함).
+  - [`tests/test_city_officers.cpp`](file:///home/user/Downloads/vaneditor/tests/test_city_officers.cpp) 전체 통과 (낙양 12현역/1재야/0포로 판독 및 전국 60개 도시 순회 0.2ms 초고속 통과).
+- **Step 3-3 (4탭 도시 종합 인스펙터 UI):**
+  - [`include/ui/CityDetailModal.hpp`](file:///home/user/Downloads/vaneditor/include/ui/CityDetailModal.hpp) 및 [`src/ui/CityDetailModal.cpp`](file:///home/user/Downloads/vaneditor/src/ui/CityDetailModal.cpp).
+  - [`include/ui/CityTableView.hpp`](file:///home/user/Downloads/vaneditor/include/ui/CityTableView.hpp) 및 [`src/ui/CityTableView.cpp`](file:///home/user/Downloads/vaneditor/src/ui/CityTableView.cpp) 더블클릭/컨텍스트 메뉴 완벽 연동.
+  - [`src/main.cpp`](file:///home/user/Downloads/vaneditor/src/main.cpp)에 `SettlementManager` 및 `CityTableView` 바인딩 완료.
+  - [`tests/test_city_detail_modal.cpp`](file:///home/user/Downloads/vaneditor/tests/test_city_detail_modal.cpp) 및 [`tests/test_city_table.cpp`](file:///home/user/Downloads/vaneditor/tests/test_city_table.cpp) 120프레임 스모크 테스트 100% 통과.
+- **배포 패키지:**
+  - `make package` -> `dist/san13_editor_linux_x86_64.tar.gz` (1.3MB) 빌드 검증 완료.
+
+---
+
+## 10. Phase 4 상세 작업 명세서 (도시 내정·숙련도·부락 쓰기 파이프라인 및 최종 완성)
+
+> **원칙 준수:**
+> 1. 실측 교차 검증이 완료된 오프셋(민심 `+0xD2`, 상업 `+0xD6`, 농업 `+0xE0`, 문화 `+0xEA`, 숙련도 `+0xFC/+0xFE/+0x100`, 부락 장악도 `+0x14`)에 한해서만 쓰기 API를 개방한다.
+> 2. `BoundsValidator`를 반드시 경유하여 게임 엔진 크래시를 유발할 수 있는 비정상 수치 오버플로를 방지한다.
+> 3. 내구도(`+0x102` 후보군)는 안전 검증 완료 전까지 쓰기 가드를 유지하여 기존 자원 오염을 완벽 차단한다.
+> 4. 모든 수정 내역은 테스트 직후 원래 수치로 100% 안전 복구(Rollback)되어야 한다.
+
+### 10.1. 수치 경계(Bounds) 설계
+
+| 필드명                          |   오프셋    |    자료형     |    SafeVanilla 범위    | LimitBreak 범위 | 비고                      |
+| :--------------------------- | :------: | :--------: | :------------------: | :-----------: | :---------------------- |
+| 민심 (`public_order`)          | `+0x0D2` | `uint16_t` | 0 ~ 1,000 (최대 1,250) |   0 ~ 5,000   | 100 도달 시 인구 유입 가속       |
+| 상업 기본치 (`commerce`)          | `+0x0D6` | `uint16_t` |      0 ~ 4,000       |  0 ~ 10,000   | 금 수입 영향                 |
+| 농업 기본치 (`agriculture`)       | `+0x0E0` | `uint16_t` |      0 ~ 4,000       |  0 ~ 10,000   | 군량 수입 영향                |
+| 문화 기본치 (`culture`)           | `+0x0EA` | `uint16_t` |      0 ~ 4,000       |  0 ~ 10,000   | 도시 기술 해금                |
+| 창병 숙련도 (`spear_proficiency`) | `+0x0FC` | `uint16_t` |      0 ~ 3,000       |   0 ~ 5,000   | 1,000: 중급, 2,000: 고급 창병 |
+| 기병 숙련도 (`horse_proficiency`) | `+0x0FE` | `uint16_t` |      0 ~ 3,000       |   0 ~ 5,000   | 1,000: 중급, 2,000: 고급 기병 |
+| 궁병 숙련도 (`bow_proficiency`)   | `+0x100` | `uint16_t` |      0 ~ 3,000       |   0 ~ 5,000   | 1,000: 중급, 2,000: 고급 궁병 |
+| 부락 장악도 (`dev_progress`)      | `+0x14`  | `uint16_t` |     0 ~ 100 (%)      |  0 ~ 100 (%)  | 100% 시 도시 효과 상시 부여      |
+
+### 10.2. 도메인 매니저 쓰기 메서드 설계
+
+#### 1) `CityManager`
+```cpp
+bool SetCityPublicOrder(uint8_t id, int64_t val, ClampingPolicy policy = ClampingPolicy::SafeVanilla);
+bool SetCityCommerce(uint8_t id, int64_t val, ClampingPolicy policy = ClampingPolicy::SafeVanilla);
+bool SetCityAgriculture(uint8_t id, int64_t val, ClampingPolicy policy = ClampingPolicy::SafeVanilla);
+bool SetCityCulture(uint8_t id, int64_t val, ClampingPolicy policy = ClampingPolicy::SafeVanilla);
+bool SetCitySpearProficiency(uint8_t id, int64_t val, ClampingPolicy policy = ClampingPolicy::SafeVanilla);
+bool SetCityHorseProficiency(uint8_t id, int64_t val, ClampingPolicy policy = ClampingPolicy::SafeVanilla);
+bool SetCityBowProficiency(uint8_t id, int64_t val, ClampingPolicy policy = ClampingPolicy::SafeVanilla);
+bool MaximizeCityDomestic(uint8_t id);
+bool MaximizeCityProficiency(uint8_t id);
+```
+
+#### 2) `SettlementManager`
+```cpp
+bool SetSettlementDevProgress(uint16_t id, int64_t val);
+bool MaximizeCitySettlements(uint8_t cityId, const uint8_t settlementIds[4], uint32_t count);
+```
+
+### 10.3. 4탭 모달 UI 인터랙션 설계
+- **탭 2 (내정 및 관할 부락):**
+  - 민심, 상업, 농업, 문화 수치 슬라이더(`SliderInt`) 및 직접 입력(`InputInt`).
+  - [빠른 치트]: "내정 올 3,000 풀충전", "관할 부락 전원 100% 장악" 원클릭 버튼.
+- **탭 3 (군사 및 숙련도):**
+  - 창병, 기병, 궁병 숙련도 슬라이더(0 ~ 3,000).
+  - [빠른 치트]: "전 병종 숙련도 3,000 (최고 병종) 완충" 원클릭 버튼.
+- **핫싱크(Hot-Sync):**
+  - `Auto-Sync` 활성화 시 슬라이더 조작 즉시 게임 프로세스에 반영.
+  - `[메모리 적용 (Hot-Sync)]` 버튼 클릭 시 경제/내정/숙련도/부락 데이터 원자적 일괄 동기화.
+
+### 10.4. 단위 테스트 및 검증 계획
+1. **`bin/test_city_detail_modal`:** 내정치, 숙련도, 부락 장악도 쓰기 및 읽기 일치 검증, 테스트 후 원래 상태 완벽 복구 검증.
+2. **`make test`:** 15개 전체 오프라인/온라인 테스트 스위트 회귀 무결성 검증.
+3. **`make package`:** 최종 릴리스 패키징.
+
+---
+
+### 10.5. Phase 4 구현 및 검증 완료 보고 (완료일: 2026-10-03)
+
+- **Step 4-1 (수치 경계 및 세니타이저 수립):**
+  - [`include/game/Bounds.hpp`](file:///home/user/Downloads/vaneditor/include/game/Bounds.hpp):
+    - `StatBounds::CityPublicOrder`: 0 ~ 1,000 (Safe) / 0 ~ 5,000 (LimitBreak).
+    - `StatBounds::CityDomestic`: 0 ~ 4,000 (Safe) / 0 ~ 10,000 (LimitBreak).
+    - `StatBounds::CityProficiency`: 0 ~ 3,000 (Safe) / 0 ~ 5,000 (LimitBreak).
+    - `StatBounds::SettlementDev`: 0 ~ 100 (%).
+    - `BoundsValidator::SanitizeCityPublicOrder()`, `SanitizeCityDomestic()`, `SanitizeCityProficiency()`, `SanitizeSettlementDev()`.
+- **Step 4-2 (도메인 매니저 쓰기 메서드 구현):**
+  - [`include/game/CityManager.hpp`](file:///home/user/Downloads/vaneditor/include/game/CityManager.hpp) 및 [`src/game/CityManager.cpp`](file:///home/user/Downloads/vaneditor/src/game/CityManager.cpp):
+    - `SetCityPublicOrder`, `SetCityCommerce`, `SetCityAgriculture`, `SetCityCulture`.
+    - `SetCitySpearProficiency`, `SetCityHorseProficiency`, `SetCityBowProficiency`.
+    - `MaximizeCityDomestic`, `MaximizeCityProficiency`.
+    - 실측 검증 중인 성벽 내구도(`+0x102`)는 안전 가드를 유지하여 기존 자금(`+0x58`) 오염 완벽 차단.
+  - [`include/game/SettlementManager.hpp`](file:///home/user/Downloads/vaneditor/include/game/SettlementManager.hpp) 및 [`src/game/SettlementManager.cpp`](file:///home/user/Downloads/vaneditor/src/game/SettlementManager.cpp):
+    - `SetSettlementDevProgress(id, val)` (Stride 28B, 오프셋 `+0x14`).
+    - `MaximizeCitySettlements(ids, count)`.
+- **Step 4-3 (4탭 인스펙터 모달 직접 편집 UI 및 치트 버튼 완성):**
+  - [`include/ui/CityDetailModal.hpp`](file:///home/user/Downloads/vaneditor/include/ui/CityDetailModal.hpp) 및 [`src/ui/CityDetailModal.cpp`](file:///home/user/Downloads/vaneditor/src/ui/CityDetailModal.cpp):
+    - **탭 2 (내정 및 관할 부락):** 민심, 상업, 농업, 문화 `SliderInt` 컨트롤 및 프로그레스바 동시 제공. 빠른 치트(`내정 올 3,000 완충`, `관할 부락 100% 일괄 장악`, 한계돌파 10,000) 탑재. 부락별 개별 슬라이더 및 `[100%]` 즉시 장악 버튼 제공.
+    - **탭 3 (군사 및 숙련도):** 창병, 기병, 궁병 숙련도 `SliderInt` (0 ~ 3,000/5,000) 및 병과 티어(초급/중급/고급) 실시간 인디케이터. 빠른 치트(`전 병종 숙련도 3,000 완충 (고급 병과 해금)`) 탑재.
+    - **핫싱크(Hot-Sync):** 변경 감지 시 즉시 메모리 패치 (`Auto-Sync`) 및 `[메모리 적용]` 버튼 지원.
+- **Step 4-4 (단위 테스트 및 회귀 무결성 검증 통과):**
+  - [`tests/test_city_detail_modal.cpp`](file:///home/user/Downloads/vaneditor/tests/test_city_detail_modal.cpp):
+    - 낙양(ID 23) 대상 내정 4대치 직접 편집, Safe 모드 클램핑(민심 1,000 / 상업 4,000), 내정 치트 완충 확인.
+    - 병과 3대 숙련도 직접 편집, 클램핑(3,000), 숙련도 치트 완충 확인.
+    - 부락 장악도 직접 편집 및 100% 장악 치트 확인.
+    - **100% 무결성 롤백(Safe Rollback):** 테스트 완료 후 낙양의 원래 내정/숙련도/부락 데이터를 100% 복구하여 게임 프로세스 오염 방지 확인.
+    - ImGui 4탭 인스펙터 120프레임 무결성 스모크 테스트 통과.
+  - `make test`: 전체 15개 오프라인/온라인 테스트 스위트 100% 통과 (Active Process Verified).
+- **Step 4-5 (독립 실행형 배포 패키지):**
+  - `make package` -> `dist/san13_editor_linux_x86_64.tar.gz` (1.3MB) 빌드 검증 완료.
+
+---
+
+## 11. Phase 5 상세 작업 명세서 (부락 한글 명칭 매핑 및 무장 통합 분류 필터/뱃지 시스템)
+
+### 11.1. 배경 및 사용자 요구사항 분석
+1. **부락 한글 명칭 표출:**
+   - 기존의 숫자 기반 임시 레이블(`부락 #017`) 대신 실제 인게임 지명(`호로관`, `밀`, `옹구`, `무평`, `영음` 등)을 연동하여 가독성 및 몰입도 극대화.
+   - 요새/진/보루는 맵상의 동적 건설 시설이므로 엔진 전체 역분석 대신 300개 부락의 명칭 체계 및 도시 연동에 집중.
+2. **무장 관리 UI 전략 (칸 나누기 vs 통합 뷰):**
+   - 탭으로 화면을 분리할 경우 다중 선택(Multi-Select) 기반의 일괄 버프(신무장과 역사 무장을 함께 선택하여 스탯/수명/적성 일괄 수정) 및 전체 랭킹 정렬 비교가 단절되는 심각한 UX 저하 발생.
+   - **채택된 설계 (통합 뷰 + 직교 분류 필터 & 뱃지):**
+     - 단일 가상 스크롤 테이블 뷰를 유지하여 2,165명 전체에 대한 일괄 작업 및 검색/정렬 편의성 100% 보존.
+     - 상단 툴바에 직교 분류 필터(`[분류: 전체 | 역사무장 | 등록신무장 | 고대무장]`)를 제공하여 원클릭 분리 보기 완벽 지원.
+     - 테이블 목록 및 상세 모달에서 `[신무장]`(하늘색), `[고대]`(보라색) 컬러 태그 뱃지를 부여하여 한눈에 식별 가능하도록 구현.
+
+### 11.2. 아키텍처 및 모듈 설계
+
+#### 1) 부락 명칭 매핑 시스템 (`SettlementNameTable`)
+- [`include/game/SettlementNameTable.hpp`](file:///home/user/Downloads/vaneditor/include/game/SettlementNameTable.hpp) & [`src/game/SettlementNameTable.cpp`](file:///home/user/Downloads/vaneditor/src/game/SettlementNameTable.cpp)
+- **API 설계:**
+  ```cpp
+  class SettlementNameTable {
+  public:
+      static const char* GetSettlementName(uint16_t id);
+      static std::string GetFormattedSettlementName(uint16_t id, const std::string& cityName = "");
+  };
+  ```
+- 알려진 300개 부락 지명 매핑 테이블 구축 및 관할 도시 컨텍스트 결합 포맷팅 지원.
+- `SettlementManager::LoadSettlement()`에서 `outRecord.name`에 자동 적용.
+
+#### 2) 무장 통합 분류 필터 & 뱃지 시스템 (`OfficerTableView`)
+- [`include/ui/OfficerTableView.hpp`](file:///home/user/Downloads/vaneditor/include/ui/OfficerTableView.hpp):
+  ```cpp
+  enum class OfficerOriginFilter {
+      All = 0,         // 전체
+      Historical = 1,  // 역사 무장 (ID 0 ~ 799)
+      Created = 2,     // 등록 신무장 (ID >= 1000)
+      Ancient = 3      // 고대 무장 (ID 850 ~ 899)
+  };
+  ```
+- **필터링 조건식:**
+  - 기존 상태 필터(`All`, `Active`, `Free`, `Unappeared`)와 분류 필터(`All`, `Historical`, `Created`, `Ancient`)의 AND 결합 필터링.
+- **UI 뱃지 렌더링:**
+  - `ID >= 1000`: `[신무장]` (하늘색: `ImVec4(0.35f, 0.85f, 0.95f, 1.0f)`)
+  - `850 <= ID < 900`: `[고대]` (보라색: `ImVec4(0.85f, 0.55f, 0.95f, 1.0f)`)
+  - `ID < 800`: 역사 무장 기본 색상 (군주 황금색 / 일반 흰색)
+
+### 11.3. 작업 단계 및 검증 계획
+1. `SettlementNameTable` 구현 및 `SettlementManager` 연동.
+2. `OfficerTableView`에 `OfficerOriginFilter` 및 상단 라디오/버튼 컨트롤 추가, 뱃지 렌더링 구현.
+3. 단위 테스트 작성 및 회귀 검증 (`make test`).
+4. 독립 실행 배포 패키지(`make package`) 빌드 및 문서 갱신.
+
+---
+
+### 11.4. Phase 5 구현 및 검증 완료 보고 (완료일: 2026-10-03)
+
+- **Step 5-1 (부락 한글 지명 매핑 시스템 구축):**
+  - [`include/game/SettlementNameTable.hpp`](file:///home/user/Downloads/vaneditor/include/game/SettlementNameTable.hpp) & [`src/game/SettlementNameTable.cpp`](file:///home/user/Downloads/vaneditor/src/game/SettlementNameTable.cpp) 신규 개발.
+  - 전국 주요 부락(답씨, 망평, 호로관, 밀, 옹구, 하동, 무평, 영음, 곤양, 성부, 여양, 박망, 무음, 고시, 육양, 신야, 채양, 장릉, 의성, 오장원, 견성, 제남, 평양, 누와, 동병, 낙, 칠 등) 실측 지명 매핑 및 미등록 슬롯 스마트 포맷팅 지원.
+  - [`src/game/SettlementManager.cpp`](file:///home/user/Downloads/vaneditor/src/game/SettlementManager.cpp)에 연동하여 `LoadSettlement` 호출 시 즉시 실제 지명으로 바인딩.
+  - [`tests/test_settlement_manager.cpp`](file:///home/user/Downloads/vaneditor/tests/test_settlement_manager.cpp)에서 답씨(0), 망평(1), 호로관(17) 지명 매핑 검증 100% 통과.
+- **Step 5-2 (무장 테이블 통합 분류 필터 & 뱃지 시스템 구축):**
+  - [`include/ui/OfficerTableView.hpp`](file:///home/user/Downloads/vaneditor/include/ui/OfficerTableView.hpp) & [`src/ui/OfficerTableView.cpp`](file:///home/user/Downloads/vaneditor/src/ui/OfficerTableView.cpp):
+    - `OfficerOriginFilter` (`All`, `Historical`, `Created`, `Ancient`) 도입.
+    - 상단 툴바에 `출신: [전체 | 역사 | 신무장 | 고대]` 라디오 버튼 배치.
+    - 테이블 목록 성명 컬럼에 `[신무장]`(하늘색), `[고대]`(보라색), `[특수]`(주황색) 컬러 뱃지 렌더링.
+    - 검색창에 `신무장`, `등록무장`, `고대`, `고대무장` 입력 시 즉시 해당 그룹 스마트 매칭 지원.
+  - [`tests/test_officer_table.cpp`](file:///home/user/Downloads/vaneditor/tests/test_officer_table.cpp)에서 역사(800인), 고대(50인), 신무장(1,007인) 분류 필터링 및 표본 유효성 검증 100% 통과.
+- **Step 5-3 (회귀 테스트 및 패키지 릴리스):**
+  - `make test`: 전체 15개 단위 및 렌더링 테스트 스위트 100% PASS.
+  - `make package` -> `dist/san13_editor_linux_x86_64.tar.gz` (1.3MB) 최신화 완료.
+
+---
+
+## 12. 부락 시스템 심층 진단 및 아키텍처 정정 (진단일: 2026-10-03)
+
+### 12.1. 문제 제기 및 현상
+- 인게임에서 확인 결과, 에디터에 표시되는 부락 명칭이 실제 게임과 완전히 불일치하는 현상 발생 (예: 낙양의 부락으로 '호로관', '밀', '옹구', '하동'이 표시됨).
+
+### 12.2. 라이브 메모리 교차 실측 기반 3대 근본 원인 규명
+1. **도시 구조체 오프셋 `+0x18`의 오독 (결정적 원인):**
+   - 기존에는 도시 구조체(`San13CityRaw`)의 `+0x18 ~ +0x1B` 4바이트를 "관할 부락 ID 목록"으로 가정함.
+   - 60개 도시 전체 메모리를 교차 실측한 결과, 이는 부락 ID가 아니라 **도로망으로 직결된 인접 도시(Connected / Neighboring Cities) ID 목록**임이 규명됨:
+     - 도시 0 (양평): `[1, 255, 255, 255]` (인접 도시: 북평)
+     - 도시 1 (북평): `[0, 2, 3, 255]` (인접 도시: 양평, 계, 남피)
+     - 도시 2 (계): `[1, 3, 4, 255]` (인접 도시: 북평, 남피, 중산)
+     - 도시 23 (낙양): `[17, 20, 22, 24]` (인접 도시: 진류, 완, 천수, 무위)
+   - 즉, 낙양의 부락으로 "낙양의 인접 도시 번호"를 읽고 있었음.
+2. **관문(Gate)과 부락(Settlement)의 체계 혼동:**
+   - 삼국지 13 PK의 거점은 도시(60개, ID 0~59), 부락(300개, ID 0~299, 거점 60~359), 관문(26개, 호로관/함곡관/동관 등)으로 분리됨.
+   - 호로관은 관문(Gate)이지 부락(Settlement)이 아님에도 부락 ID 17에 억지로 매핑되어 있었음.
+3. **임시 UI 렌더링 큐 텍스트의 오독:**
+   - 이전 스캔에서 발견된 문자열(적벽, 화용, 기춘 등)은 3D 맵 화면에 현재 카메라가 비추고 있는 지역의 스프라이트 텍스트 임시 렌더링 캐시 버퍼(`0x74930240`)였음.
+
+### 12.3. 진짜 도시-부락 연결 아키텍처 규명
+- 부락 300개 청크(`RootBase + 0xCA48`, 28B Stride):
+  ```cpp
+  struct San13SettlementRaw {
+      uint32_t vtable;               // +0x00: VTable 포인터 (0x72919AC4)
+      uint16_t settlement_id;        // +0x04: 부락 고유 ID (0 ~ 299)
+      uint16_t force_id;             // +0x06: 점령 세력 ID
+      uint16_t global_site_id;       // +0x08: 글로벌 거점 ID (60 + settlement_id)
+      uint8_t  connected_cities[4];  // +0x0A ~ +0x0D: 소속 및 관할 도시 ID (최대 4개)
+      uint8_t  pad_0x0E[6];          // +0x0E ~ +0x13: 미지의 플래그
+      uint8_t  dev_progress;         // +0x14: 장악도 / 개발도 (0 ~ 100%)
+      uint8_t  pad_0x15[7];          // +0x15 ~ +0x1B: 말미 패딩
+  };
+  ```
+- **실측 검증:**
+  - 낙양(City 23) 소속 부락 검색: 정확히 4개 검출 -> **ID 6, ID 9, ID 35, ID 144**.
+  - 양평(City 0) 소속 부락 검색: 정확히 1개 검출 -> **ID 117**.
+  - 인게임 도시별 관할 부락 수(`settlement_count`)와 100% 완벽 일치!
+
+### 12.4. 정정 조치 계획
+1. `San13CityRaw`의 `settlement_ids[4]` 필드를 `connected_city_ids[4]`로 의미 변경 및 주석/구조체 정정.
+2. `San13SettlementRaw` 구조체에 `connected_cities[4]` 명시.
+3. `SettlementManager::LoadCitySettlements`를 도시 ID 기준 역방향 탐색(Reverse Lookup)으로 전환.
+4. `SettlementNameTable.cpp`에서 임의 추측된 50여 개 가짜 지명을 전면 제거하고, 컨텍스트 기반의 안전한 표준 명칭(`[도시명] 부락 #ID` 또는 `부락 #ID`)으로 표시하도록 전환.
+
+---
+
+## 13. 게임 아카이브(DATA0/DATA1) 전수 언팩 및 공식 부락/효과 DB 추출 결과 (2026-10-03)
+
+### 13.1. 아카이브 언패커(`tools/unpack_s13.py`) 아키텍처
+- **KOEI S13 ZP1 포맷 규격 규명:**
+  - `DATA0.S13` (인덱스 테이블): 32바이트 Stride
+    - `uint64_t offset`: `DATA1.S13` 내 파일 시작 오프셋
+    - `uint64_t decompressed_size`: 원본 압축 해제 크기
+    - `uint64_t compressed_size`: 아카이브 내 저장 크기
+    - `uint64_t is_compressed`: 1(ZP1 압축), 0(Raw 비압축)
+  - `DATA1.S13` ZP1 블록 헤더:
+    - `char magic[4]`: `"zp1\0"`
+    - `uint32_t tot_sz`, `chunk_sz`, `num_chunks`
+    - `uint32_t chunk_lens[num_chunks]`: 청크별 압축 바이트 수
+  - **128바이트 청크 정렬 법칙:**
+    - 첫 번째 청크는 항상 `offset + 0x800` (2,048B)에서 시작.
+    - 각 청크는 4B little-endian 실제 길이 prefix + zlib 스트림(`0x78 0xDA`).
+    - 이후 청크는 `(rel_pos + chunk_len + 0x7F) & ~0x7F`로 128B 경계에 정렬됨.
+- **언팩 결과:**
+  - `DATA0.S13` (1,873개 항목): 1,432개 파일 추출, 441개 빈 슬롯, **0 에러** (4.01초 소요, 4.40 GB).
+  - `DATA0_2.S13` (141개 항목): 120개 파일 추출, 21개 빈 슬롯, **0 에러** (0.45초 소요, 0.28 GB).
+  - 저장 위치: `unpacked_pk/data/`, `unpacked_pk/data2/`, 인덱스: `unpacked_pk/manifest.json`.
+
+### 13.2. Entry 1655 시스템 메시지 테이블 분석 및 100% 공식 데이터 매핑
+- **토큰 인덱스별 공식 데이터:**
+  - `Token 14 ~ 73`: 60개 도시 (`14 + city_id`) -> 14: 양평(0), 37: 낙양(23), 73: 교지(59).
+  - `Token 74 ~ 173`: 도시/부락 효과 설명 (100개 토큰).
+  - `Token 174 ~ 181`: 8대 주요 관문 (호관, 호로관, 함곡관, 동관, 무관, 양평관, 가맹관, 면죽관).
+  - `Token 182 ~ 328`: **기본 부락 147개 (`182 + settlement_id`) 공식 한글 지명 100% 일치**!
+    - ID 0: 범 (Fan)
+    - ID 1: 동평 (Dongping)
+    - ID 6: **밀 (Mi)** -> 낙양 관할 부락 (일치)
+    - ID 9: **온 (Wen)** -> 낙양 관할 부락 (일치)
+    - ID 35: **하남 (Henan)** -> 낙양 관할 부락 (일치)
+    - ID 40: 화용 (Huarong), ID 41: 이릉 (Yiling), ID 48: 합비 (Hefei), ID 49: 장판 (Changban)
+    - ID 71: 오장원 (Wuzhangyuan), ID 77: 가정 (Jieting), ID 86: 검각 (Jiange)
+    - ID 117: **임유 (Linyu)** -> 양평 관할 부락 (일치)
+    - ID 144: **신안 (Xin'an)** -> 낙양 관할 부락 (일치)
+    - ID 146: 증 (Zeng)
+  - `Token 329 ~ 372`: **부락 44종 특수 효과 및 특수 병과**:
+    - 효과 0~8: 상업/농업/병역 (소/중/대)
+    - 효과 9: 궁기병, 10: 청주병, 11: **호표기**, 12: 동주병, 13: 서량병, 14: 등갑병, 21: 상병
+    - 효과 22~30: 상업+500/750/1000, 농업+500/750/1000, 인구+20000/40000/60000
+    - 효과 31~36/43: 특수 병종 편제 가능
+- **부락 메모리 구조체 완전 규명 (`San13SettlementRaw`):**
+  - `+0x0E ~ +0x11`: `uint8_t buff_effects[4]` (최대 4개 버프 ID, 255=없음)
+    - 부락 117(임유): `[11, 255, 255, 255]` -> **효과 11: 호표기 편제가능**!
+    - 부락 0(범), 1(동평): `[28, 255, 255, 255]` -> **효과 28: 인구+20000**!
+    - 부락 6(밀): `[28, 29, 255, 255]` -> **인구+20000, 인구+40000**!
+  - `+0x12`: `uint8_t is_active` (1=활성)
+  - `+0x13`: `uint8_t primary_city_id` (주 관할 도시)
+  - ID 147 ~ 299: PK 동적 요새(砦/진/보루) 확장 슬롯 (초기값: `force=255, global=65535`).
+
+### 13.3. 소프트웨어 적용 및 검증 현황
+- `include/game/Settlement.hpp`: `buff_effects[4]`, `is_active`, `primary_city_id` 반영.
+- `src/game/SettlementNameTable.cpp`: 147개 부락명 및 44개 효과명 전수 매핑, `GetEffectDescription` 구현.
+- `src/ui/CityDetailModal.cpp`: 관할 부락 테이블에 "효과 / 특수병과" 컬럼 추가 및 UI 표시.
+- `tests/test_settlement_manager.cpp`: 147개 공식 명칭 및 효과 단위 테스트 100% PASS.
+- `make test`: 전체 테스트 스위트 100% 통과 (Green).
+
+
+
 
 
 

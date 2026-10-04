@@ -13,10 +13,10 @@ IMGUI_DIR = vendor/imgui
 CORE_SRCS = $(SRC_DIR)/core/LinuxMemoryDriver.cpp
 CORE_OBJS = $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(CORE_SRCS))
 
-GAME_SRCS = $(SRC_DIR)/game/GameVersion.cpp $(SRC_DIR)/game/OfficerManager.cpp $(SRC_DIR)/game/OfficerNameTable.cpp $(SRC_DIR)/game/CityManager.cpp
+GAME_SRCS = $(SRC_DIR)/game/GameVersion.cpp $(SRC_DIR)/game/OfficerManager.cpp $(SRC_DIR)/game/OfficerNameTable.cpp $(SRC_DIR)/game/TacticManager.cpp $(SRC_DIR)/game/ForceManager.cpp $(SRC_DIR)/game/CityManager.cpp $(SRC_DIR)/game/SettlementManager.cpp $(SRC_DIR)/game/SettlementNameTable.cpp $(SRC_DIR)/game/ItemManager.cpp $(SRC_DIR)/game/ItemNameTable.cpp
 GAME_OBJS = $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(GAME_SRCS))
 
-UI_SRCS = $(SRC_DIR)/ui/FontHelper.cpp $(SRC_DIR)/ui/UIManager.cpp $(SRC_DIR)/ui/HangulAutomata.cpp $(SRC_DIR)/ui/OfficerTableView.cpp $(SRC_DIR)/ui/CityTableView.cpp
+UI_SRCS = $(SRC_DIR)/ui/FontHelper.cpp $(SRC_DIR)/ui/UIManager.cpp $(SRC_DIR)/ui/HangulAutomata.cpp $(SRC_DIR)/ui/OfficerTableView.cpp $(SRC_DIR)/ui/CityTableView.cpp $(SRC_DIR)/ui/CityDetailModal.cpp $(SRC_DIR)/ui/ItemTableView.cpp
 UI_OBJS = $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(UI_SRCS))
 
 IMGUI_SRCS = $(IMGUI_DIR)/imgui.cpp \
@@ -43,6 +43,12 @@ TEST_OFFICER_BIN = $(BIN_DIR)/test_officer_manager
 TEST_CITY_SRC = $(TEST_DIR)/test_city_manager.cpp
 TEST_CITY_BIN = $(BIN_DIR)/test_city_manager
 
+TEST_SETTLEMENT_SRC = $(TEST_DIR)/test_settlement_manager.cpp
+TEST_SETTLEMENT_BIN = $(BIN_DIR)/test_settlement_manager
+
+TEST_CITY_OFFICERS_SRC = $(TEST_DIR)/test_city_officers.cpp
+TEST_CITY_OFFICERS_BIN = $(BIN_DIR)/test_city_officers
+
 TEST_GUI_SRC = $(TEST_DIR)/test_gui_window.cpp
 TEST_GUI_BIN = $(BIN_DIR)/test_gui_window
 
@@ -54,6 +60,9 @@ TEST_OFFICER_EDIT_BIN = $(BIN_DIR)/test_officer_edit
 
 TEST_CITY_TABLE_SRC = $(TEST_DIR)/test_city_table.cpp
 TEST_CITY_TABLE_BIN = $(BIN_DIR)/test_city_table
+
+TEST_CITY_MODAL_SRC = $(TEST_DIR)/test_city_detail_modal.cpp
+TEST_CITY_MODAL_BIN = $(BIN_DIR)/test_city_detail_modal
 
 TEST_BATCH_SRC = $(TEST_DIR)/test_batch_actions.cpp
 TEST_BATCH_BIN = $(BIN_DIR)/test_batch_actions
@@ -67,13 +76,25 @@ TEST_HANGUL_WIDGET_BIN = $(BIN_DIR)/test_hangul_input_widget
 TEST_OFFICER_NAMES_SRC = $(TEST_DIR)/test_officer_names.cpp
 TEST_OFFICER_NAMES_BIN = $(BIN_DIR)/test_officer_names
 
+TEST_TACTIC_SRC = $(TEST_DIR)/test_tactic_manager.cpp
+TEST_TACTIC_BIN = $(BIN_DIR)/test_tactic_manager
+
+TEST_MULTI_BONDS_SRC = $(TEST_DIR)/test_multi_bonds.cpp
+TEST_MULTI_BONDS_BIN = $(BIN_DIR)/test_multi_bonds
+
+TEST_FORCE_SRC = $(TEST_DIR)/test_force_manager.cpp
+TEST_FORCE_BIN = $(BIN_DIR)/test_force_manager
+
+TEST_ITEM_SRC = $(TEST_DIR)/test_item_manager.cpp
+TEST_ITEM_BIN = $(BIN_DIR)/test_item_manager
+
 APP_SRC = $(SRC_DIR)/main.cpp
 APP_BIN = $(BIN_DIR)/san13_editor
 DIST_DIR = dist
 PACKAGE_DIR = $(DIST_DIR)/san13_editor_linux_x86_64
 PACKAGE_TAR = $(DIST_DIR)/san13_editor_linux_x86_64.tar.gz
 
-all: test_memory test_bounds test_officer test_city test_gui test_officer_table test_officer_edit test_city_table test_batch test_hangul test_hangul_widget test_officer_names $(APP_BIN)
+all: $(APP_BIN)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp $(ALL_HEADERS)
 	@mkdir -p $(dir $@)
@@ -99,6 +120,14 @@ $(TEST_CITY_BIN): $(ALL_OBJS) $(TEST_CITY_SRC)
 	@mkdir -p $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) $(TEST_CITY_SRC) $(ALL_OBJS) -o $@ $(LDFLAGS)
 
+$(TEST_SETTLEMENT_BIN): $(ALL_OBJS) $(TEST_SETTLEMENT_SRC)
+	@mkdir -p $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) $(TEST_SETTLEMENT_SRC) $(ALL_OBJS) -o $@ $(LDFLAGS)
+
+$(TEST_CITY_OFFICERS_BIN): $(ALL_OBJS) $(TEST_CITY_OFFICERS_SRC)
+	@mkdir -p $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) $(TEST_CITY_OFFICERS_SRC) $(ALL_OBJS) -o $@ $(LDFLAGS)
+
 $(TEST_GUI_BIN): $(ALL_OBJS) $(UI_OBJS) $(IMGUI_OBJS) $(TEST_GUI_SRC)
 	@mkdir -p $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) $(TEST_GUI_SRC) $(ALL_OBJS) $(UI_OBJS) $(IMGUI_OBJS) -o $@ $(UI_LDFLAGS)
@@ -115,6 +144,10 @@ $(TEST_CITY_TABLE_BIN): $(ALL_OBJS) $(UI_OBJS) $(IMGUI_OBJS) $(TEST_CITY_TABLE_S
 	@mkdir -p $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) $(TEST_CITY_TABLE_SRC) $(ALL_OBJS) $(UI_OBJS) $(IMGUI_OBJS) -o $@ $(UI_LDFLAGS)
 
+$(TEST_CITY_MODAL_BIN): $(ALL_OBJS) $(UI_OBJS) $(IMGUI_OBJS) $(TEST_CITY_MODAL_SRC)
+	@mkdir -p $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) $(TEST_CITY_MODAL_SRC) $(ALL_OBJS) $(UI_OBJS) $(IMGUI_OBJS) -o $@ $(UI_LDFLAGS)
+
 $(TEST_BATCH_BIN): $(ALL_OBJS) $(UI_OBJS) $(IMGUI_OBJS) $(TEST_BATCH_SRC)
 	@mkdir -p $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) $(TEST_BATCH_SRC) $(ALL_OBJS) $(UI_OBJS) $(IMGUI_OBJS) -o $@ $(UI_LDFLAGS)
@@ -127,9 +160,25 @@ $(TEST_HANGUL_WIDGET_BIN): $(ALL_OBJS) $(UI_OBJS) $(IMGUI_OBJS) $(TEST_HANGUL_WI
 	@mkdir -p $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) $(TEST_HANGUL_WIDGET_SRC) $(ALL_OBJS) $(UI_OBJS) $(IMGUI_OBJS) -o $@ $(UI_LDFLAGS)
 
-$(TEST_OFFICER_NAMES_BIN): $(BUILD_DIR)/game/OfficerNameTable.o $(TEST_OFFICER_NAMES_SRC)
+$(TEST_OFFICER_NAMES_BIN): $(BUILD_DIR)/game/OfficerNameTable.o $(BUILD_DIR)/game/TacticManager.o $(TEST_OFFICER_NAMES_SRC)
 	@mkdir -p $(BIN_DIR)
-	$(CXX) $(CXXFLAGS) $(TEST_OFFICER_NAMES_SRC) $(BUILD_DIR)/game/OfficerNameTable.o -o $@ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $(TEST_OFFICER_NAMES_SRC) $(BUILD_DIR)/game/OfficerNameTable.o $(BUILD_DIR)/game/TacticManager.o -o $@ $(LDFLAGS)
+
+$(TEST_TACTIC_BIN): $(ALL_OBJS) $(TEST_TACTIC_SRC)
+	@mkdir -p $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) $(TEST_TACTIC_SRC) $(ALL_OBJS) -o $@ $(LDFLAGS)
+
+$(TEST_MULTI_BONDS_BIN): $(ALL_OBJS) $(TEST_MULTI_BONDS_SRC)
+	@mkdir -p $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) $(TEST_MULTI_BONDS_SRC) $(ALL_OBJS) -o $@ $(LDFLAGS)
+
+$(TEST_FORCE_BIN): $(ALL_OBJS) $(TEST_FORCE_SRC)
+	@mkdir -p $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) $(TEST_FORCE_SRC) $(ALL_OBJS) -o $@ $(LDFLAGS)
+
+$(TEST_ITEM_BIN): $(ALL_OBJS) $(TEST_ITEM_SRC)
+	@mkdir -p $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) $(TEST_ITEM_SRC) $(ALL_OBJS) -o $@ $(LDFLAGS)
 
 $(APP_BIN): $(ALL_OBJS) $(UI_OBJS) $(IMGUI_OBJS) $(APP_SRC)
 	@mkdir -p $(BIN_DIR)
@@ -137,7 +186,7 @@ $(APP_BIN): $(ALL_OBJS) $(UI_OBJS) $(IMGUI_OBJS) $(APP_SRC)
 
 TOOL_SRCS = $(wildcard tools/*.cpp)
 TOOL_BINS = $(patsubst tools/%.cpp, $(BIN_DIR)/%, $(TOOL_SRCS))
-TOOL_COMMON_OBJS = $(BUILD_DIR)/core/LinuxMemoryDriver.o $(BUILD_DIR)/game/GameVersion.o $(BUILD_DIR)/game/OfficerNameTable.o $(BUILD_DIR)/game/CityManager.o
+TOOL_COMMON_OBJS = $(BUILD_DIR)/core/LinuxMemoryDriver.o $(BUILD_DIR)/game/GameVersion.o $(BUILD_DIR)/game/OfficerNameTable.o $(BUILD_DIR)/game/TacticManager.o $(BUILD_DIR)/game/CityManager.o
 
 $(BIN_DIR)/san13_tool: tools/san13_tool.c
 	@mkdir -p $(BIN_DIR)
@@ -186,6 +235,14 @@ test_city: $(TEST_CITY_BIN)
 	@echo "=== Running Phase 4.4 City Manager Domain Unit Tests ==="
 	./$(TEST_CITY_BIN)
 
+test_settlement: $(TEST_SETTLEMENT_BIN)
+	@echo "=== Running Phase 3.1 Settlement Manager Domain Unit Tests ==="
+	./$(TEST_SETTLEMENT_BIN)
+
+test_city_officers: $(TEST_CITY_OFFICERS_BIN)
+	@echo "=== Running Phase 3.2 City Officer Linked-List Unit Tests ==="
+	./$(TEST_CITY_OFFICERS_BIN)
+
 test_gui: $(TEST_GUI_BIN)
 	@echo "=== Running Phase 5.1 Dear ImGui GUI Pipeline Smoke Test ==="
 	./$(TEST_GUI_BIN) --smoke-test
@@ -201,6 +258,10 @@ test_officer_edit: $(TEST_OFFICER_EDIT_BIN)
 test_city_table: $(TEST_CITY_TABLE_BIN)
 	@echo "=== Running Phase 5.4 City Resource Editor & Table View Test ==="
 	./$(TEST_CITY_TABLE_BIN) --smoke-test
+
+test_city_modal: $(TEST_CITY_MODAL_BIN)
+	@echo "=== Running Phase 4 4-Tab City Inspector & Direct Editing Tests ==="
+	./$(TEST_CITY_MODAL_BIN) --smoke-test
 
 test_batch: $(TEST_BATCH_BIN)
 	@echo "=== Running Phase 5.5 Batch Actions & Multi-Select Test ==="
@@ -218,10 +279,26 @@ test_officer_names: $(TEST_OFFICER_NAMES_BIN)
 	@echo "=== Running Phase 5.7 Officer Korean Name Table Unit Tests ==="
 	./$(TEST_OFFICER_NAMES_BIN)
 
-test_offline: test_bounds test_hangul test_hangul_widget test_officer_names
+test_tactic: $(TEST_TACTIC_BIN)
+	@echo "=== Running Phase 1 Custom Tactic Unit Tests ==="
+	./$(TEST_TACTIC_BIN)
+
+test_multi_bonds: $(TEST_MULTI_BONDS_BIN)
+	@echo "=== Running Phase 2 Multi-Bonds Unit Tests ==="
+	./$(TEST_MULTI_BONDS_BIN)
+
+test_force: $(TEST_FORCE_BIN)
+	@echo "=== Running Phase 3 Force Manager Unit Tests ==="
+	./$(TEST_FORCE_BIN)
+
+test_item: $(TEST_ITEM_BIN)
+	@echo "=== Running Phase 5 Item Manager Domain Unit Tests ==="
+	./$(TEST_ITEM_BIN)
+
+test_offline: test_bounds test_hangul test_hangul_widget test_officer_names test_tactic
 	@echo "=== All Offline Unit & Integration Tests Passed (No Live Process Required) ==="
 
-test_live: test_memory test_officer test_city test_gui test_officer_table test_officer_edit test_city_table test_batch
+test_live: test_memory test_officer test_city test_settlement test_city_officers test_city_modal test_gui test_officer_table test_officer_edit test_city_table test_batch test_multi_bonds test_force test_item
 	@echo "=== All Live In-Game Memory Tests Passed (Active Process Verified) ==="
 
 test: test_offline test_live
@@ -230,6 +307,6 @@ gui: $(TEST_GUI_BIN)
 	./$(TEST_GUI_BIN)
 
 clean:
-	rm -rf $(BUILD_DIR) $(BIN_DIR)/test_memory_driver $(BIN_DIR)/test_bounds $(BIN_DIR)/test_officer_manager $(BIN_DIR)/test_city_manager $(BIN_DIR)/test_gui_window $(BIN_DIR)/test_officer_table $(BIN_DIR)/test_officer_edit $(BIN_DIR)/test_city_table $(BIN_DIR)/test_batch_actions $(BIN_DIR)/test_hangul_automata $(BIN_DIR)/test_hangul_input_widget $(BIN_DIR)/test_officer_names $(APP_BIN) $(PACKAGE_DIR) $(PACKAGE_TAR)
+	rm -rf $(BUILD_DIR) $(BIN_DIR)/test_memory_driver $(BIN_DIR)/test_bounds $(BIN_DIR)/test_officer_manager $(BIN_DIR)/test_city_manager $(BIN_DIR)/test_settlement_manager $(BIN_DIR)/test_city_officers $(BIN_DIR)/test_city_detail_modal $(BIN_DIR)/test_gui_window $(BIN_DIR)/test_officer_table $(BIN_DIR)/test_officer_edit $(BIN_DIR)/test_city_table $(BIN_DIR)/test_batch_actions $(BIN_DIR)/test_hangul_automata $(BIN_DIR)/test_hangul_input_widget $(BIN_DIR)/test_officer_names $(TEST_TACTIC_BIN) $(TEST_MULTI_BONDS_BIN) $(TEST_FORCE_BIN) $(TEST_ITEM_BIN) $(APP_BIN) $(PACKAGE_DIR) $(PACKAGE_TAR)
 
-.PHONY: all test_memory test_bounds test_officer test_city test_gui test_officer_table test_officer_edit test_city_table test_batch test_hangul test_hangul_widget test_officer_names test test_offline test_live gui editor package tools clean
+.PHONY: all test_memory test_bounds test_officer test_city test_settlement test_city_officers test_city_modal test_gui test_officer_table test_officer_edit test_city_table test_batch test_hangul test_hangul_widget test_officer_names test_tactic test_multi_bonds test_force test_item test test_offline test_live gui editor package tools clean

@@ -1,10 +1,15 @@
 #include "ui/UIManager.hpp"
 #include "ui/OfficerTableView.hpp"
 #include "ui/CityTableView.hpp"
+#include "ui/ItemTableView.hpp"
 #include "core/LinuxMemoryDriver.hpp"
 #include "game/GameVersion.hpp"
 #include "game/OfficerManager.hpp"
 #include "game/CityManager.hpp"
+#include "game/SettlementManager.hpp"
+#include "game/ItemManager.hpp"
+#include "game/TacticManager.hpp"
+#include "game/ForceManager.hpp"
 #include "imgui.h"
 
 #include <iostream>
@@ -84,8 +89,11 @@ int main(int argc, char** argv) {
     LinuxMemoryDriver driver;
     OfficerManager officerMgr;
     CityManager cityMgr;
+    SettlementManager setMgr;
+    ItemManager itemMgr;
     OfficerTableView officerTable;
     CityTableView cityTable;
+    ItemTableView itemTable;
 
     uintptr_t rootBase = 0;
     std::string verDesc;
@@ -96,8 +104,14 @@ int main(int argc, char** argv) {
             if (GameVersionDetector::DetectRootBase(driver, rootBase, verDesc)) {
                 officerMgr.Initialize(&driver, rootBase);
                 cityMgr.Initialize(&driver, rootBase);
-                officerTable.Initialize(&officerMgr);
-                cityTable.Initialize(&cityMgr);
+                setMgr.Initialize(&driver, rootBase);
+                itemMgr.Initialize(&driver, rootBase);
+                ForceManager::Initialize(&driver, rootBase);
+                TacticManager::LoadCustomTactics();
+                TacticManager::LoadCustomTacticsFromMemory(&driver, rootBase);
+                officerTable.Initialize(&officerMgr, &itemMgr);
+                cityTable.Initialize(&cityMgr, &setMgr);
+                itemTable.Initialize(&itemMgr, &officerMgr);
                 isConnected = true;
                 std::cout << "[+] 게임 프로세스 연결 성공 (PID: " << driver.GetPid() 
                           << ", RootBase: 0x" << std::hex << rootBase << std::dec << ")\n";
@@ -151,22 +165,23 @@ int main(int argc, char** argv) {
             ImGuiWindowFlags_NoBringToFrontOnFocus;
 
         if (ImGui::Begin("MainEditorWindow", nullptr, windowFlags)) {
-            // 상단 상태 대시보드 배너
-            ImGui::BeginChild("TopBanner", ImVec2(0, 85), true);
+            // 상단 상태 대시보드 배너 (주인공 퀵 위젯 포함)
+            ImGui::BeginChild("TopBanner", ImVec2(0, 95), true);
             ImGui::Columns(3, "TopStatusColumns", false);
 
-            // 컬럼 1: 프로세스 연결 상태
+            // 컬럼 1: 프로세스 연결 상태 및 일자
             ImGui::TextColored(ImVec4(0.95f, 0.82f, 0.40f, 1.0f), "★ 삼국지 13 PK 한국어 에디터");
             if (isConnected && driver.IsAlive()) {
-                ImGui::TextColored(ImVec4(0.2f, 0.95f, 0.35f, 1.0f), "● 게임 연결됨 (PID: %d)", driver.GetPid());
-                ImGui::SameLine();
+                uint16_t yr = 0, mo = 0, da = 0;
+                officerMgr.GetGameDate(yr, mo, da);
+                ImGui::TextColored(ImVec4(0.2f, 0.95f, 0.35f, 1.0f), "● 연결됨 (PID: %d) | %d년 %d월 %d일", driver.GetPid(), yr, mo, da);
                 if (ImGui::SmallButton("새로고침 (F5)")) {
                     officerTable.RefreshData();
                     cityTable.RefreshData();
+                    itemTable.RefreshData();
                 }
             } else {
                 ImGui::TextColored(ImVec4(0.95f, 0.55f, 0.25f, 1.0f), "○ 대기 중 (San13PK_kr.exe 실행 대기)");
-                ImGui::SameLine();
                 if (ImGui::SmallButton("지금 재탐색")) {
                     TryConnect();
                 }
@@ -181,12 +196,35 @@ int main(int argc, char** argv) {
             } else {
                 ImGui::TextDisabled("게임 실행 시 자동 감지됩니다");
             }
+            ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "GUI: %.1f FPS (Dear ImGui %s)", ImGui::GetIO().Framerate, IMGUI_VERSION);
 
             ImGui::NextColumn();
-            // 컬럼 3: 렌더러 및 시스템 정보
-            ImGui::Text("렌더링 파이프라인:");
-            ImGui::TextColored(ImVec4(0.85f, 0.85f, 0.85f, 1.0f), "나눔고딕 18px | Dear ImGui %s", IMGUI_VERSION);
-            ImGui::Text("성능: %.1f FPS (%.2f ms/프레임)", ImGui::GetIO().Framerate, 1000.0f / ImGui::GetIO().Framerate);
+            // 컬럼 3: 플레이어 무장 (주인공) 퀵 대시보드
+            ProtagonistRecord prot;
+            if (isConnected && officerMgr.GetProtagonistInfo(prot) && prot.is_valid) {
+                ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.2f, 1.0f), "★ 플레이어 무장: %s (ID: %d)", prot.name.c_str(), prot.officer_id);
+                ImGui::TextColored(ImVec4(0.85f, 0.85f, 0.85f, 1.0f), "소속: %s | 신분: %s | 통%d 무%d 지%d 정%d", 
+                                   prot.city_name.c_str(), prot.rank_desc.c_str(), 
+                                   prot.leadership, prot.war, prot.intel, prot.politics);
+                ImGui::TextColored(ImVec4(0.95f, 0.85f, 0.40f, 1.0f), "소지 금: %u 금", prot.personal_gold);
+                ImGui::SameLine();
+                if (ImGui::SmallButton("+1만")) {
+                    uint32_t next = prot.personal_gold + 10000;
+                    if (next > 999999) next = 999999;
+                    officerMgr.SetProtagonistGold(next);
+                }
+                ImGui::SameLine();
+                if (ImGui::SmallButton("5만")) {
+                    officerMgr.SetProtagonistGold(50000);
+                }
+                ImGui::SameLine();
+                if (ImGui::SmallButton("★ 주인공 편집")) {
+                    officerTable.OpenEditModal(prot.officer_id);
+                }
+            } else {
+                ImGui::Text("플레이어 무장 (주인공):");
+                ImGui::TextDisabled(isConnected ? "시나리오 진행 중인 주인공 없음" : "게임 연결 대기 중");
+            }
 
             ImGui::Columns(1);
             ImGui::EndChild();
@@ -222,6 +260,19 @@ int main(int argc, char** argv) {
                         ImGui::Spacing();
                         ImGui::TextColored(ImVec4(0.95f, 0.65f, 0.35f, 1.0f), "▶ 게임 프로세스가 연결되지 않았습니다.");
                         ImGui::BulletText("삼국지 13 PK 시나리오를 시작한 후 도시 데이터를 편집할 수 있습니다.");
+                    }
+                    ImGui::EndTabItem();
+                }
+
+                // 탭 3: 명품 아이템 편집기
+                if (ImGui::BeginTabItem("명품 아이템 편집기 (Item Editor)")) {
+                    ImGui::Spacing();
+                    if (isConnected) {
+                        itemTable.Render();
+                    } else {
+                        ImGui::Spacing();
+                        ImGui::TextColored(ImVec4(0.95f, 0.65f, 0.35f, 1.0f), "▶ 게임 프로세스가 연결되지 않았습니다.");
+                        ImGui::BulletText("삼국지 13 PK 시나리오를 시작한 후 명품 목록을 조회하고 편집할 수 있습니다.");
                     }
                     ImGui::EndTabItem();
                 }

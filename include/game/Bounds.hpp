@@ -70,6 +70,33 @@ struct StatBounds {
         static constexpr int8_t   MIN_VAL = -50;
         static constexpr int8_t   MAX_VAL = 50;
     };
+
+    // 9. 도시 민심 (Public Order) - 메모리: uint16_t (+0x0D2)
+    struct CityPublicOrder {
+        static constexpr uint16_t MIN_VAL = 0;
+        static constexpr uint16_t VANILLA_MAX = 1000;
+        static constexpr uint16_t LIMIT_BREAK_MAX = 5000;
+    };
+
+    // 10. 도시 내정 3대 기본치 (상업, 농업, 문화) - 메모리: uint16_t (+0x0D6, +0x0E0, +0x0EA)
+    struct CityDomestic {
+        static constexpr uint16_t MIN_VAL = 0;
+        static constexpr uint16_t VANILLA_MAX = 4000;
+        static constexpr uint16_t LIMIT_BREAK_MAX = 10000;
+    };
+
+    // 11. 병종 3대 숙련도 (창병, 기병, 궁병) - 메모리: uint16_t (+0x0FC, +0x0FE, +0x100)
+    struct CityProficiency {
+        static constexpr uint16_t MIN_VAL = 0;
+        static constexpr uint16_t VANILLA_MAX = 3000;
+        static constexpr uint16_t LIMIT_BREAK_MAX = 5000;
+    };
+
+    // 12. 부락 장악도/개발도 - 메모리: uint16_t (+0x14)
+    struct SettlementDev {
+        static constexpr uint16_t MIN_VAL = 0;
+        static constexpr uint16_t MAX_VAL = 100;
+    };
 };
 
 /**
@@ -151,6 +178,43 @@ public:
         if (input < StatBounds::ItemBonus::MIN_VAL) return StatBounds::ItemBonus::MIN_VAL;
         if (input > StatBounds::ItemBonus::MAX_VAL) return StatBounds::ItemBonus::MAX_VAL;
         return static_cast<int8_t>(input);
+    }
+
+    // 도시 민심 안전 변환 (0 ~ 1,000 / 한계돌파 5,000)
+    static inline uint16_t SanitizeCityPublicOrder(int64_t input, ClampingPolicy policy = ClampingPolicy::SafeVanilla) {
+        if (input < 0) return 0;
+        uint16_t max_allowed = (policy == ClampingPolicy::LimitBreak)
+                               ? StatBounds::CityPublicOrder::LIMIT_BREAK_MAX
+                               : StatBounds::CityPublicOrder::VANILLA_MAX;
+        if (input > max_allowed) return max_allowed;
+        return static_cast<uint16_t>(input);
+    }
+
+    // 도시 내정치(상업, 농업, 문화) 안전 변환 (0 ~ 4,000 / 한계돌파 10,000)
+    static inline uint16_t SanitizeCityDomestic(int64_t input, ClampingPolicy policy = ClampingPolicy::SafeVanilla) {
+        if (input < 0) return 0;
+        uint16_t max_allowed = (policy == ClampingPolicy::LimitBreak)
+                               ? StatBounds::CityDomestic::LIMIT_BREAK_MAX
+                               : StatBounds::CityDomestic::VANILLA_MAX;
+        if (input > max_allowed) return max_allowed;
+        return static_cast<uint16_t>(input);
+    }
+
+    // 병종 숙련도 안전 변환 (0 ~ 3,000 / 한계돌파 5,000)
+    static inline uint16_t SanitizeCityProficiency(int64_t input, ClampingPolicy policy = ClampingPolicy::SafeVanilla) {
+        if (input < 0) return 0;
+        uint16_t max_allowed = (policy == ClampingPolicy::LimitBreak)
+                               ? StatBounds::CityProficiency::LIMIT_BREAK_MAX
+                               : StatBounds::CityProficiency::VANILLA_MAX;
+        if (input > max_allowed) return max_allowed;
+        return static_cast<uint16_t>(input);
+    }
+
+    // 부락 장악도(개발도) 안전 변환 (0 ~ 100%)
+    static inline uint16_t SanitizeSettlementDev(int64_t input) {
+        if (input < StatBounds::SettlementDev::MIN_VAL) return StatBounds::SettlementDev::MIN_VAL;
+        if (input > StatBounds::SettlementDev::MAX_VAL) return StatBounds::SettlementDev::MAX_VAL;
+        return static_cast<uint16_t>(input);
     }
 };
 

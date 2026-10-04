@@ -10,8 +10,10 @@ namespace San13::UI {
 CityTableView::CityTableView() = default;
 CityTableView::~CityTableView() = default;
 
-void CityTableView::Initialize(Game::CityManager* cityMgr) {
+void CityTableView::Initialize(Game::CityManager* cityMgr, Game::SettlementManager* setMgr) {
     m_cityMgr = cityMgr;
+    m_setMgr = setMgr;
+    m_detailModal.Initialize(cityMgr, setMgr);
     RefreshData();
 }
 
@@ -121,66 +123,33 @@ void CityTableView::ApplySort(int columnId, bool ascending) {
 
 void CityTableView::OpenEditModal(int cityId) {
     if (!m_cityMgr || cityId < 0 || cityId >= Game::CityMemoryLayout::MAX_CITY_COUNT) return;
-    if (m_cityMgr->LoadCity(static_cast<uint8_t>(cityId), m_editingRecord)) {
-        m_editingCityId = cityId;
-        m_selectedCityId = cityId;
-        m_showEditModal = true;
-        m_syncStatusMsg.clear();
-    }
+    m_selectedCityId = cityId;
+    m_detailModal.Open(cityId);
+}
+
+bool CityTableView::IsEditModalOpen() const {
+    return m_detailModal.IsOpen();
+}
+
+void CityTableView::CloseEditModal() {
+    m_detailModal.Close();
 }
 
 bool CityTableView::CommitEditToMemory() {
-    if (!m_cityMgr || m_editingCityId < 0) return false;
-
-    auto policy = m_limitBreakMode ? Game::ClampingPolicy::LimitBreak : Game::ClampingPolicy::SafeVanilla;
-    uint8_t id = static_cast<uint8_t>(m_editingCityId);
-
-    auto startTime = std::chrono::high_resolution_clock::now();
-
-    bool ok1 = m_cityMgr->SetCityGold(id, m_editingRecord.gold, policy);
-    bool ok2 = m_cityMgr->SetCityProvisions(id, m_editingRecord.provisions, policy);
-    bool ok3 = m_cityMgr->SetCityTroops(id, m_editingRecord.troops, policy);
-    bool ok4 = m_cityMgr->SetCityDurability(id, m_editingRecord.durability, policy);
-
-    auto endTime = std::chrono::high_resolution_clock::now();
-    m_lastSyncTimeMs = std::chrono::duration<float, std::milli>(endTime - startTime).count();
-
-    bool allOk = ok1 && ok2 && ok3 && ok4;
-    if (allOk) {
-        // 게임 메모리에서 최신화된 데이터 재로드
-        m_cityMgr->LoadCity(id, m_editingRecord);
-
-        // 캐시 목록 동기화
-        for (auto& city : m_cachedCities) {
-            if (city.id == id) {
-                city = m_editingRecord;
-                break;
-            }
-        }
-        char buf[64];
-        std::snprintf(buf, sizeof(buf), "● 실시간 핫싱크 성공 (%.3fms)", m_lastSyncTimeMs);
-        m_syncStatusMsg = buf;
-    } else {
-        m_syncStatusMsg = "× 도시 자원 메모리 쓰기 실패";
+    bool ok = m_detailModal.CommitEditToMemory();
+    if (ok) {
+        RefreshData();
     }
-
-    return allOk;
+    return ok;
 }
 
 bool CityTableView::QuickCheatMaxResources(uint8_t cityId) {
     if (!m_cityMgr || cityId >= Game::CityMemoryLayout::MAX_CITY_COUNT) return false;
     bool ok = m_cityMgr->MaximizeCityResources(cityId);
-    if (ok) {
-        for (auto& city : m_cachedCities) {
-            if (city.id == cityId) {
-                m_cityMgr->LoadCity(cityId, city);
-                if (m_editingCityId == cityId) {
-                    m_editingRecord = city;
-                }
-                break;
-            }
-        }
+    if (m_detailModal.IsOpen() && m_detailModal.GetCityId() == cityId) {
+        m_detailModal.RefreshData();
     }
+    RefreshData();
     return ok;
 }
 
@@ -189,16 +158,10 @@ bool CityTableView::QuickCheatDepleteResources(uint8_t cityId) {
     m_cityMgr->SetCityGold(cityId, 0, Game::ClampingPolicy::SafeVanilla);
     m_cityMgr->SetCityProvisions(cityId, 0, Game::ClampingPolicy::SafeVanilla);
     m_cityMgr->SetCityTroops(cityId, 0, Game::ClampingPolicy::SafeVanilla);
-
-    for (auto& city : m_cachedCities) {
-        if (city.id == cityId) {
-            m_cityMgr->LoadCity(cityId, city);
-            if (m_editingCityId == cityId) {
-                m_editingRecord = city;
-            }
-            break;
-        }
+    if (m_detailModal.IsOpen() && m_detailModal.GetCityId() == cityId) {
+        m_detailModal.RefreshData();
     }
+    RefreshData();
     return true;
 }
 
@@ -207,8 +170,43 @@ bool CityTableView::QuickCheatAllCitiesMax() {
     for (uint8_t i = 0; i < Game::CityMemoryLayout::MAX_CITY_COUNT; i++) {
         m_cityMgr->MaximizeCityResources(i);
     }
+    if (m_detailModal.IsOpen()) {
+        m_detailModal.RefreshData();
+    }
     RefreshData();
     return true;
+}
+
+void CityTableView::SetLimitBreakMode(bool enabled) {
+    m_detailModal.SetLimitBreakMode(enabled);
+}
+
+bool CityTableView::IsLimitBreakMode() const {
+    return m_detailModal.IsLimitBreakMode();
+}
+
+void CityTableView::SetAutoSync(bool enabled) {
+    m_detailModal.SetAutoSync(enabled);
+}
+
+bool CityTableView::IsAutoSync() const {
+    return m_detailModal.IsAutoSync();
+}
+
+Game::CityRecord& CityTableView::GetEditRecord() {
+    return m_detailModal.GetEditingRecord();
+}
+
+const Game::CityRecord& CityTableView::GetEditRecord() const {
+    return m_detailModal.GetEditingRecord();
+}
+
+int CityTableView::GetEditingCityId() const {
+    return m_detailModal.GetCityId();
+}
+
+float CityTableView::GetLastSyncTimeMs() const {
+    return m_detailModal.GetLastSyncTimeMs();
 }
 
 static void RenderResourceValue(uint32_t val, uint32_t highThresh) {
@@ -359,115 +357,7 @@ void CityTableView::Render() {
 }
 
 void CityTableView::RenderEditModal() {
-    if (m_showEditModal && !ImGui::IsPopupOpen("도시 자원 상세 편집##CityEditModal")) {
-        ImGui::OpenPopup("도시 자원 상세 편집##CityEditModal");
-    }
-
-    if (ImGui::BeginPopupModal("도시 자원 상세 편집##CityEditModal", &m_showEditModal, ImGuiWindowFlags_AlwaysAutoResize)) {
-        // 1. 헤더 정보
-        ImGui::TextColored(ImVec4(0.95f, 0.82f, 0.40f, 1.0f), "■ %s (ID %02d)",
-                           m_editingRecord.name.c_str(), m_editingRecord.id);
-        ImGui::SameLine();
-        ImGui::TextDisabled("| 메모리 주소: 0x%lX", (unsigned long)m_editingRecord.memory_address);
-
-        ImGui::Separator();
-        ImGui::Spacing();
-
-        // 2. 제어 옵션
-        ImGui::Checkbox("한계 돌파 모드 (자금/군량 9,999,999 허용)", &m_limitBreakMode);
-        ImGui::SameLine();
-        ImGui::Checkbox("실시간 자동 핫싱크 (Auto-Sync)", &m_autoSync);
-
-        ImGui::Spacing();
-        ImGui::Separator();
-        ImGui::Spacing();
-
-        int maxGold = m_limitBreakMode ? 9999999 : 999999;
-        int maxProv = m_limitBreakMode ? 9999999 : 999999;
-        int maxTroops = m_limitBreakMode ? 999999 : 200000;
-        int maxDur = m_limitBreakMode ? 10000 : 5000;
-        bool valueChanged = false;
-
-        // 3. 자원 슬라이더 및 입력창
-        ImGui::TextColored(ImVec4(0.4f, 0.85f, 1.0f, 1.0f), "▶ 도시 경제 및 군사 자원 수치");
-
-        int gold = static_cast<int>(m_editingRecord.gold);
-        int prov = static_cast<int>(m_editingRecord.provisions);
-        int troops = static_cast<int>(m_editingRecord.troops);
-        int dur = static_cast<int>(m_editingRecord.durability);
-
-        ImGui::PushItemWidth(260.0f);
-        if (ImGui::SliderInt("자금 (Gold)##EditGold", &gold, 0, maxGold)) {
-            m_editingRecord.gold = gold;
-            valueChanged = true;
-        }
-        if (ImGui::SliderInt("군량 (Provisions)##EditProv", &prov, 0, maxProv)) {
-            m_editingRecord.provisions = prov;
-            valueChanged = true;
-        }
-        if (ImGui::SliderInt("병력 (Troops)##EditTroops", &troops, 0, maxTroops)) {
-            m_editingRecord.troops = troops;
-            valueChanged = true;
-        }
-        if (ImGui::SliderInt("성벽 내구도 (Durability)##EditDur", &dur, 0, maxDur)) {
-            m_editingRecord.durability = dur;
-            valueChanged = true;
-        }
-        ImGui::PopItemWidth();
-
-        ImGui::Spacing();
-        ImGui::Separator();
-        ImGui::Spacing();
-
-        // 4. 빠른 프리셋 치트 버튼
-        ImGui::Text("빠른 치트 프리셋:");
-        ImGui::SameLine();
-        if (ImGui::Button("자금/군량 999,999 풀충전")) {
-            m_editingRecord.gold = 999999;
-            m_editingRecord.provisions = 999999;
-            valueChanged = true;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("내구도 5,000 완충")) {
-            m_editingRecord.durability = 5000;
-            valueChanged = true;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("자원 고갈 (자금 0, 군량 0)")) {
-            m_editingRecord.gold = 0;
-            m_editingRecord.provisions = 0;
-            m_editingRecord.troops = 0;
-            valueChanged = true;
-        }
-
-        // 실시간 자동 동기화 활성화 시 값 변경 즉시 커밋
-        if (valueChanged && m_autoSync) {
-            CommitEditToMemory();
-        }
-
-        ImGui::Spacing();
-        ImGui::Separator();
-        ImGui::Spacing();
-
-        // 5. 하단 상태 바 및 버튼
-        if (!m_syncStatusMsg.empty()) {
-            ImGui::TextColored(ImVec4(0.2f, 0.9f, 0.4f, 1.0f), "%s", m_syncStatusMsg.c_str());
-        } else {
-            ImGui::TextDisabled("동기화 대기 중...");
-        }
-
-        ImGui::SameLine(ImGui::GetWindowWidth() - 250.0f);
-        if (ImGui::Button("메모리 적용 (Hot-Sync)", ImVec2(170, 0))) {
-            CommitEditToMemory();
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("닫기", ImVec2(60, 0))) {
-            m_showEditModal = false;
-            ImGui::CloseCurrentPopup();
-        }
-
-        ImGui::EndPopup();
-    }
+    m_detailModal.Render();
 }
 
 } // namespace San13::UI

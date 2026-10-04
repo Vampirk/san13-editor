@@ -1,5 +1,6 @@
 #include "game/OfficerManager.hpp"
 #include "game/OfficerNameTable.hpp"
+#include "game/CityManager.hpp"
 #include <iostream>
 #include <cstring>
 
@@ -14,7 +15,7 @@ const char* GetFamousOfficerName(uint16_t id) {
 }
 
 OfficerManager::OfficerManager()
-    : m_driver(nullptr), m_rootBase(0), m_officerArrayBase(0) {
+    : m_driver(nullptr), m_rootBase(0), m_officerArrayBase(0), m_protagonistBase(0) {
 }
 
 OfficerManager::~OfficerManager() {
@@ -25,6 +26,7 @@ bool OfficerManager::Initialize(Core::IMemoryDriver* driver, uintptr_t rootBase)
     m_driver = driver;
     m_rootBase = rootBase;
     m_officerArrayBase = rootBase + OfficerMemoryLayout::POOL_OFFSET;
+    m_protagonistBase = rootBase + ProtagonistMemoryLayout::CHUNK_OFFSET;
     return true;
 }
 
@@ -85,6 +87,15 @@ bool OfficerManager::LoadOfficer(uint16_t id, OfficerRecord& outRecord) {
     outRecord.spouse_3_id = header.spouse_3_id;
     outRecord.sworn_brother_id = header.sworn_brother_id;
     outRecord.rival_id = header.rival_id;
+
+    // +0x1284 ~ +0x128E: 친애 무장 6인 슬롯 읽기
+    m_driver->ReadRaw(objAddr + OfficerMemoryLayout::FRIENDS_OFFSET, outRecord.friends, sizeof(outRecord.friends));
+
+    // +0x1296 ~ +0x129A: 의형제 3인 슬롯 읽기
+    m_driver->ReadRaw(objAddr + OfficerMemoryLayout::SWORN_BROTHERS_OFFSET, outRecord.sworn_brothers, sizeof(outRecord.sworn_brothers));
+
+    // +0x129C ~ +0x12A0: 원수 3인 슬롯 읽기
+    m_driver->ReadRaw(objAddr + OfficerMemoryLayout::RIVALS_OFFSET, outRecord.rivals, sizeof(outRecord.rivals));
 
     // +0x50 ~ +0x5F: 성향/기호/가치관/상성 8대 특성 블록 읽기
     m_driver->Read<San13OfficerCharacter>(objAddr + 0x50, outRecord.character);
@@ -263,7 +274,10 @@ bool OfficerManager::SetTactic(uint16_t id, uint8_t tacticId) {
     if (!m_driver || m_officerArrayBase == 0 || id >= OfficerMemoryLayout::MAX_TOTAL_SLOTS) {
         return false;
     }
-    if (tacticId > 140) tacticId = 140;
+    // 바닐라 0~140 및 등록 전법 250~255 허용 (uint8_t 범위)
+    if (tacticId > 140 && tacticId < 250) {
+        tacticId = 140;
+    }
     uintptr_t tacticAddr = GetOfficerAddress(id) + 0x24;
     return m_driver->Write<uint8_t>(tacticAddr, tacticId);
 }
@@ -319,6 +333,54 @@ bool OfficerManager::SetRelations(uint16_t id, uint16_t father, uint16_t mother,
     ok &= m_driver->Write<uint16_t>(addr + 0x48, spouse3);
     ok &= m_driver->Write<uint16_t>(addr + 0x4A, swornBrother);
     ok &= m_driver->Write<uint16_t>(addr + 0x4C, rival);
+    return ok;
+}
+
+bool OfficerManager::SetSwornBrothers(uint16_t id, const uint16_t brothers[3]) {
+    if (!m_driver || m_officerArrayBase == 0 || id >= OfficerMemoryLayout::MAX_TOTAL_SLOTS) {
+        return false;
+    }
+    uintptr_t addr = GetOfficerAddress(id);
+    bool ok = true;
+    ok &= m_driver->WriteRaw(addr + OfficerMemoryLayout::SWORN_BROTHERS_OFFSET, brothers, sizeof(uint16_t) * 3);
+
+    // 헤더 +0x4A 동기화: 유효한 첫 번째 의형제 ID
+    uint16_t headerLeader = 0xFFFF;
+    for (int i = 0; i < 3; ++i) {
+        if (brothers[i] != 0xFFFF && brothers[i] != 0) {
+            headerLeader = brothers[i];
+            break;
+        }
+    }
+    ok &= m_driver->Write<uint16_t>(addr + 0x4A, headerLeader);
+    return ok;
+}
+
+bool OfficerManager::SetFriends(uint16_t id, const uint16_t friends[6]) {
+    if (!m_driver || m_officerArrayBase == 0 || id >= OfficerMemoryLayout::MAX_TOTAL_SLOTS) {
+        return false;
+    }
+    uintptr_t addr = GetOfficerAddress(id);
+    return m_driver->WriteRaw(addr + OfficerMemoryLayout::FRIENDS_OFFSET, friends, sizeof(uint16_t) * 6);
+}
+
+bool OfficerManager::SetRivals(uint16_t id, const uint16_t rivals[3]) {
+    if (!m_driver || m_officerArrayBase == 0 || id >= OfficerMemoryLayout::MAX_TOTAL_SLOTS) {
+        return false;
+    }
+    uintptr_t addr = GetOfficerAddress(id);
+    bool ok = true;
+    ok &= m_driver->WriteRaw(addr + OfficerMemoryLayout::RIVALS_OFFSET, rivals, sizeof(uint16_t) * 3);
+
+    // 헤더 +0x4C 동기화
+    uint16_t headerRival = 0xFFFF;
+    for (int i = 0; i < 3; ++i) {
+        if (rivals[i] != 0xFFFF && rivals[i] != 0) {
+            headerRival = rivals[i];
+            break;
+        }
+    }
+    ok &= m_driver->Write<uint16_t>(addr + 0x4C, headerRival);
     return ok;
 }
 
@@ -456,6 +518,68 @@ bool OfficerManager::BatchRestore(const std::vector<OfficerSnapshot>& snapshots)
         }
     }
     return allOk;
+}
+
+uint16_t OfficerManager::GetProtagonistOfficerId() {
+    if (!m_driver || m_protagonistBase == 0) return 0xFFFF;
+    San13ProtagonistRaw raw{};
+    if (!m_driver->ReadRaw(m_protagonistBase, &raw, sizeof(raw))) return 0xFFFF;
+    if (raw.vtable != ProtagonistMemoryLayout::EXPECTED_VTABLE) return 0xFFFF;
+    if (raw.officer_id >= OfficerMemoryLayout::MAX_TOTAL_SLOTS) return 0xFFFF;
+    return raw.officer_id;
+}
+
+bool OfficerManager::IsProtagonist(uint16_t officerId) {
+    return (GetProtagonistOfficerId() == officerId);
+}
+
+bool OfficerManager::GetProtagonistInfo(ProtagonistRecord& outProtagonist) {
+    outProtagonist = ProtagonistRecord{};
+    if (!m_driver || m_protagonistBase == 0) return false;
+
+    San13ProtagonistRaw raw{};
+    if (!m_driver->ReadRaw(m_protagonistBase, &raw, sizeof(raw))) return false;
+    if (raw.vtable != ProtagonistMemoryLayout::EXPECTED_VTABLE) return false;
+    if (raw.officer_id >= OfficerMemoryLayout::MAX_TOTAL_SLOTS) return false;
+
+    outProtagonist.is_valid = true;
+    outProtagonist.officer_id = raw.officer_id;
+    outProtagonist.personal_gold = raw.personal_gold;
+
+    OfficerRecord offRec;
+    if (LoadOfficer(raw.officer_id, offRec)) {
+        outProtagonist.name = offRec.name;
+        outProtagonist.leadership = offRec.stats.curr_leadership;
+        outProtagonist.war = offRec.stats.curr_war;
+        outProtagonist.intel = offRec.stats.curr_intel;
+        outProtagonist.politics = offRec.stats.curr_politics;
+
+        // 관직 / 신분
+        if (offRec.rank == 0 && offRec.force_id > 0 && offRec.force_id < 120) {
+            outProtagonist.rank_desc = "군주";
+        } else if (offRec.rank >= 1 && offRec.rank <= 9) {
+            outProtagonist.rank_desc = std::to_string((int)offRec.rank) + "품관";
+        } else {
+            outProtagonist.rank_desc = "재야";
+        }
+
+        // 도시
+        if (offRec.city_id < CityMemoryLayout::MAX_CITY_COUNT) {
+            outProtagonist.city_name = GetCityName((uint8_t)offRec.city_id);
+        } else {
+            outProtagonist.city_name = "소재 미상";
+        }
+    } else {
+        outProtagonist.name = "무장 #" + std::to_string(raw.officer_id);
+    }
+
+    return true;
+}
+
+bool OfficerManager::SetProtagonistGold(uint32_t gold) {
+    if (!m_driver || m_protagonistBase == 0) return false;
+    uint32_t cleanGold = gold > 999999 ? 999999 : gold;
+    return m_driver->Write<uint32_t>(m_protagonistBase + offsetof(San13ProtagonistRaw, personal_gold), cleanGold);
 }
 
 } // namespace San13::Game

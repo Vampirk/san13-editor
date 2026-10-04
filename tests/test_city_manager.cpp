@@ -50,7 +50,7 @@ int main() {
     std::cout << "         -> 양평 (ID 0): 자금=" << c0.gold << ", 군량=" << c0.provisions << ", 민간인구=" << c0.civilian_population << ", 병력=" << c0.troops << ", 총인구=" << c0.total_population << "\n";
     TEST_ASSERT(c0.gold == 2200 && c0.provisions == 4240 && c0.civilian_population == 95000 && c0.troops == 2120, "양평 실시간 자원 데이터(자금 2,200, 군량 4,240, 민간인구 95,000, 병력 2,120) 일치");
     TEST_ASSERT(c0.total_population == 97120 && c0.GetTotalPopulation() == 97120, "양평 총 인구 공식(95,000 + 2,120 = 97,120) 일치");
-    TEST_ASSERT(c0.settlement_count == 1 && c0.settlement_ids[0] == 1, "양평 관할 부락(1개, 부락 ID 1) 일치");
+    TEST_ASSERT(c0.settlement_count == 1 && c0.connected_city_ids[0] == 1, "양평 관할 부락 수(1개) 및 인접 도시(북평 ID 1) 일치");
 
     TEST_ASSERT(cityMgr.LoadCity(9, c_ye), "도시 9 (업) 로드 성공");
     std::cout << "         -> 업 (ID 9): 자금=" << c_ye.gold << ", 군량=" << c_ye.provisions << ", 민간인구=" << c_ye.civilian_population << ", 병력=" << c_ye.troops << ", 총인구=" << c_ye.total_population << "\n";

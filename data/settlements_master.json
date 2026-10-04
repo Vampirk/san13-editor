@@ -1,0 +1,786 @@
+{
+  "total_settlements": 147,
+  "settlements": [
+    {
+      "id": 0,
+      "name": "범",
+      "type": "base_settlement"
+    },
+    {
+      "id": 1,
+      "name": "동평",
+      "type": "base_settlement"
+    },
+    {
+      "id": 2,
+      "name": "역성",
+      "type": "base_settlement"
+    },
+    {
+      "id": 3,
+      "name": "량",
+      "type": "base_settlement"
+    },
+    {
+      "id": 4,
+      "name": "견성",
+      "type": "base_settlement"
+    },
+    {
+      "id": 5,
+      "name": "광정",
+      "type": "base_settlement"
+    },
+    {
+      "id": 6,
+      "name": "밀",
+      "type": "base_settlement"
+    },
+    {
+      "id": 7,
+      "name": "무평",
+      "type": "base_settlement"
+    },
+    {
+      "id": 8,
+      "name": "영릉",
+      "type": "base_settlement"
+    },
+    {
+      "id": 9,
+      "name": "온",
+      "type": "base_settlement"
+    },
+    {
+      "id": 10,
+      "name": "령",
+      "type": "base_settlement"
+    },
+    {
+      "id": 11,
+      "name": "제남",
+      "type": "base_settlement"
+    },
+    {
+      "id": 12,
+      "name": "계교",
+      "type": "base_settlement"
+    },
+    {
+      "id": 13,
+      "name": "하간",
+      "type": "base_settlement"
+    },
+    {
+      "id": 14,
+      "name": "안평",
+      "type": "base_settlement"
+    },
+    {
+      "id": 15,
+      "name": "상산",
+      "type": "base_settlement"
+    },
+    {
+      "id": 16,
+      "name": "조",
+      "type": "base_settlement"
+    },
+    {
+      "id": 17,
+      "name": "구강",
+      "type": "base_settlement"
+    },
+    {
+      "id": 18,
+      "name": "제",
+      "type": "base_settlement"
+    },
+    {
+      "id": 19,
+      "name": "낙안",
+      "type": "base_settlement"
+    },
+    {
+      "id": 20,
+      "name": "고밀",
+      "type": "base_settlement"
+    },
+    {
+      "id": 21,
+      "name": "거평",
+      "type": "base_settlement"
+    },
+    {
+      "id": 22,
+      "name": "즉구",
+      "type": "base_settlement"
+    },
+    {
+      "id": 23,
+      "name": "팽성",
+      "type": "base_settlement"
+    },
+    {
+      "id": 24,
+      "name": "오",
+      "type": "base_settlement"
+    },
+    {
+      "id": 25,
+      "name": "발간",
+      "type": "base_settlement"
+    },
+    {
+      "id": 26,
+      "name": "호택",
+      "type": "base_settlement"
+    },
+    {
+      "id": 27,
+      "name": "둔류",
+      "type": "base_settlement"
+    },
+    {
+      "id": 28,
+      "name": "유",
+      "type": "base_settlement"
+    },
+    {
+      "id": 29,
+      "name": "세양",
+      "type": "base_settlement"
+    },
+    {
+      "id": 30,
+      "name": "호륙",
+      "type": "base_settlement"
+    },
+    {
+      "id": 31,
+      "name": "무음",
+      "type": "base_settlement"
+    },
+    {
+      "id": 32,
+      "name": "영음",
+      "type": "base_settlement"
+    },
+    {
+      "id": 33,
+      "name": "곤양",
+      "type": "base_settlement"
+    },
+    {
+      "id": 34,
+      "name": "박망",
+      "type": "base_settlement"
+    },
+    {
+      "id": 35,
+      "name": "하남",
+      "type": "base_settlement"
+    },
+    {
+      "id": 36,
+      "name": "장릉",
+      "type": "base_settlement"
+    },
+    {
+      "id": 37,
+      "name": "임려",
+      "type": "base_settlement"
+    },
+    {
+      "id": 38,
+      "name": "방릉",
+      "type": "base_settlement"
+    },
+    {
+      "id": 39,
+      "name": "의성",
+      "type": "base_settlement"
+    },
+    {
+      "id": 40,
+      "name": "화용",
+      "type": "base_settlement"
+    },
+    {
+      "id": 41,
+      "name": "이릉",
+      "type": "base_settlement"
+    },
+    {
+      "id": 42,
+      "name": "석정",
+      "type": "base_settlement"
+    },
+    {
+      "id": 43,
+      "name": "환",
+      "type": "base_settlement"
+    },
+    {
+      "id": 44,
+      "name": "시상",
+      "type": "base_settlement"
+    },
+    {
+      "id": 45,
+      "name": "팽택",
+      "type": "base_settlement"
+    },
+    {
+      "id": 46,
+      "name": "역양",
+      "type": "base_settlement"
+    },
+    {
+      "id": 47,
+      "name": "유수구",
+      "type": "base_settlement"
+    },
+    {
+      "id": 48,
+      "name": "합비",
+      "type": "base_settlement"
+    },
+    {
+      "id": 49,
+      "name": "장판",
+      "type": "base_settlement"
+    },
+    {
+      "id": 50,
+      "name": "강도",
+      "type": "base_settlement"
+    },
+    {
+      "id": 51,
+      "name": "곡아",
+      "type": "base_settlement"
+    },
+    {
+      "id": 52,
+      "name": "단양",
+      "type": "base_settlement"
+    },
+    {
+      "id": 53,
+      "name": "유권",
+      "type": "base_settlement"
+    },
+    {
+      "id": 54,
+      "name": "부춘",
+      "type": "base_settlement"
+    },
+    {
+      "id": 55,
+      "name": "토은",
+      "type": "base_settlement"
+    },
+    {
+      "id": 56,
+      "name": "무종",
+      "type": "base_settlement"
+    },
+    {
+      "id": 57,
+      "name": "창오",
+      "type": "base_settlement"
+    },
+    {
+      "id": 58,
+      "name": "울림",
+      "type": "base_settlement"
+    },
+    {
+      "id": 59,
+      "name": "동병",
+      "type": "base_settlement"
+    },
+    {
+      "id": 60,
+      "name": "무렴",
+      "type": "base_settlement"
+    },
+    {
+      "id": 61,
+      "name": "심성",
+      "type": "base_settlement"
+    },
+    {
+      "id": 62,
+      "name": "오상",
+      "type": "base_settlement"
+    },
+    {
+      "id": 63,
+      "name": "동후관",
+      "type": "base_settlement"
+    },
+    {
+      "id": 64,
+      "name": "태말",
+      "type": "base_settlement"
+    },
+    {
+      "id": 65,
+      "name": "함광",
+      "type": "base_settlement"
+    },
+    {
+      "id": 66,
+      "name": "광종",
+      "type": "base_settlement"
+    },
+    {
+      "id": 67,
+      "name": "광천",
+      "type": "base_settlement"
+    },
+    {
+      "id": 68,
+      "name": "폐",
+      "type": "base_settlement"
+    },
+    {
+      "id": 69,
+      "name": "하동",
+      "type": "base_settlement"
+    },
+    {
+      "id": 70,
+      "name": "부풍",
+      "type": "base_settlement"
+    },
+    {
+      "id": 71,
+      "name": "오장원",
+      "type": "base_settlement"
+    },
+    {
+      "id": 72,
+      "name": "진창",
+      "type": "base_settlement"
+    },
+    {
+      "id": 73,
+      "name": "고도",
+      "type": "base_settlement"
+    },
+    {
+      "id": 74,
+      "name": "농동",
+      "type": "base_settlement"
+    },
+    {
+      "id": 75,
+      "name": "칠",
+      "type": "base_settlement"
+    },
+    {
+      "id": 76,
+      "name": "처",
+      "type": "base_settlement"
+    },
+    {
+      "id": 77,
+      "name": "가정",
+      "type": "base_settlement"
+    },
+    {
+      "id": 78,
+      "name": "농서",
+      "type": "base_settlement"
+    },
+    {
+      "id": 79,
+      "name": "서",
+      "type": "base_settlement"
+    },
+    {
+      "id": 80,
+      "name": "양무",
+      "type": "base_settlement"
+    },
+    {
+      "id": 81,
+      "name": "평양",
+      "type": "base_settlement"
+    },
+    {
+      "id": 82,
+      "name": "성기",
+      "type": "base_settlement"
+    },
+    {
+      "id": 83,
+      "name": "역",
+      "type": "base_settlement"
+    },
+    {
+      "id": 84,
+      "name": "창송",
+      "type": "base_settlement"
+    },
+    {
+      "id": 85,
+      "name": "삼수",
+      "type": "base_settlement"
+    },
+    {
+      "id": 86,
+      "name": "검각",
+      "type": "base_settlement"
+    },
+    {
+      "id": 87,
+      "name": "서성",
+      "type": "base_settlement"
+    },
+    {
+      "id": 88,
+      "name": "안양",
+      "type": "base_settlement"
+    },
+    {
+      "id": 89,
+      "name": "임강",
+      "type": "base_settlement"
+    },
+    {
+      "id": 90,
+      "name": "광한",
+      "type": "base_settlement"
+    },
+    {
+      "id": 91,
+      "name": "낙",
+      "type": "base_settlement"
+    },
+    {
+      "id": 92,
+      "name": "주제",
+      "type": "base_settlement"
+    },
+    {
+      "id": 93,
+      "name": "완온",
+      "type": "base_settlement"
+    },
+    {
+      "id": 94,
+      "name": "복미",
+      "type": "base_settlement"
+    },
+    {
+      "id": 95,
+      "name": "기춘",
+      "type": "base_settlement"
+    },
+    {
+      "id": 96,
+      "name": "누와",
+      "type": "base_settlement"
+    },
+    {
+      "id": 97,
+      "name": "회무",
+      "type": "base_settlement"
+    },
+    {
+      "id": 98,
+      "name": "안광",
+      "type": "base_settlement"
+    },
+    {
+      "id": 99,
+      "name": "망해",
+      "type": "base_settlement"
+    },
+    {
+      "id": 100,
+      "name": "고복",
+      "type": "base_settlement"
+    },
+    {
+      "id": 101,
+      "name": "탕거",
+      "type": "base_settlement"
+    },
+    {
+      "id": 102,
+      "name": "야롱",
+      "type": "base_settlement"
+    },
+    {
+      "id": 103,
+      "name": "해혼",
+      "type": "base_settlement"
+    },
+    {
+      "id": 104,
+      "name": "나",
+      "type": "base_settlement"
+    },
+    {
+      "id": 105,
+      "name": "익양",
+      "type": "base_settlement"
+    },
+    {
+      "id": 106,
+      "name": "연도",
+      "type": "base_settlement"
+    },
+    {
+      "id": 107,
+      "name": "증양",
+      "type": "base_settlement"
+    },
+    {
+      "id": 108,
+      "name": "시안",
+      "type": "base_settlement"
+    },
+    {
+      "id": 109,
+      "name": "임무",
+      "type": "base_settlement"
+    },
+    {
+      "id": 110,
+      "name": "호",
+      "type": "base_settlement"
+    },
+    {
+      "id": 111,
+      "name": "열",
+      "type": "base_settlement"
+    },
+    {
+      "id": 112,
+      "name": "상애",
+      "type": "base_settlement"
+    },
+    {
+      "id": 113,
+      "name": "뇌양",
+      "type": "base_settlement"
+    },
+    {
+      "id": 114,
+      "name": "잔릉",
+      "type": "base_settlement"
+    },
+    {
+      "id": 115,
+      "name": "천",
+      "type": "base_settlement"
+    },
+    {
+      "id": 116,
+      "name": "아림",
+      "type": "base_settlement"
+    },
+    {
+      "id": 117,
+      "name": "임유",
+      "type": "base_settlement"
+    },
+    {
+      "id": 118,
+      "name": "장무",
+      "type": "base_settlement"
+    },
+    {
+      "id": 119,
+      "name": "상",
+      "type": "base_settlement"
+    },
+    {
+      "id": 120,
+      "name": "동광",
+      "type": "base_settlement"
+    },
+    {
+      "id": 121,
+      "name": "고시",
+      "type": "base_settlement"
+    },
+    {
+      "id": 122,
+      "name": "성부",
+      "type": "base_settlement"
+    },
+    {
+      "id": 123,
+      "name": "하채",
+      "type": "base_settlement"
+    },
+    {
+      "id": 124,
+      "name": "여양",
+      "type": "base_settlement"
+    },
+    {
+      "id": 125,
+      "name": "저",
+      "type": "base_settlement"
+    },
+    {
+      "id": 126,
+      "name": "안국",
+      "type": "base_settlement"
+    },
+    {
+      "id": 127,
+      "name": "상규",
+      "type": "base_settlement"
+    },
+    {
+      "id": 128,
+      "name": "채양",
+      "type": "base_settlement"
+    },
+    {
+      "id": 129,
+      "name": "여한",
+      "type": "base_settlement"
+    },
+    {
+      "id": 130,
+      "name": "안륙",
+      "type": "base_settlement"
+    },
+    {
+      "id": 131,
+      "name": "소위",
+      "type": "base_settlement"
+    },
+    {
+      "id": 132,
+      "name": "전지",
+      "type": "base_settlement"
+    },
+    {
+      "id": 133,
+      "name": "당읍",
+      "type": "base_settlement"
+    },
+    {
+      "id": 134,
+      "name": "하구",
+      "type": "base_settlement"
+    },
+    {
+      "id": 135,
+      "name": "사오",
+      "type": "base_settlement"
+    },
+    {
+      "id": 136,
+      "name": "동양",
+      "type": "base_settlement"
+    },
+    {
+      "id": 137,
+      "name": "평이",
+      "type": "base_settlement"
+    },
+    {
+      "id": 138,
+      "name": "담중",
+      "type": "base_settlement"
+    },
+    {
+      "id": 139,
+      "name": "용천",
+      "type": "base_settlement"
+    },
+    {
+      "id": 140,
+      "name": "낭중",
+      "type": "base_settlement"
+    },
+    {
+      "id": 141,
+      "name": "육양",
+      "type": "base_settlement"
+    },
+    {
+      "id": 142,
+      "name": "여양",
+      "type": "base_settlement"
+    },
+    {
+      "id": 143,
+      "name": "격",
+      "type": "base_settlement"
+    },
+    {
+      "id": 144,
+      "name": "신안",
+      "type": "base_settlement"
+    },
+    {
+      "id": 145,
+      "name": "음산",
+      "type": "base_settlement"
+    },
+    {
+      "id": 146,
+      "name": "증",
+      "type": "base_settlement"
+    }
+  ],
+  "effects": {
+    "0": "상업(소)",
+    "1": "상업(중)",
+    "2": "상업(대)",
+    "3": "농업(소)",
+    "4": "농업(중)",
+    "5": "농업(대)",
+    "6": "병역(소)",
+    "7": "병역(중)",
+    "8": "병역(대)",
+    "9": "궁기병",
+    "10": "청주병",
+    "11": "호표기",
+    "12": "동주병",
+    "13": "서량병",
+    "14": "등갑병",
+    "15": "사기(소)",
+    "16": "사기(중)",
+    "17": "사기(대)",
+    "18": "지휘(소)",
+    "19": "지휘(중)",
+    "20": "지휘(대)",
+    "21": "상병",
+    "22": "상업+500",
+    "23": "상업+750",
+    "24": "상업+1000",
+    "25": "농업+500",
+    "26": "농업+750",
+    "27": "농업+1000",
+    "28": "인구+20000",
+    "29": "인구+40000",
+    "30": "인구+60000",
+    "31": "궁기병 편제가능",
+    "32": "청주병 편제가능",
+    "33": "호표기 편제가능",
+    "34": "동주병 편제가능",
+    "35": "서량병 편제가능",
+    "36": "등갑병 편제가능",
+    "37": "사기+2",
+    "38": "사기+5",
+    "39": "사기+10",
+    "40": "지휘+2",
+    "41": "지휘+4",
+    "42": "지휘+6",
+    "43": "상병 편제가능"
+  }
+}

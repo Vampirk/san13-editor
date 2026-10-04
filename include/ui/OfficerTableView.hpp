@@ -6,6 +6,10 @@
 #include <string>
 #include <unordered_set>
 
+namespace San13::Game {
+    class ItemManager;
+}
+
 namespace San13::UI {
 
 enum class OfficerFilterMode {
@@ -14,6 +18,13 @@ enum class OfficerFilterMode {
     Free = 2,        // 재야 무장 (현재 활동 중 & 무소속)
     Unappeared = 3,  // 미등장 무장 (시나리오 현재 연도 미도달)
     Extended = 4     // 신무장 / 결혼 자녀 무장 (ID 800+)
+};
+
+enum class OfficerOriginFilter {
+    All = 0,         // 전체 분류
+    Historical = 1,  // 역사 무장 (ID 0 ~ 799)
+    Created = 2,     // 등록 신무장 (ID >= 1000)
+    Ancient = 3      // 고대 무장 (ID 850 ~ 899)
 };
 
 /**
@@ -25,9 +36,9 @@ public:
     ~OfficerTableView();
 
     /**
-     * @brief OfficerManager와 데이터 바인딩 및 초기 무장 목록 로드
+     * @brief OfficerManager 및 ItemManager와 데이터 바인딩 및 초기 무장 목록 로드
      */
-    void Initialize(Game::OfficerManager* officerMgr);
+    void Initialize(Game::OfficerManager* officerMgr, Game::ItemManager* itemMgr = nullptr);
 
     /**
      * @brief 실시간 메모리 데이터 재로드 (새로고침)
@@ -67,6 +78,12 @@ public:
      * @brief 프로그래밍적 필터 모드 설정
      */
     void SetFilterMode(OfficerFilterMode mode);
+
+    /**
+     * @brief 프로그래밍적 출신/분류 필터 모드 설정
+     */
+    void SetOriginFilter(OfficerOriginFilter filter);
+    OfficerOriginFilter GetOriginFilter() const { return m_originFilter; }
 
     /**
      * @brief 특정 열 기준 정렬 실행
@@ -183,12 +200,14 @@ private:
     void RenderBatchEditModal();
 
     Game::OfficerManager*            m_officerMgr = nullptr;
+    Game::ItemManager*               m_itemMgr = nullptr;
     std::vector<Game::OfficerRecord> m_cachedOfficers;
     std::vector<size_t>              m_filteredIndices;
 
     char                             m_searchQuery[64] = {0};
     HangulAutomata                   m_searchAutomata;
     OfficerFilterMode                m_filterMode = OfficerFilterMode::All;
+    OfficerOriginFilter              m_originFilter = OfficerOriginFilter::All;
     int                              m_selectedOfficerId = -1;
 
     // EDGE-25 시나리오 일자
@@ -209,6 +228,7 @@ private:
     bool                             m_autoSync = true;
     std::string                      m_syncStatusMsg;
     float                            m_lastSyncTimeMs = 0.0f;
+    uint32_t                         m_editProtagonistGold = 0;
 
     // Phase 5.5 다중 선택 및 일괄 수정 상태
     std::unordered_set<uint16_t>       m_selectedOfficerIds;

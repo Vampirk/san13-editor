@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include "game/TacticManager.hpp"
 
 namespace San13::Game {
 
@@ -86,6 +87,9 @@ struct OfficerMemoryLayout {
     static constexpr uintptr_t POOL_OFFSET = 0x015EE0;      // RootBase로부터의 무장 풀 시작 오프셋
     static constexpr size_t    OBJECT_STRIDE = 0x12BC;      // 무장 1명 오브젝트 크기 (4,796 바이트)
     static constexpr size_t    STATS_OFFSET = 0x15;         // 오브젝트 시작점으로부터 스탯 블록 오프셋
+    static constexpr size_t    FRIENDS_OFFSET = 0x1284;        // 친애 무장 슬롯 (uint16_t[6], 12바이트)
+    static constexpr size_t    SWORN_BROTHERS_OFFSET = 0x1296; // 의형제 3인 슬롯 (uint16_t[3], 6바이트)
+    static constexpr size_t    RIVALS_OFFSET = 0x129C;         // 원수 3인 슬롯 (uint16_t[3], 6바이트)
     static constexpr uint16_t  MAX_HISTORICAL_COUNT = 800;  // 역사 무장 최대 수
     static constexpr uint16_t  MAX_TOTAL_SLOTS = 2165;      // 신무장/자녀 무장 포함 전체 슬롯 상한
 };
@@ -114,6 +118,9 @@ struct OfficerRecord {
     uint16_t spouse_3_id = 0xFFFF; // 배우자 3 무장 ID (+0x48)
     uint16_t sworn_brother_id = 0xFFFF; // 의형제/인연 리더 무장 ID (+0x4A)
     uint16_t rival_id = 0xFFFF;  // 원수 무장 ID (+0x4C)
+    uint16_t sworn_brothers[3] = {0xFFFF, 0xFFFF, 0xFFFF}; // 의형제 3인 슬롯 (+0x1296, +0x1298, +0x129A)
+    uint16_t friends[6] = {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF}; // 친애 무장 6인 슬롯 (+0x1284 ~ +0x128E)
+    uint16_t rivals[3] = {0xFFFF, 0xFFFF, 0xFFFF}; // 원수/혐오 무장 3인 슬롯 (+0x129C, +0x129E, +0x12A0)
     San13OfficerCharacter character{}; // 8대 성향/기호/가치관/상성 (+0x50 ~ +0x58)
     uint16_t city_id = 0xFFFF;
     uint8_t  rank = 0;           // 관직 품관 (0: 군주, 1~9: 1품관~9품관)
@@ -179,35 +186,9 @@ struct OfficerRecord {
     }
 
     static const char* GetTacticName(size_t idx) {
-        static const char* const TACTIC_NAMES[141] = {
-            "천하무쌍", "괴력무쌍", "군신", "만인적", "소패왕", "사자분신",
-            "투장용약", "투지호장", "고금무쌍", "국사무쌍", "천궁", "신궁",
-            "인왕서기", "투지용장", "불굴강장", "불굴용장", "부동", "불굴",
-            "특공", "철벽", "방원진", "역경강화", "연격", "기병돌격",
-            "연사", "강궁", "공격강화", "방어강화", "기동강화", "창공강화",
-            "창방강화", "창속강화", "기공강화", "기방강화", "기속강화", "궁공강화",
-            "궁방강화", "궁속강화", "주위공격", "사기회복", "결사지휘", "견수지휘",
-            "대의지휘", "천의무봉", "용략지휘", "공수지휘", "맹장돌격", "열장돌격",
-            "효장질구", "신산진법", "시황제", "위풍지휘", "돌진지휘", "돌격지휘",
-            "질주지휘", "특공지휘", "철벽지휘", "속방지휘", "역경지휘", "맹사지휘",
-            "제사지휘", "공격지휘", "수비지휘", "속공지휘", "공격명령", "수비명령",
-            "속공명령", "창병공격진", "창병수비진", "창병속공진", "기병공격진", "기병수비진",
-            "기병속공진", "궁병공격진", "궁병수비진", "궁병속공진", "고무", "위무",
-            "왕좌", "군략지원", "후방지원", "신의", "전진강화", "위병",
-            "허보", "귀모계", "연환계", "종횡기략", "요염", "이간계",
-            "동요", "선동", "교란", "위보", "위보동요", "위보선동",
-            "위보교란", "도발", "동요도발", "선동도발", "교란도발", "창병동요",
-            "기병동요", "궁병동요", "창병선동", "기병선동", "궁병선동", "소침공작",
-            "공격약화", "수비약화", "기동약화", "창공약화", "창방약화", "창속약화",
-            "기공약화", "기방약화", "기속약화", "궁공약화", "궁방약화", "궁속약화",
-            "창병도발", "기병도발", "궁병도발", "열화계", "신화계", "화우계",
-            "육도비계", "태평요술", "요술", "대화계", "화공계", "화염계",
-            "화계", "흉노난사", "오환맹사", "산월역경", "남만특공", "저강철벽",
-            "단일도발", "대도발", "금족"
-        };
-        if (idx < 141) return TACTIC_NAMES[idx];
-        return "미상 전법";
+        return TacticManager::GetTacticName(static_cast<uint16_t>(idx));
     }
+
 
     const char* GetCurrentTacticDescription() const {
         return GetTacticName(tactic_id);

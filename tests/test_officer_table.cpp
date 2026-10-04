@@ -202,7 +202,41 @@ int main(int argc, char** argv) {
     }
     TEST_ASSERT(allExtValid, "모든 확장 슬롯 무장의 ID 800+ 및 is_extended 플래그 검증 완료");
 
-    // 필터 리셋
+    // 5-4. [Phase 5] 출신/분류 필터(역사 / 고대 / 신무장) 검증
+    std::cout << "         -> 출신/분류 필터(역사/고대/신무장) 검증\n";
+    tableView.SetFilterMode(OfficerFilterMode::All);
+
+    // 역사 무장 (ID < 800)
+    tableView.SetOriginFilter(OfficerOriginFilter::Historical);
+    size_t histCount = tableView.GetFilteredCount();
+    std::cout << "         -> 역사 무장(ID < 800) 수: " << histCount << "명\n";
+    TEST_ASSERT(histCount >= 700 && histCount <= 800, "역사 무장 700~800명 범위 검증");
+    for (size_t i = 0; i < std::min(histCount, (size_t)30); i++) {
+        const auto* off = tableView.GetOfficerAt(i);
+        TEST_ASSERT(off && off->id < 800, "역사 무장 ID < 800 확인");
+    }
+
+    // 고대 무장 (ID 850 ~ 899)
+    tableView.SetOriginFilter(OfficerOriginFilter::Ancient);
+    size_t ancCount = tableView.GetFilteredCount();
+    std::cout << "         -> 고대 무장(ID 850~899) 수: " << ancCount << "명\n";
+    TEST_ASSERT(ancCount > 0 && ancCount <= 50, "고대 무장 1~50명 감지 확인");
+    for (size_t i = 0; i < ancCount; i++) {
+        const auto* off = tableView.GetOfficerAt(i);
+        TEST_ASSERT(off && off->id >= 850 && off->id < 900, "고대 무장 ID 850~899 범위 확인");
+    }
+
+    // 등록 신무장 (ID >= 1000)
+    tableView.SetOriginFilter(OfficerOriginFilter::Created);
+    size_t createdCount = tableView.GetFilteredCount();
+    std::cout << "         -> 등록 신무장(ID >= 1000) 수: " << createdCount << "명\n";
+    for (size_t i = 0; i < std::min(createdCount, (size_t)30); i++) {
+        const auto* off = tableView.GetOfficerAt(i);
+        TEST_ASSERT(off && off->id >= 1000, "등록 신무장 ID >= 1000 확인");
+    }
+
+    // 출신 필터 리셋
+    tableView.SetOriginFilter(OfficerOriginFilter::All);
     tableView.SetFilterMode(OfficerFilterMode::All);
     TEST_ASSERT(tableView.GetFilteredCount() == totalOfficers, "전체 필터 복귀 확인");
 

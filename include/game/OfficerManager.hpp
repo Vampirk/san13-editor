@@ -3,6 +3,7 @@
 #include "core/IMemoryDriver.hpp"
 #include "game/Officer.hpp"
 #include "game/Bounds.hpp"
+#include "game/Protagonist.hpp"
 #include <vector>
 #include <memory>
 
@@ -96,6 +97,21 @@ public:
                       uint16_t spouse2 = 0xFFFF, uint16_t spouse3 = 0xFFFF, uint16_t rival = 0xFFFF);
 
     /**
+     * @brief 의형제 3인 슬롯 설정 (+0x1296, +0x1298, +0x129A 및 헤더 +0x4A)
+     */
+    bool SetSwornBrothers(uint16_t id, const uint16_t brothers[3]);
+
+    /**
+     * @brief 친애 무장 6인 슬롯 설정 (+0x1284 ~ +0x128E)
+     */
+    bool SetFriends(uint16_t id, const uint16_t friends[6]);
+
+    /**
+     * @brief 원수 3인 슬롯 설정 (+0x129C, +0x129E, +0x12A0 및 헤더 +0x4C)
+     */
+    bool SetRivals(uint16_t id, const uint16_t rivals[3]);
+
+    /**
      * @brief 다중 무장 스탯 일괄 가산/감산 (Batch Delta)
      */
     bool BatchApplyStatsDelta(const std::vector<uint16_t>& ids,
@@ -130,6 +146,27 @@ public:
      */
     bool BatchRestore(const std::vector<OfficerSnapshot>& snapshots);
 
+
+    /**
+     * @brief [Phase 6.6] 주인공(플레이어) 정보 조회
+     */
+    bool GetProtagonistInfo(ProtagonistRecord& outProtagonist);
+
+    /**
+     * @brief [Phase 6.6] 주인공 개인 소지금 수정
+     */
+    bool SetProtagonistGold(uint32_t gold);
+
+    /**
+     * @brief 현재 플레이어 무장 ID 조회 (미확인 시 0xFFFF)
+     */
+    uint16_t GetProtagonistOfficerId();
+
+    /**
+     * @brief 특정 무장이 현재 플레이어인지 여부
+     */
+    bool IsProtagonist(uint16_t officerId);
+
     /**
      * @brief 특정 무장의 메모리 주소 산출 공식
      */
@@ -139,6 +176,7 @@ private:
     Core::IMemoryDriver* m_driver;
     uintptr_t m_rootBase;
     uintptr_t m_officerArrayBase;
+    uintptr_t m_protagonistBase;
 };
 
 } // namespace San13::Game

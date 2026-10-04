@@ -13,6 +13,9 @@ dist/*.tar.gz
 # Runtime configuration and temporary directories
 imgui.ini
 scratch/
+unpacked_pk/
+__pycache__/
+*.pyc
 
 # Proprietary legacy binaries (reverse engineering references, not redistributable)
 legacy_van/
