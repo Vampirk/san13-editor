@@ -720,8 +720,8 @@ void OfficerTableView::Render() {
 
     if (ImGui::BeginTable("OfficerVirtualTable", 14, flags, ImVec2(0, 0))) {
         ImGui::TableSetupColumn("선택/ID", ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthFixed, 80.0f, 0);
-        ImGui::TableSetupColumn("성명",    ImGuiTableColumnFlags_WidthFixed, 140.0f, 1);
-        ImGui::TableSetupColumn("신분",    ImGuiTableColumnFlags_WidthFixed, 90.0f, 2);
+        ImGui::TableSetupColumn("성명",    ImGuiTableColumnFlags_WidthStretch, 1.8f, 1);
+        ImGui::TableSetupColumn("신분",    ImGuiTableColumnFlags_WidthStretch, 1.3f, 2);
         ImGui::TableSetupColumn("통솔",    ImGuiTableColumnFlags_WidthFixed, 55.0f, 3);
         ImGui::TableSetupColumn("무력",    ImGuiTableColumnFlags_WidthFixed, 55.0f, 4);
         ImGui::TableSetupColumn("지력",    ImGuiTableColumnFlags_WidthFixed, 55.0f, 5);
@@ -903,7 +903,11 @@ void OfficerTableView::RenderEditModal() {
         ImGui::OpenPopup(modalTitle);
     }
 
-    ImGui::SetNextWindowSize(ImVec2(680, 580), ImGuiCond_FirstUseEver);
+    ImGuiViewport* vp = ImGui::GetMainViewport();
+    float modalW = std::clamp(vp->WorkSize.x * 0.70f, 680.0f, 1150.0f);
+    float modalH = std::clamp(vp->WorkSize.y * 0.80f, 560.0f, 850.0f);
+    ImGui::SetNextWindowSize(ImVec2(modalW, modalH), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSizeConstraints(ImVec2(640.0f, 480.0f), ImVec2(vp->WorkSize.x * 0.95f, vp->WorkSize.y * 0.95f));
 
     if (ImGui::BeginPopupModal(modalTitle, &m_showEditModal, ImGuiWindowFlags_None)) {
         // 1. 헤더 정보

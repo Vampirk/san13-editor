@@ -29,7 +29,9 @@ struct San13ItemRaw {
     uint8_t  pad_1A[2];          // +0x1A ~ +0x1B: 패딩
     uint16_t owner_officer_id;   // +0x1C: 소유 무장 고유 ID (0xFFFF = 미소유/시장/상인)
     uint8_t  pad_1E[2];          // +0x1E ~ +0x1F: 패딩
-    uint32_t flags;              // +0x20: 상태 플래그
+    uint8_t  location_city_id;   // +0x20: 소재 도시 ID (0 ~ 59, 0xFF=무장 소유)
+    uint8_t  status_flag;        // +0x21: 아이템 상태 플래그 (1=무장 소유/장비, 0=시장/미발견)
+    uint8_t  pad_22[2];          // +0x22 ~ +0x23: 패딩
 };
 #pragma pack(pop)
 
@@ -44,6 +46,8 @@ static_assert(offsetof(San13ItemRaw, skill_level) == 0x0F, "skill_level offset m
 static_assert(offsetof(San13ItemRaw, value) == 0x10, "value offset mismatch");
 static_assert(offsetof(San13ItemRaw, price) == 0x12, "price offset mismatch");
 static_assert(offsetof(San13ItemRaw, owner_officer_id) == 0x1C, "owner_officer_id offset mismatch");
+static_assert(offsetof(San13ItemRaw, location_city_id) == 0x20, "location_city_id offset mismatch");
+static_assert(offsetof(San13ItemRaw, status_flag) == 0x21, "status_flag offset mismatch");
 
 // 에디터 UI 및 비즈니스 로직용 DTO
 struct ItemRecord {
@@ -70,6 +74,9 @@ struct ItemRecord {
     uint16_t owner_id = 0xFFFF;  // 0xFFFF = 미소유
     std::string owner_name;      // 소유 무장 이름 또는 "미소유/시장"
     bool is_owned = false;
+
+    uint8_t location_city_id = 0xFF; // 0 ~ 59: 소재 도시 ID, 0xFF: 무장 소유
+    std::string location_name;      // 예: "[낙양] 시장", "[장안] 시장" 또는 "-"
 
     uintptr_t memory_address = 0;
 };

@@ -38,6 +38,9 @@ public:
     // 편의 함수: 수여 (지정 무장에게 부여)
     bool GrantItem(uint16_t itemId, uint16_t officerId);
 
+    // 소재지 도시 변경 (미소유 보물 시장 이동)
+    bool SetItemLocation(uint16_t itemId, uint8_t cityId);
+
     uintptr_t GetItemAddress(uint16_t itemId) const;
 
 private:

@@ -39,9 +39,11 @@ static_assert(offsetof(San13SettlementRaw, primary_city_id) == 0x13, "primary_ci
 static_assert(offsetof(San13SettlementRaw, city_dev_progress) == 0x14, "city_dev_progress offset mismatch");
 
 struct SettlementMemoryLayout {
-    static constexpr uintptr_t CHUNK_OFFSET = 0x00CA48;   // RootBase로부터의 오프셋
-    static constexpr size_t    OBJECT_STRIDE = 0x1C;       // 단일 부락 크기 (28 바이트)
-    static constexpr uint16_t  MAX_SETTLEMENT_COUNT = 300; // 삼국지 13 PK 총 부락 수
+    static constexpr uintptr_t CHUNK_OFFSET = 0x00CA48;        // RootBase로부터의 부락 청크 오프셋
+    static constexpr uintptr_t CHIIKI_CHUNK_OFFSET = 0xD31A10; // RootBase로부터의 CChiiki (PK 요충/성채) 청크 오프셋
+    static constexpr size_t    OBJECT_STRIDE = 0x1C;           // 단일 부락 크기 (28 바이트)
+    static constexpr size_t    CHIIKI_STRIDE = 0x14;           // CChiiki 크기 (20 바이트)
+    static constexpr uint16_t  MAX_SETTLEMENT_COUNT = 300;     // 삼국지 13 PK 총 부락 수
 };
 
 /**

@@ -104,10 +104,16 @@ public:
      */
     static const char* GetFortressTag(FortressType type);
 
+    /**
+     * @brief 특정 부락의 CChiiki (PK 요충/성채) 메모리 주소 산출
+     */
+    uintptr_t GetChiikiAddress(uint16_t id) const;
+
 private:
     Core::IMemoryDriver* m_driver;
     uintptr_t m_rootBase;
     uintptr_t m_settlementArrayBase;
+    uintptr_t m_chiikiArrayBase;
 };
 
 } // namespace San13::Game

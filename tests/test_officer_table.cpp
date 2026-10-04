@@ -57,6 +57,12 @@ int main(int argc, char** argv) {
     bool mgrOk = officerMgr.Initialize(&driver, rootBase);
     TEST_ASSERT(mgrOk, "OfficerManager 초기화 성공");
 
+    uint16_t gameYear = 0, gameMonth = 0, gameDay = 0;
+    bool dateOk = officerMgr.GetGameDate(gameYear, gameMonth, gameDay);
+    TEST_ASSERT(dateOk, "시나리오 게임 일자 판독 성공");
+    std::cout << "         -> 판독된 인게임 일자: " << gameYear << "년 " << gameMonth << "월 " << gameDay << "일\n";
+    TEST_ASSERT(gameYear == 195 && gameMonth == 7 && gameDay == 1, "195년 7월 1일 일자 정합성 검증 성공");
+
     // 2. OfficerTableView 데이터 바인딩 및 동적 슬롯 확장 로드 검증
     std::cout << "\n[Step 2] 800명 역사 무장 + 285+ 확장 슬롯 동적 스캔 로드 검증\n";
     OfficerTableView tableView;
@@ -226,13 +232,13 @@ int main(int argc, char** argv) {
         TEST_ASSERT(off && off->id >= 850 && off->id < 900, "고대 무장 ID 850~899 범위 확인");
     }
 
-    // 등록 신무장 (ID >= 1000)
+    // 등록 신무장 (ID >= 700, 고대무장 850~899 제외)
     tableView.SetOriginFilter(OfficerOriginFilter::Created);
     size_t createdCount = tableView.GetFilteredCount();
-    std::cout << "         -> 등록 신무장(ID >= 1000) 수: " << createdCount << "명\n";
+    std::cout << "         -> 등록 신무장(ID >= 700, 고대 제외) 수: " << createdCount << "명\n";
     for (size_t i = 0; i < std::min(createdCount, (size_t)30); i++) {
         const auto* off = tableView.GetOfficerAt(i);
-        TEST_ASSERT(off && off->id >= 1000, "등록 신무장 ID >= 1000 확인");
+        TEST_ASSERT(off && off->id >= 700 && (off->id < 850 || off->id >= 900), "등록 신무장 ID 범위 확인");
     }
 
     // 출신 필터 리셋

@@ -174,8 +174,11 @@ void CityDetailModal::Render() {
         ImGui::OpenPopup("도시 종합 인스펙터##CityDetailModal");
     }
 
-    ImGui::SetNextWindowSize(ImVec2(820, 580), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSizeConstraints(ImVec2(720, 480), ImVec2(1200, 750));
+    ImGuiViewport* vp = ImGui::GetMainViewport();
+    float modalW = std::clamp(vp->WorkSize.x * 0.75f, 750.0f, 1300.0f);
+    float modalH = std::clamp(vp->WorkSize.y * 0.80f, 520.0f, 850.0f);
+    ImGui::SetNextWindowSize(ImVec2(modalW, modalH), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSizeConstraints(ImVec2(720.0f, 480.0f), ImVec2(vp->WorkSize.x * 0.95f, vp->WorkSize.y * 0.95f));
 
     if (ImGui::BeginPopupModal("도시 종합 인스펙터##CityDetailModal", &m_isOpen, ImGuiWindowFlags_NoCollapse)) {
         // 상단 헤더

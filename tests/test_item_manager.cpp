@@ -146,6 +146,30 @@ int main() {
     assert(modifiedItem.owner_id == 418);
     std::cout << "  [PASS] 소유권 변경/몰수/수여 및 안전 원복 100% 무결성 검증 통과\n";
 
+    // Step 6: 미소유 명품의 소재지 도시 판독 및 시장 이동(SetItemLocation) 검증
+    std::cout << "\n[Step 6] 미소유 명품 소재 도시(시장) 판독 및 위치 이동 검증\n";
+    ItemRecord sword15;
+    assert(itemMgr.LoadItem(15, sword15));
+    std::cout << "  [Item 15 참사검] 소유: " << sword15.owner_name << ", 소재지: " << sword15.location_name << " (CityID: " << (int)sword15.location_city_id << ")\n";
+    assert(!sword15.is_owned);
+    assert(sword15.location_city_id == 23); // 낙양
+    assert(sword15.location_name.find("낙양") != std::string::npos);
+
+    // 시장 위치 이동 테스트: 장안(25)으로 이동 후 원복
+    uint8_t origCity = sword15.location_city_id;
+    assert(itemMgr.SetItemLocation(15, 25)); // 장안으로 이동
+    ItemRecord movedSword;
+    assert(itemMgr.LoadItem(15, movedSword));
+    assert(movedSword.location_city_id == 25);
+    assert(movedSword.location_name.find("장안") != std::string::npos);
+    std::cout << "  -> 장안으로 시장 이동 확인: " << movedSword.location_name << "\n";
+
+    // 원래 도시(낙양 23)로 100% 안전 원복
+    assert(itemMgr.SetItemLocation(15, origCity));
+    assert(itemMgr.LoadItem(15, movedSword));
+    assert(movedSword.location_city_id == origCity);
+    std::cout << "  [PASS] 미소유 명품 소재지 도시(시장) 판독 및 이동/원복 무결성 통과\n";
+
     std::cout << "\n============================================================\n";
     std::cout << " 결과 요약: 명품(Item) 매니저 전수 검증 100% 통과 (Green)\n";
     std::cout << "============================================================\n";

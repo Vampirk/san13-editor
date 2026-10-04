@@ -1,6 +1,7 @@
 #include "ui/ItemTableView.hpp"
 #include "ui/FontHelper.hpp"
 #include "game/OfficerNameTable.hpp"
+#include "game/City.hpp"
 #include "imgui.h"
 #include <algorithm>
 #include <cstring>
@@ -24,6 +25,11 @@ bool ItemTableView::MatchesFilter(const Game::ItemRecord& item) const {
     // 1. 소유 필터
     if (m_ownerFilter == ItemOwnershipFilter::OwnedOnly && !item.is_owned) return false;
     if (m_ownerFilter == ItemOwnershipFilter::UnownedOnly && item.is_owned) return false;
+
+    // 1-1. 도시 시장 필터
+    if (m_cityFilter >= 0) {
+        if (item.is_owned || item.location_city_id != static_cast<uint8_t>(m_cityFilter)) return false;
+    }
 
     // 2. 카테고리 필터
     if (m_catFilter != ItemCategoryFilter::All) {
@@ -66,9 +72,13 @@ bool ItemTableView::MatchesFilter(const Game::ItemRecord& item) const {
         std::string catLower = item.category_name;
         std::transform(catLower.begin(), catLower.end(), catLower.begin(), ::tolower);
 
+        std::string locLower = item.location_name;
+        std::transform(locLower.begin(), locLower.end(), locLower.begin(), ::tolower);
+
         if (nameLower.find(needle) == std::string::npos &&
             ownerLower.find(needle) == std::string::npos &&
-            catLower.find(needle) == std::string::npos) {
+            catLower.find(needle) == std::string::npos &&
+            locLower.find(needle) == std::string::npos) {
             return false;
         }
     }
@@ -141,16 +151,43 @@ void ItemTableView::RenderToolbar() {
     ImGui::SameLine();
     ImGui::Text("| 소유:");
     ImGui::SameLine();
-    if (ImGui::RadioButton("전체##OwnAll", m_ownerFilter == ItemOwnershipFilter::All)) {
+    if (ImGui::RadioButton("전체##OwnAll", m_ownerFilter == ItemOwnershipFilter::All && m_cityFilter == -1)) {
         m_ownerFilter = ItemOwnershipFilter::All;
+        m_cityFilter = -1;
     }
     ImGui::SameLine();
     if (ImGui::RadioButton("소유 중##OwnYes", m_ownerFilter == ItemOwnershipFilter::OwnedOnly)) {
         m_ownerFilter = ItemOwnershipFilter::OwnedOnly;
+        m_cityFilter = -1;
     }
     ImGui::SameLine();
-    if (ImGui::RadioButton("미소유##OwnNo", m_ownerFilter == ItemOwnershipFilter::UnownedOnly)) {
+    if (ImGui::RadioButton("미소유(시장)##OwnNo", m_ownerFilter == ItemOwnershipFilter::UnownedOnly && m_cityFilter == -1)) {
         m_ownerFilter = ItemOwnershipFilter::UnownedOnly;
+        m_cityFilter = -1;
+    }
+
+    ImGui::SameLine();
+    ImGui::Spacing();
+    ImGui::SameLine();
+    ImGui::Text("| 도시 시장:");
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(130.0f);
+    const char* curCityTitle = (m_cityFilter >= 0 && m_cityFilter < 60) ? Game::GetCityName(static_cast<uint8_t>(m_cityFilter)) : "전체 도시";
+    if (ImGui::BeginCombo("##ItemCityCombo", curCityTitle)) {
+        if (ImGui::Selectable("전체 도시", m_cityFilter == -1)) {
+            m_cityFilter = -1;
+        }
+        for (uint8_t cid = 0; cid < 60; cid++) {
+            const char* cName = Game::GetCityName(cid);
+            if (!cName || cName[0] == '\0') continue;
+            char cBuf[64];
+            std::snprintf(cBuf, sizeof(cBuf), "%s (#%02u)", cName, cid);
+            if (ImGui::Selectable(cBuf, m_cityFilter == cid)) {
+                m_cityFilter = cid;
+                m_ownerFilter = ItemOwnershipFilter::UnownedOnly;
+            }
+        }
+        ImGui::EndCombo();
     }
 
     ImGui::EndChild();
@@ -180,7 +217,7 @@ void ItemTableView::RenderItemTable() {
         ImGui::TableSetupColumn("능력치 보정", ImGuiTableColumnFlags_WidthFixed, 90.0f);
         ImGui::TableSetupColumn("부가 특기", ImGuiTableColumnFlags_WidthFixed, 95.0f);
         ImGui::TableSetupColumn("가치/가격", ImGuiTableColumnFlags_WidthFixed, 95.0f);
-        ImGui::TableSetupColumn("소유 무장", ImGuiTableColumnFlags_WidthFixed, 140.0f);
+        ImGui::TableSetupColumn("소유자 / 소재지", ImGuiTableColumnFlags_WidthFixed, 155.0f);
         ImGui::TableSetupColumn("관리 / 조작", ImGuiTableColumnFlags_WidthStretch);
         ImGui::TableHeadersRow();
 
@@ -238,7 +275,7 @@ void ItemTableView::RenderItemTable() {
                 ImGui::TableSetColumnIndex(5);
                 ImGui::Text("%u / %u금", item->value, item->price);
 
-                // 7. 소유 무장
+                // 7. 소유자 / 소재지
                 ImGui::TableSetColumnIndex(6);
                 if (item->is_owned) {
                     if (item->owner_id == protId) {
@@ -247,7 +284,7 @@ void ItemTableView::RenderItemTable() {
                         ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.9f, 1.0f), "%s (#%u)", item->owner_name.c_str(), item->owner_id);
                     }
                 } else {
-                    ImGui::TextDisabled("미소유 / 시장");
+                    ImGui::TextColored(ImVec4(0.95f, 0.78f, 0.35f, 1.0f), "%s", item->location_name.c_str());
                 }
 
                 // 8. 관리 / 조작

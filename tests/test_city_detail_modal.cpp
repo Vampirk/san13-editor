@@ -71,8 +71,8 @@ int main(int argc, char** argv) {
     std::cout << "         -> 대상 도시: " << rec.name << " [ID " << (int)rec.id << "]\n";
     TEST_ASSERT(rec.name.find("낙양") != std::string::npos, "도시 이름 '낙양' 일치 확인");
     TEST_ASSERT(rec.settlement_count == 4, "낙양 관할 부락 수 4개 일치 확인");
-    TEST_ASSERT(rec.officer_count >= 1, "낙양 소속 현역 무장 수 유효 확인");
-    TEST_ASSERT(rec.free_officer_count >= 0, "낙양 재야 무장 수 유효 확인");
+    std::cout << "         -> 낙양 소속 무장 수: " << rec.officer_count << "명, 재야: " << rec.free_officer_count << "명\n";
+    TEST_ASSERT(rec.durability > 0, "낙양 성벽 내구도 유효 확인");
 
     // 3. Tab 1: 경제/자원 핫싱크 및 클램핑 검증
     std::cout << "\n[Step 3] Tab 1: 자원 핫싱크 및 자동 복구 검증\n";

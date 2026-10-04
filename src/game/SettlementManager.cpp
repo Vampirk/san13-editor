@@ -9,7 +9,7 @@
 namespace San13::Game {
 
 SettlementManager::SettlementManager()
-    : m_driver(nullptr), m_rootBase(0), m_settlementArrayBase(0) {
+    : m_driver(nullptr), m_rootBase(0), m_settlementArrayBase(0), m_chiikiArrayBase(0) {
 }
 
 SettlementManager::~SettlementManager() {
@@ -20,12 +20,18 @@ bool SettlementManager::Initialize(Core::IMemoryDriver* driver, uintptr_t rootBa
     m_driver = driver;
     m_rootBase = rootBase;
     m_settlementArrayBase = rootBase + SettlementMemoryLayout::CHUNK_OFFSET;
+    m_chiikiArrayBase = rootBase + SettlementMemoryLayout::CHIIKI_CHUNK_OFFSET;
     return true;
 }
 
 uintptr_t SettlementManager::GetSettlementAddress(uint16_t id) const {
     if (m_settlementArrayBase == 0) return 0;
     return m_settlementArrayBase + (id * SettlementMemoryLayout::OBJECT_STRIDE);
+}
+
+uintptr_t SettlementManager::GetChiikiAddress(uint16_t id) const {
+    if (m_chiikiArrayBase == 0) return 0;
+    return m_chiikiArrayBase + ((60 + id) * SettlementMemoryLayout::CHIIKI_STRIDE);
 }
 
 bool SettlementManager::LoadSettlement(uint16_t id, SettlementRecord& outRecord, uint8_t cityId, const std::string& cityName) {
@@ -104,23 +110,54 @@ bool SettlementManager::LoadSettlement(uint16_t id, SettlementRecord& outRecord,
     outRecord.name = SettlementNameTable::GetFormattedName(raw.settlement_id, cityName);
     outRecord.memory_address = addr;
 
-    // Phase 4 보완: 요새/성채(건물) 및 요충 레벨(Lv 1~5) 체계
+    // Phase 4 보완: 요새/성채(건물) 및 요충 레벨(Lv 1~5) 체계 (CChiiki 라이브 연동)
     outRecord.kind = (raw.settlement_id < 147) ? SettlementKind::FixedSettlement : SettlementKind::DynamicFortress;
 
-    // 최대 건물 레벨 산출 (tail_pad[3]에 커스텀 값 있으면 우선 적용)
-    uint8_t customMaxLevel = raw.tail_pad[3];
-    if (customMaxLevel >= 1 && customMaxLevel <= 5) {
-        outRecord.max_fortress_level = customMaxLevel;
-    } else {
-        outRecord.max_fortress_level = GetDefaultMaxLevel(raw.settlement_id, raw.default_effect_id);
+    uint8_t cTypeVal = 0xFF;
+    uint16_t cValHp = 0;
+    uint8_t cValLv = 0;
+    bool hasChiiki = false;
+
+    if (m_chiikiArrayBase != 0) {
+        uintptr_t cAddr = GetChiikiAddress(raw.settlement_id);
+        uint8_t cBuf[20];
+        if (m_driver->ReadRaw(cAddr, cBuf, sizeof(cBuf))) {
+            hasChiiki = true;
+            cTypeVal = cBuf[7];
+            cValHp = *reinterpret_cast<uint16_t*>(&cBuf[8]);
+            cValLv = cBuf[0x10];
+        }
     }
 
-    uint8_t fortTypeVal = raw.tail_pad[0];
+    // 최대 건물 레벨 산출 (CChiiki 레벨 우선, tail_pad[3] 호환)
+    if (hasChiiki && cValLv >= 1 && cValLv <= 5) {
+        outRecord.max_fortress_level = cValLv;
+    } else {
+        uint8_t customMaxLevel = raw.tail_pad[3];
+        if (customMaxLevel >= 1 && customMaxLevel <= 5) {
+            outRecord.max_fortress_level = customMaxLevel;
+        } else {
+            outRecord.max_fortress_level = GetDefaultMaxLevel(raw.settlement_id, raw.default_effect_id);
+        }
+    }
+
+    // 건물(성채) 유형 및 HP 산출 (CChiiki 우선, tail_pad 호환)
+    uint8_t fortTypeVal = 0;
+    if (hasChiiki && cTypeVal >= 1 && cTypeVal <= 5) {
+        fortTypeVal = cTypeVal;
+    } else if (raw.tail_pad[0] >= 1 && raw.tail_pad[0] <= 5) {
+        fortTypeVal = raw.tail_pad[0];
+    }
+
     if (fortTypeVal >= 1 && fortTypeVal <= 5) {
         outRecord.fortress_type = static_cast<FortressType>(fortTypeVal);
         outRecord.current_fortress_level = fortTypeVal;
         outRecord.is_fortified = true;
-        outRecord.hp = *reinterpret_cast<const uint16_t*>(&raw.tail_pad[1]);
+        if (hasChiiki && cTypeVal == fortTypeVal && cValHp != 0xFFFF && cValHp > 0) {
+            outRecord.hp = cValHp;
+        } else {
+            outRecord.hp = *reinterpret_cast<const uint16_t*>(&raw.tail_pad[1]);
+        }
         switch (outRecord.fortress_type) {
             case FortressType::Camp:        outRecord.max_hp = 1000; break; // Lv 1 견진
             case FortressType::MusicTower:  outRecord.max_hp = 1500; break; // Lv 2 군악대
@@ -301,8 +338,16 @@ bool SettlementManager::SetSettlementMaxLevel(uint16_t id, uint8_t maxLevel) {
         return false;
     }
 
-    uintptr_t addr = GetSettlementAddress(id);
     uint8_t cleanLv = std::clamp<uint8_t>(maxLevel, 1, 5);
+
+    // 1. CChiiki 레벨(+0x10) 쓰기
+    if (m_chiikiArrayBase != 0) {
+        uintptr_t chiikiAddr = GetChiikiAddress(id);
+        m_driver->Write<uint8_t>(chiikiAddr + 0x10, cleanLv);
+    }
+
+    // 2. San13SettlementRaw tail_pad[3] 호환 쓰기
+    uintptr_t addr = GetSettlementAddress(id);
     uintptr_t maxLvAddr = addr + offsetof(San13SettlementRaw, tail_pad) + 3;
     return m_driver->Write<uint8_t>(maxLvAddr, cleanLv);
 }
@@ -337,11 +382,50 @@ bool SettlementManager::FortifySettlement(uint16_t id, FortressType type, uint16
 
     // 현재 부락의 최대 레벨 확인 및 필요 시 자동 승급
     uint8_t curMaxLv = raw.tail_pad[3];
+    if (m_chiikiArrayBase != 0) {
+        uint8_t chiikiLv = 0;
+        if (m_driver->Read<uint8_t>(GetChiikiAddress(id) + 0x10, chiikiLv) && chiikiLv >= 1 && chiikiLv <= 5) {
+            curMaxLv = chiikiLv;
+        }
+    }
     if (curMaxLv < reqLv || curMaxLv > 5) {
         curMaxLv = std::max(reqLv, GetDefaultMaxLevel(id, raw.default_effect_id));
     }
 
-    // tail_pad에 타입, HP, 최대 레벨 기록
+    // 대상 세력 ID 산출 (cityId가 유효하면 해당 도시 군주의 세력 ID)
+    uint8_t targetForceId = 0xFF;
+    uint8_t boundCity = (cityId != 255) ? cityId : raw.primary_city_id;
+    if (boundCity != 255 && boundCity < CityMemoryLayout::MAX_CITY_COUNT) {
+        uintptr_t cityAddr = m_rootBase + CityMemoryLayout::CHUNK_OFFSET + (boundCity * CityMemoryLayout::OBJECT_STRIDE);
+        uint16_t rulerId = 0xFFFF;
+        if (m_driver->Read<uint16_t>(cityAddr + offsetof(San13CityRaw, ruler_id), rulerId) && rulerId != 0xFFFF) {
+            for (const auto& f : ForceManager::GetForces()) {
+                if (f.is_valid && f.ruler_id == rulerId) {
+                    targetForceId = static_cast<uint8_t>(f.force_id);
+                    break;
+                }
+            }
+        }
+    }
+
+    // 1. CChiiki (PK 요충/성채 진짜 구조체)에 쓰기
+    if (m_chiikiArrayBase != 0) {
+        uintptr_t chiikiAddr = GetChiikiAddress(id);
+        uint8_t chiikiBuf[20];
+        if (m_driver->ReadRaw(chiikiAddr, chiikiBuf, sizeof(chiikiBuf))) {
+            if (targetForceId != 0xFF) {
+                chiikiBuf[6] = targetForceId;
+            }
+            chiikiBuf[7] = static_cast<uint8_t>(type);
+            *reinterpret_cast<uint16_t*>(&chiikiBuf[8]) = setHp;
+            if (chiikiBuf[0x10] < reqLv) {
+                chiikiBuf[0x10] = reqLv;
+            }
+            m_driver->WriteRaw(chiikiAddr, chiikiBuf, sizeof(chiikiBuf));
+        }
+    }
+
+    // 2. San13SettlementRaw tail_pad에 타입, HP, 최대 레벨 기록 (호환성 유지)
     uint8_t tail[4] = {
         static_cast<uint8_t>(type),
         static_cast<uint8_t>(setHp & 0xFF),
@@ -350,12 +434,10 @@ bool SettlementManager::FortifySettlement(uint16_t id, FortressType type, uint16
     };
 
     uintptr_t tailAddr = addr + offsetof(San13SettlementRaw, tail_pad);
-    if (!m_driver->WriteRaw(tailAddr, tail, sizeof(tail))) {
-        return false;
-    }
+    m_driver->WriteRaw(tailAddr, tail, sizeof(tail));
 
     // 요새화 시 해당 부락을 즉시 100% 장악 상태로 활성화 및 primary_city_id 바인딩
-    SetSettlementDevProgress(id, 100, cityId);
+    SetSettlementDevProgress(id, 100, boundCity);
     return true;
 }
 
@@ -370,7 +452,18 @@ bool SettlementManager::DemolishFortress(uint16_t id) {
         return false;
     }
 
-    // tail_pad[3]의 최대 레벨 설정은 보존하고 건물 정보(타입/HP)만 해체
+    // 1. CChiiki 해체 (-1, HP 0xFFFF)
+    if (m_chiikiArrayBase != 0) {
+        uintptr_t chiikiAddr = GetChiikiAddress(id);
+        uint8_t chiikiBuf[20];
+        if (m_driver->ReadRaw(chiikiAddr, chiikiBuf, sizeof(chiikiBuf))) {
+            chiikiBuf[7] = 0xFF; // -1: 미건축
+            *reinterpret_cast<uint16_t*>(&chiikiBuf[8]) = 0xFFFF;
+            m_driver->WriteRaw(chiikiAddr, chiikiBuf, sizeof(chiikiBuf));
+        }
+    }
+
+    // 2. tail_pad[3]의 최대 레벨 설정은 보존하고 건물 정보(타입/HP)만 해체
     uint8_t maxLv = raw.tail_pad[3];
     uint8_t zeroTail[4] = {0, 0, 0, maxLv};
     uintptr_t tailAddr = addr + offsetof(San13SettlementRaw, tail_pad);

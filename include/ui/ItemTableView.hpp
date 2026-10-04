@@ -51,6 +51,7 @@ private:
     HangulAutomata m_searchAutomata;
     ItemCategoryFilter m_catFilter = ItemCategoryFilter::All;
     ItemOwnershipFilter m_ownerFilter = ItemOwnershipFilter::All;
+    int m_cityFilter = -1; // -1: 전체, 0~59: 특정 도시 소재지/시장
 
     // 수여 모달 상태
     bool m_showAssignModal = false;

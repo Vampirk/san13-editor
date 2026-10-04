@@ -274,12 +274,12 @@ void CityTableView::Render() {
         ImGuiTableFlags_BordersV;
 
     if (ImGui::BeginTable("CityVirtualTable", 6, flags, ImVec2(0, 0))) {
-        ImGui::TableSetupColumn("ID",     ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthFixed, 50.0f, 0);
-        ImGui::TableSetupColumn("도시명", ImGuiTableColumnFlags_WidthFixed, 120.0f, 1);
-        ImGui::TableSetupColumn("자금",   ImGuiTableColumnFlags_WidthFixed, 100.0f, 2);
-        ImGui::TableSetupColumn("군량",   ImGuiTableColumnFlags_WidthFixed, 100.0f, 3);
-        ImGui::TableSetupColumn("병력",   ImGuiTableColumnFlags_WidthFixed, 90.0f, 4);
-        ImGui::TableSetupColumn("내구도", ImGuiTableColumnFlags_WidthFixed, 90.0f, 5);
+        ImGui::TableSetupColumn("ID",     ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthFixed, 55.0f, 0);
+        ImGui::TableSetupColumn("도시명", ImGuiTableColumnFlags_WidthStretch, 2.0f, 1);
+        ImGui::TableSetupColumn("자금",   ImGuiTableColumnFlags_WidthStretch, 1.4f, 2);
+        ImGui::TableSetupColumn("군량",   ImGuiTableColumnFlags_WidthStretch, 1.4f, 3);
+        ImGui::TableSetupColumn("병력",   ImGuiTableColumnFlags_WidthStretch, 1.3f, 4);
+        ImGui::TableSetupColumn("내구도", ImGuiTableColumnFlags_WidthStretch, 1.3f, 5);
         ImGui::TableSetupScrollFreeze(0, 1);
         ImGui::TableHeadersRow();
 

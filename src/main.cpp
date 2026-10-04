@@ -152,8 +152,20 @@ int main(int argc, char** argv) {
 
         ui.BeginFrame();
 
-        // 메인 에디터 대시보드 윈도우
+        // 창 크기에 따른 유동적 폰트/UI 반응형 스케일링
         ImGuiViewport* viewport = ImGui::GetMainViewport();
+        static bool autoScale = true;
+        static float manualScale = 1.0f;
+
+        if (autoScale) {
+            float scaleW = viewport->WorkSize.x / 1280.0f;
+            float scaleH = viewport->WorkSize.y / 800.0f;
+            float targetScale = std::clamp(std::min(scaleW, scaleH), 0.85f, 1.40f);
+            ImGui::GetIO().FontGlobalScale = targetScale;
+        } else {
+            ImGui::GetIO().FontGlobalScale = manualScale;
+        }
+
         ImGui::SetNextWindowPos(viewport->WorkPos);
         ImGui::SetNextWindowSize(viewport->WorkSize);
 
@@ -165,8 +177,9 @@ int main(int argc, char** argv) {
             ImGuiWindowFlags_NoBringToFrontOnFocus;
 
         if (ImGui::Begin("MainEditorWindow", nullptr, windowFlags)) {
-            // 상단 상태 대시보드 배너 (주인공 퀵 위젯 포함)
-            ImGui::BeginChild("TopBanner", ImVec2(0, 95), true);
+            // 상단 상태 대시보드 배너 (주인공 퀵 위젯 및 반응형 스케일 제어 포함)
+            float bannerHeight = std::max(95.0f, ImGui::GetFrameHeightWithSpacing() * 3.8f);
+            ImGui::BeginChild("TopBanner", ImVec2(0, bannerHeight), true);
             ImGui::Columns(3, "TopStatusColumns", false);
 
             // 컬럼 1: 프로세스 연결 상태 및 일자
@@ -196,7 +209,14 @@ int main(int argc, char** argv) {
             } else {
                 ImGui::TextDisabled("게임 실행 시 자동 감지됩니다");
             }
-            ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "GUI: %.1f FPS (Dear ImGui %s)", ImGui::GetIO().Framerate, IMGUI_VERSION);
+            ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "GUI: %.1f FPS | 스케일: %.2fx", 
+                               ImGui::GetIO().Framerate, ImGui::GetIO().FontGlobalScale);
+            ImGui::Checkbox("창 반응형##AutoUIScale", &autoScale);
+            if (!autoScale) {
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(70.0f);
+                ImGui::SliderFloat("##ManualScale", &manualScale, 0.75f, 1.50f, "%.2fx");
+            }
 
             ImGui::NextColumn();
             // 컬럼 3: 플레이어 무장 (주인공) 퀵 대시보드

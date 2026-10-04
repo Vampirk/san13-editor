@@ -140,7 +140,18 @@ int main() {
     San13SettlementRaw raw117;
     driver.Read<San13SettlementRaw>(setMgr.GetSettlementAddress(117), raw117);
     TEST_ASSERT(raw117.primary_city_id == 0, "인게임 메모리 primary_city_id가 양평(0)으로 즉시 바인딩됨 확인");
-    std::cout << "         -> 건축 확인: " << f117.name << " " << f117.type_tag << " (내구: " << f117.hp << "/" << f117.max_hp << ", 지배도시=" << (int)raw117.primary_city_id << ")\n";
+
+    // [CChiiki 실측 검증] PK 엔진 진짜 성채 구조체(0xD31A10) 쓰기 확인
+    uintptr_t chiiki117Addr = setMgr.GetChiikiAddress(117);
+    uint8_t c117Buf[20];
+    driver.ReadRaw(chiiki117Addr, c117Buf, 20);
+    int8_t c117Type = static_cast<int8_t>(c117Buf[7]);
+    uint16_t c117Hp = *reinterpret_cast<uint16_t*>(&c117Buf[8]);
+    uint8_t c117Lv = c117Buf[0x10];
+    TEST_ASSERT(c117Type == 5, "CChiiki jousai_type == 5 (방채) 인게임 엔진 쓰기 확인");
+    TEST_ASSERT(c117Hp == 2500, "CChiiki hp == 2500 인게임 내구도 쓰기 확인");
+    TEST_ASSERT(c117Lv >= 5, "CChiiki level >= 5 인게임 요충 레벨 승급 확인");
+    std::cout << "         -> 건축 확인: " << f117.name << " " << f117.type_tag << " (내구: " << f117.hp << "/" << f117.max_hp << ", 지배도시=" << (int)raw117.primary_city_id << ", CChiiki Type=" << (int)c117Type << ")\n";
 
     // 6-2. 성채 유형 견진(堅陣, Lv1)으로 전환
     bool cOk = setMgr.FortifySettlement(117, FortressType::Camp, 1000, 0);
@@ -154,6 +165,13 @@ int main() {
     // 6-3. 성채 해체 및 일반 부락 원복
     bool dOk = setMgr.DemolishFortress(117);
     TEST_ASSERT(dOk, "부락 117 성채 해체(원복) 성공");
+
+    driver.ReadRaw(chiiki117Addr, c117Buf, 20);
+    c117Type = static_cast<int8_t>(c117Buf[7]);
+    c117Hp = *reinterpret_cast<uint16_t*>(&c117Buf[8]);
+    TEST_ASSERT(c117Type == -1, "CChiiki jousai_type == -1 (해체) 인게임 엔진 원복 확인");
+    TEST_ASSERT(c117Hp == 0xFFFF, "CChiiki hp == 0xFFFF (미건축 내구도) 원복 확인");
+
     SettlementRecord d117;
     setMgr.LoadSettlement(117, d117, 0, "양평");
     TEST_ASSERT(d117.is_fortified == false, "부락 117 건물 건축 플래그 비활성 확인");

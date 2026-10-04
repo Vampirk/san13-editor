@@ -38,18 +38,20 @@ uintptr_t OfficerManager::GetOfficerAddress(uint16_t id) const {
 bool OfficerManager::GetGameDate(uint16_t& outYear, uint16_t& outMonth, uint16_t& outDay) {
     if (!m_driver || m_rootBase == 0) return false;
 
-    // [EDGE-25] RootBase + 0x137A (년), +0x1380 (월), +0x1386 (일)
-    uint16_t y = 0, m = 0, d = 0;
+    // [EDGE-25] RootBase + 0x137A (년), +0x137C (월, 0-indexed: 0=1월..11=12월), +0x1380 (일, 1~31)
+    uint16_t y = 0, raw_m = 0, d = 0;
     if (!m_driver->Read<uint16_t>(m_rootBase + 0x137A, y) ||
-        !m_driver->Read<uint16_t>(m_rootBase + 0x1380, m) ||
-        !m_driver->Read<uint16_t>(m_rootBase + 0x1386, d)) {
+        !m_driver->Read<uint16_t>(m_rootBase + 0x137C, raw_m) ||
+        !m_driver->Read<uint16_t>(m_rootBase + 0x1380, d)) {
         return false;
     }
 
     if (y < 100 || y > 400) return false;
+    if (raw_m > 11) return false;
+    if (d < 1 || d > 31) return false;
 
     outYear = y;
-    outMonth = m;
+    outMonth = raw_m + 1;
     outDay = d;
     return true;
 }
