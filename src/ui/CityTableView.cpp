@@ -98,16 +98,19 @@ void CityTableView::ApplySort(int columnId, bool ascending) {
                 case 1: // 도시명
                     cmp = a.name.compare(b.name);
                     break;
-                case 2: // 자금
+                case 2: // 지배 세력
+                    cmp = a.force_name.compare(b.force_name);
+                    break;
+                case 3: // 자금
                     cmp = (a.gold < b.gold) ? -1 : (a.gold > b.gold ? 1 : 0);
                     break;
-                case 3: // 군량
+                case 4: // 군량
                     cmp = (a.provisions < b.provisions) ? -1 : (a.provisions > b.provisions ? 1 : 0);
                     break;
-                case 4: // 병력
+                case 5: // 병력
                     cmp = (a.troops < b.troops) ? -1 : (a.troops > b.troops ? 1 : 0);
                     break;
-                case 5: // 내구도
+                case 6: // 내구도
                     cmp = (a.durability < b.durability) ? -1 : (a.durability > b.durability ? 1 : 0);
                     break;
                 default:
@@ -211,9 +214,11 @@ float CityTableView::GetLastSyncTimeMs() const {
 
 static void RenderResourceValue(uint32_t val, uint32_t highThresh) {
     if (val >= highThresh) {
-        ImGui::TextColored(ImVec4(0.95f, 0.82f, 0.40f, 1.0f), "%u", val); // 최대치 황금색
+        ImGui::TextColored(ImVec4(1.00f, 0.85f, 0.25f, 1.0f), "%u", val); // 완충/상한 황금색
+    } else if (val >= highThresh / 2) {
+        ImGui::TextColored(ImVec4(0.38f, 0.88f, 0.52f, 1.0f), "%u", val); // 풍족 비취색
     } else if (val == 0) {
-        ImGui::TextColored(ImVec4(0.85f, 0.30f, 0.30f, 1.0f), "0 (고갈)"); // 0일 때 붉은색 경고
+        ImGui::TextColored(ImVec4(0.90f, 0.35f, 0.35f, 1.0f), "0 (고갈)"); // 0일 때 붉은색 경고
     } else {
         ImGui::Text("%u", val);
     }
@@ -262,7 +267,7 @@ void CityTableView::Render() {
     ImGui::EndGroup();
     ImGui::Spacing();
 
-    // 2. 도시 목록 테이블
+    // 2. 도시 목록 테이블 (7열 구성: ID, 도시명, 지배 세력/태수, 자금, 군량, 병력, 내구도)
     static ImGuiTableFlags flags =
         ImGuiTableFlags_Resizable |
         ImGuiTableFlags_Reorderable |
@@ -273,13 +278,14 @@ void CityTableView::Render() {
         ImGuiTableFlags_BordersOuter |
         ImGuiTableFlags_BordersV;
 
-    if (ImGui::BeginTable("CityVirtualTable", 6, flags, ImVec2(0, 0))) {
-        ImGui::TableSetupColumn("ID",     ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthFixed, 55.0f, 0);
-        ImGui::TableSetupColumn("도시명", ImGuiTableColumnFlags_WidthStretch, 2.0f, 1);
-        ImGui::TableSetupColumn("자금",   ImGuiTableColumnFlags_WidthStretch, 1.4f, 2);
-        ImGui::TableSetupColumn("군량",   ImGuiTableColumnFlags_WidthStretch, 1.4f, 3);
-        ImGui::TableSetupColumn("병력",   ImGuiTableColumnFlags_WidthStretch, 1.3f, 4);
-        ImGui::TableSetupColumn("내구도", ImGuiTableColumnFlags_WidthStretch, 1.3f, 5);
+    if (ImGui::BeginTable("CityVirtualTable", 7, flags, ImVec2(0, 0))) {
+        ImGui::TableSetupColumn("ID",        ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthFixed, 50.0f, 0);
+        ImGui::TableSetupColumn("도시명",    ImGuiTableColumnFlags_WidthStretch, 1.8f, 1);
+        ImGui::TableSetupColumn("지배 세력", ImGuiTableColumnFlags_WidthStretch, 1.6f, 2);
+        ImGui::TableSetupColumn("자금",      ImGuiTableColumnFlags_WidthStretch, 1.3f, 3);
+        ImGui::TableSetupColumn("군량",      ImGuiTableColumnFlags_WidthStretch, 1.3f, 4);
+        ImGui::TableSetupColumn("병력",      ImGuiTableColumnFlags_WidthStretch, 1.2f, 5);
+        ImGui::TableSetupColumn("내구도",    ImGuiTableColumnFlags_WidthStretch, 1.2f, 6);
         ImGui::TableSetupScrollFreeze(0, 1);
         ImGui::TableHeadersRow();
 
@@ -333,20 +339,32 @@ void CityTableView::Render() {
             ImGui::TableSetColumnIndex(1);
             ImGui::Text("%s", city.name.c_str());
 
-            // Column 2: 자금
+            // Column 2: 지배 세력 및 태수
             ImGui::TableSetColumnIndex(2);
+            if (city.force_name.empty() || city.force_name.find("공백지") != std::string::npos || city.force_name.find("무소속") != std::string::npos) {
+                ImGui::TextDisabled("[공백지]");
+            } else {
+                ImGui::TextColored(ImVec4(0.96f, 0.82f, 0.40f, 1.0f), "%s", city.force_name.c_str());
+                if (city.ruler_id != 0xFFFF && !city.ruler_name.empty()) {
+                    ImGui::SameLine();
+                    ImGui::TextDisabled("(%s)", city.ruler_name.c_str());
+                }
+            }
+
+            // Column 3: 자금
+            ImGui::TableSetColumnIndex(3);
             RenderResourceValue(city.gold, 900000);
 
-            // Column 3: 군량
-            ImGui::TableSetColumnIndex(3);
+            // Column 4: 군량
+            ImGui::TableSetColumnIndex(4);
             RenderResourceValue(city.provisions, 900000);
 
-            // Column 4: 병력
-            ImGui::TableSetColumnIndex(4);
+            // Column 5: 병력
+            ImGui::TableSetColumnIndex(5);
             RenderResourceValue(city.troops, 100000);
 
-            // Column 5: 내구도
-            ImGui::TableSetColumnIndex(5);
+            // Column 6: 내구도
+            ImGui::TableSetColumnIndex(6);
             RenderResourceValue(city.durability, 4500);
         }
 

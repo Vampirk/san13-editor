@@ -468,22 +468,26 @@ void CityDetailModal::RenderTabDomestic() {
                 // 1: 거점 유형 태그 (색상 뱃지)
                 ImGui::TableSetColumnIndex(1);
                 if (s.fortress_type == Game::FortressType::Stronghold) {
-                    ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.45f, 1.0f), "%s", s.type_tag.c_str());
+                    ImGui::TextColored(ImVec4(0.96f, 0.40f, 0.40f, 1.0f), "[방채]"); // 진홍
                 } else if (s.fortress_type == Game::FortressType::SupplyDepot) {
-                    ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.35f, 1.0f), "%s", s.type_tag.c_str());
+                    ImGui::TextColored(ImVec4(0.96f, 0.76f, 0.26f, 1.0f), "[병량고]"); // 앰버
+                } else if (s.fortress_type == Game::FortressType::Hospital) {
+                    ImGui::TextColored(ImVec4(0.35f, 0.85f, 0.95f, 1.0f), "[요양사]"); // 시안
+                } else if (s.fortress_type == Game::FortressType::MusicTower) {
+                    ImGui::TextColored(ImVec4(0.80f, 0.60f, 1.00f, 1.0f), "[군악대]"); // 퍼플
                 } else if (s.fortress_type == Game::FortressType::Camp) {
-                    ImGui::TextColored(ImVec4(0.45f, 0.75f, 1.0f, 1.0f), "%s", s.type_tag.c_str());
+                    ImGui::TextColored(ImVec4(0.38f, 0.88f, 0.52f, 1.0f), "[견진]"); // 비취
                 } else if (s.is_fortified) {
-                    ImGui::TextColored(ImVec4(0.4f, 0.9f, 0.5f, 1.0f), "%s", s.type_tag.c_str());
+                    ImGui::TextColored(ImVec4(0.40f, 0.90f, 0.50f, 1.0f), "[성채]");
                 } else {
-                    ImGui::TextDisabled("%s", s.type_tag.c_str());
+                    ImGui::TextDisabled("[부락]");
                 }
 
                 // 2: 최대 건물 Lv 및 Lv 5 승급 치트
                 ImGui::TableSetColumnIndex(2);
                 ImGui::PushID(static_cast<int>(s.id * 10 + 3));
                 if (s.max_fortress_level >= 5) {
-                    ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.3f, 1.0f), "Lv 5");
+                    ImGui::TextColored(ImVec4(1.00f, 0.85f, 0.25f, 1.0f), "★Lv 5");
                 } else {
                     ImGui::Text("Lv %u", s.max_fortress_level);
                     ImGui::SameLine();
@@ -496,12 +500,12 @@ void CityDetailModal::RenderTabDomestic() {
 
                 // 3: 부락명
                 ImGui::TableSetColumnIndex(3);
-                ImGui::Text("%s", s.name.c_str());
+                ImGui::TextColored(ImVec4(0.95f, 0.95f, 0.92f, 1.0f), "%s", s.name.c_str());
 
                 // 4: 효과 / 특수병과
                 ImGui::TableSetColumnIndex(4);
                 if (!s.effect_name.empty() && s.effect_name != "-") {
-                    ImGui::TextColored(ImVec4(0.35f, 0.85f, 1.0f, 1.0f), "%s", s.effect_name.c_str());
+                    ImGui::TextColored(ImVec4(0.40f, 0.85f, 1.0f, 1.0f), "%s", s.effect_name.c_str());
                 } else {
                     ImGui::TextDisabled("-");
                 }
@@ -511,7 +515,7 @@ void CityDetailModal::RenderTabDomestic() {
                 if (s.force_name.find("미종속") != std::string::npos || s.force_name.find("공백지") != std::string::npos) {
                     ImGui::TextDisabled("%s", s.force_name.c_str());
                 } else {
-                    ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.35f, 1.0f), "%s", s.force_name.c_str());
+                    ImGui::TextColored(ImVec4(0.96f, 0.82f, 0.40f, 1.0f), "%s", s.force_name.c_str());
                 }
 
                 // 6: 장악도

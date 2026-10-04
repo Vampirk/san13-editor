@@ -237,28 +237,34 @@ void ItemTableView::RenderItemTable() {
 
                 // 2. 명품 이름
                 ImGui::TableSetColumnIndex(1);
-                ImGui::TextColored(ImVec4(1.0f, 0.9f, 0.6f, 1.0f), "%s", item->name.c_str());
+                if (item->value >= 50) {
+                    ImGui::TextColored(ImVec4(1.00f, 0.85f, 0.25f, 1.0f), "★ %s", item->name.c_str());
+                } else if (item->value >= 30) {
+                    ImGui::TextColored(ImVec4(0.96f, 0.88f, 0.65f, 1.0f), "%s", item->name.c_str());
+                } else {
+                    ImGui::TextColored(ImVec4(0.90f, 0.90f, 0.90f, 1.0f), "%s", item->name.c_str());
+                }
                 if (ImGui::IsItemHovered() && !item->description.empty()) {
                     ImGui::BeginTooltip();
-                    ImGui::TextColored(ImVec4(1.0f, 0.84f, 0.0f, 1.0f), "【 %s 】", item->name.c_str());
+                    ImGui::TextColored(ImVec4(1.00f, 0.84f, 0.0f, 1.0f), "【 %s 】", item->name.c_str());
                     ImGui::Separator();
                     ImGui::TextWrapped("%s", item->description.c_str());
                     ImGui::EndTooltip();
                 }
 
-                // 3. 분류
+                // 3. 분류 (카테고리 뱃지)
                 ImGui::TableSetColumnIndex(2);
                 ImVec4 catColor(0.85f, 0.85f, 0.85f, 1.0f);
-                if (item->category == 0) catColor = ImVec4(0.4f, 0.9f, 0.4f, 1.0f); // 말
-                else if (item->category >= 1 && item->category <= 10) catColor = ImVec4(0.95f, 0.5f, 0.5f, 1.0f); // 무기
-                else if (item->category >= 11 && item->category <= 18) catColor = ImVec4(0.5f, 0.7f, 1.0f, 1.0f); // 서적
-                else if (item->category == 23) catColor = ImVec4(1.0f, 0.84f, 0.0f, 1.0f); // 옥새
-                ImGui::TextColored(catColor, "%s", item->category_name.c_str());
+                if (item->category == 0) catColor = ImVec4(0.38f, 0.88f, 0.52f, 1.0f); // 명마: 비취
+                else if (item->category >= 1 && item->category <= 10) catColor = ImVec4(0.96f, 0.45f, 0.45f, 1.0f); // 무기: 진홍
+                else if (item->category >= 11 && item->category <= 18) catColor = ImVec4(0.40f, 0.75f, 1.00f, 1.0f); // 서적: 사파이어
+                else if (item->category == 23) catColor = ImVec4(1.00f, 0.84f, 0.20f, 1.0f); // 옥새: 제왕 황금
+                ImGui::TextColored(catColor, "[%s]", item->category_name.c_str());
 
                 // 4. 능력치 보정
                 ImGui::TableSetColumnIndex(3);
                 if (item->stat_boost > 0 || item->horse_speed > 0) {
-                    ImGui::TextColored(ImVec4(0.3f, 1.0f, 0.5f, 1.0f), "%s", item->stat_boost_desc.c_str());
+                    ImGui::TextColored(ImVec4(0.35f, 0.95f, 0.55f, 1.0f), "%s", item->stat_boost_desc.c_str());
                 } else {
                     ImGui::TextDisabled("-");
                 }
@@ -266,25 +272,31 @@ void ItemTableView::RenderItemTable() {
                 // 5. 부가 특기
                 ImGui::TableSetColumnIndex(4);
                 if (item->skill_level > 0) {
-                    ImGui::TextColored(ImVec4(0.7f, 0.9f, 1.0f, 1.0f), "%s", item->skill_desc.c_str());
+                    ImGui::TextColored(ImVec4(0.45f, 0.80f, 1.00f, 1.0f), "%s", item->skill_desc.c_str());
                 } else {
                     ImGui::TextDisabled("-");
                 }
 
                 // 6. 가치 / 가격
                 ImGui::TableSetColumnIndex(5);
-                ImGui::Text("%u / %u금", item->value, item->price);
+                if (item->value >= 50) {
+                    ImGui::TextColored(ImVec4(1.00f, 0.85f, 0.25f, 1.0f), "★%u / %u금", item->value, item->price);
+                } else if (item->value >= 30) {
+                    ImGui::TextColored(ImVec4(0.96f, 0.76f, 0.26f, 1.0f), "%u / %u금", item->value, item->price);
+                } else {
+                    ImGui::Text("%u / %u금", item->value, item->price);
+                }
 
                 // 7. 소유자 / 소재지
                 ImGui::TableSetColumnIndex(6);
                 if (item->is_owned) {
                     if (item->owner_id == protId) {
-                        ImGui::TextColored(ImVec4(1.0f, 0.84f, 0.0f, 1.0f), "★%s (주인공)", item->owner_name.c_str());
+                        ImGui::TextColored(ImVec4(1.00f, 0.84f, 0.0f, 1.0f), "★%s (주인공)", item->owner_name.c_str());
                     } else {
-                        ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.9f, 1.0f), "%s (#%u)", item->owner_name.c_str(), item->owner_id);
+                        ImGui::TextColored(ImVec4(0.90f, 0.90f, 0.90f, 1.0f), "%s (#%u)", item->owner_name.c_str(), item->owner_id);
                     }
                 } else {
-                    ImGui::TextColored(ImVec4(0.95f, 0.78f, 0.35f, 1.0f), "%s", item->location_name.c_str());
+                    ImGui::TextColored(ImVec4(0.96f, 0.76f, 0.26f, 1.0f), "🛒 %s", item->location_name.c_str());
                 }
 
                 // 8. 관리 / 조작
@@ -292,12 +304,15 @@ void ItemTableView::RenderItemTable() {
                 ImGui::PushID(item->id);
 
                 if (item->is_owned) {
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.45f, 0.20f, 0.20f, 1.0f));
+                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.65f, 0.25f, 0.25f, 1.0f));
                     if (ImGui::SmallButton("몰수")) {
                         if (m_itemMgr) {
                             m_itemMgr->ConfiscateItem(item->id);
                             m_needsRefresh = true;
                         }
                     }
+                    ImGui::PopStyleColor(2);
                     ImGui::SameLine();
                 }
 
@@ -312,12 +327,15 @@ void ItemTableView::RenderItemTable() {
                 // 주인공에게 원클릭 수여
                 if (protId <= 2164 && item->owner_id != protId) {
                     ImGui::SameLine();
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.60f, 0.45f, 0.15f, 1.0f));
+                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.78f, 0.58f, 0.20f, 1.0f));
                     if (ImGui::SmallButton("★주인공 지급")) {
                         if (m_itemMgr) {
                             m_itemMgr->GrantItem(item->id, protId);
                             m_needsRefresh = true;
                         }
                     }
+                    ImGui::PopStyleColor(2);
                 }
 
                 ImGui::PopID();

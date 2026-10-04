@@ -586,23 +586,49 @@ void OfficerTableView::ApplySort(int columnId, bool ascending) {
 
 static void RenderAptitudeText(uint8_t apt) {
     const char* text = Game::OfficerRecord::AptitudeToString(apt);
-    ImVec4 color = ImVec4(0.7f, 0.7f, 0.7f, 1.0f); // C: 회색
-    if ((apt & 0x03) == 3)      color = ImVec4(0.95f, 0.82f, 0.40f, 1.0f); // S: 황금색
-    else if ((apt & 0x03) == 2) color = ImVec4(0.30f, 0.85f, 0.95f, 1.0f); // A: 시안
-    else if ((apt & 0x03) == 1) color = ImVec4(0.35f, 0.90f, 0.45f, 1.0f); // B: 연녹색
+    ImVec4 color = ImVec4(0.65f, 0.65f, 0.70f, 1.0f); // C: 실버 회색
+    char buf[16];
+    std::snprintf(buf, sizeof(buf), "[%s]", text);
+    if ((apt & 0x03) == 3)      color = ImVec4(1.00f, 0.85f, 0.25f, 1.0f); // S: 황금빛
+    else if ((apt & 0x03) == 2) color = ImVec4(0.35f, 0.90f, 0.55f, 1.0f); // A: 비취 에메랄드
+    else if ((apt & 0x03) == 1) color = ImVec4(0.40f, 0.75f, 1.00f, 1.0f); // B: 청람 사파이어
 
-    ImGui::TextColored(color, "%s", text);
+    ImGui::TextColored(color, "%s", buf);
 }
 
 static void RenderStatValue(uint8_t val) {
-    if (val >= 90) {
-        ImGui::TextColored(ImVec4(0.95f, 0.82f, 0.40f, 1.0f), "%d", val); // 90 이상 황금색
+    if (val >= 100) {
+        ImGui::TextColored(ImVec4(1.00f, 0.85f, 0.25f, 1.0f), "★%d", val); // 100 이상 한계돌파 황금색
+    } else if (val >= 90) {
+        ImGui::TextColored(ImVec4(0.96f, 0.76f, 0.26f, 1.0f), "%d", val);  // 90 이상 일류 무장 앰버 골드
     } else if (val >= 80) {
-        ImGui::TextColored(ImVec4(0.40f, 0.90f, 0.50f, 1.0f), "%d", val); // 80 이상 연녹색
+        ImGui::TextColored(ImVec4(0.38f, 0.88f, 0.52f, 1.0f), "%d", val);  // 80 이상 준일류 비취 그린
+    } else if (val >= 70) {
+        ImGui::TextColored(ImVec4(0.48f, 0.76f, 0.92f, 1.0f), "%d", val);  // 70 이상 연청록
     } else if (val <= 40) {
-        ImGui::TextColored(ImVec4(0.55f, 0.55f, 0.60f, 1.0f), "%d", val); // 40 이하 딤그레이
+        ImGui::TextColored(ImVec4(0.55f, 0.55f, 0.60f, 1.0f), "%d", val);  // 40 이하 딤그레이
     } else {
         ImGui::Text("%d", val);
+    }
+}
+
+static void RenderStatusBadge(const char* statusDesc) {
+    if (!statusDesc) return;
+    std::string_view desc(statusDesc);
+    if (desc.find("군주") != std::string_view::npos) {
+        ImGui::TextColored(ImVec4(1.00f, 0.84f, 0.20f, 1.0f), "%s", statusDesc); // 황제/군주 황금색
+    } else if (desc.find("도독") != std::string_view::npos || desc.find("군사") != std::string_view::npos) {
+        ImGui::TextColored(ImVec4(0.80f, 0.60f, 1.00f, 1.0f), "%s", statusDesc); // 중신/도독 보라색
+    } else if (desc.find("태수") != std::string_view::npos) {
+        ImGui::TextColored(ImVec4(0.40f, 0.88f, 0.65f, 1.0f), "%s", statusDesc); // 태수 비취색
+    } else if (desc.find("재야") != std::string_view::npos) {
+        ImGui::TextColored(ImVec4(0.95f, 0.70f, 0.35f, 1.0f), "%s", statusDesc); // 재야 황갈색
+    } else if (desc.find("미등장") != std::string_view::npos || desc.find("사망") != std::string_view::npos) {
+        ImGui::TextDisabled("%s", statusDesc); // 딤그레이
+    } else if (desc.find("포로") != std::string_view::npos) {
+        ImGui::TextColored(ImVec4(0.90f, 0.35f, 0.35f, 1.0f), "%s", statusDesc); // 포로 붉은색
+    } else {
+        ImGui::Text("%s", statusDesc);
     }
 }
 
@@ -853,9 +879,9 @@ void OfficerTableView::Render() {
                     ImGui::Text("%s", off.name.c_str());
                 }
 
-                // Column 2: 신분
+                // Column 2: 신분 (계급/상태 뱃지)
                 ImGui::TableSetColumnIndex(2);
-                ImGui::Text("%s", off.GetStatusDescription(m_gameYear));
+                RenderStatusBadge(off.GetStatusDescription(m_gameYear));
 
                 // Column 3~6: 4대 스탯
                 ImGui::TableSetColumnIndex(3); RenderStatValue(off.stats.curr_leadership);
@@ -863,11 +889,17 @@ void OfficerTableView::Render() {
                 ImGui::TableSetColumnIndex(5); RenderStatValue(off.stats.curr_intel);
                 ImGui::TableSetColumnIndex(6); RenderStatValue(off.stats.curr_politics);
 
-                // Column 7: 총합
+                // Column 7: 총합 (티어별 뱃지 스타일링)
                 ImGui::TableSetColumnIndex(7);
                 int total = off.GetTotalStats();
-                if (total >= 350) {
-                    ImGui::TextColored(ImVec4(0.95f, 0.82f, 0.40f, 1.0f), "%d", total);
+                if (total >= 380) {
+                    ImGui::TextColored(ImVec4(1.00f, 0.85f, 0.25f, 1.0f), "★%d", total); // 초특급 무장 찬란한 골드
+                } else if (total >= 340) {
+                    ImGui::TextColored(ImVec4(0.96f, 0.76f, 0.26f, 1.0f), "%d", total);  // 1급 무장 앰버
+                } else if (total >= 300) {
+                    ImGui::TextColored(ImVec4(0.38f, 0.88f, 0.52f, 1.0f), "%d", total);  // 상급 무장 비취
+                } else if (total >= 250) {
+                    ImGui::TextColored(ImVec4(0.48f, 0.76f, 0.92f, 1.0f), "%d", total);  // 중급 무장 연청록
                 } else {
                     ImGui::Text("%d", total);
                 }
