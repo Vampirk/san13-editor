@@ -22,3 +22,5 @@ legacy_van/
 
 # Editor / workspace metadata
 .obsidian/
+.trash/
+vendor/glfw/

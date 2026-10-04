@@ -2,7 +2,11 @@
 #include "ui/OfficerTableView.hpp"
 #include "ui/CityTableView.hpp"
 #include "ui/ItemTableView.hpp"
+#ifdef _WIN32
+#include "core/Win32MemoryDriver.hpp"
+#else
 #include "core/LinuxMemoryDriver.hpp"
+#endif
 #include "game/GameVersion.hpp"
 #include "game/OfficerManager.hpp"
 #include "game/CityManager.hpp"
@@ -17,20 +21,31 @@
 #include <string>
 #include <chrono>
 #include <cstring>
+#include <cstdio>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 
 using namespace San13::Core;
 using namespace San13::Game;
 using namespace San13::UI;
 
+#ifdef _WIN32
+static const char* APP_VERSION = "v1.0.0 (Windows x86_64)";
+#else
 static const char* APP_VERSION = "v1.0.0 (Linux x86_64)";
+#endif
 
 static int ReadPtraceScope() {
+#ifdef _WIN32
+    return -1;
+#else
     std::ifstream file("/proc/sys/kernel/yama/ptrace_scope");
     if (!file.is_open()) return -1;
     int scope = -1;
     file >> scope;
     return scope;
+#endif
 }
 
 static void PrintHelp(const char* progName) {
@@ -64,6 +79,12 @@ int main(int argc, char** argv) {
             return 0;
         } else if (arg == "--smoke-test" || arg == "--auto-close") {
             smokeTest = true;
+        } else if (arg.rfind("--log=", 0) == 0) {
+            // 콘솔이 없는 환경(Wine/Proton 등)에서 출력을 파일로 리다이렉트
+            const std::string logPath = arg.substr(6);
+            std::freopen(logPath.c_str(), "w", stdout);
+            std::freopen(logPath.c_str(), "a", stderr);
+            std::cout << std::unitbuf;
         }
     }
 
@@ -86,7 +107,11 @@ int main(int argc, char** argv) {
     }
 
     // 2. 코어 메모리 드라이버 및 도메인 매니저
+#ifdef _WIN32
+    Win32MemoryDriver driver;
+#else
     LinuxMemoryDriver driver;
+#endif
     OfficerManager officerMgr;
     CityManager cityMgr;
     SettlementManager setMgr;
@@ -300,6 +325,13 @@ int main(int argc, char** argv) {
                 // 탭 3: 시스템 환경 및 보안 권한 가이드
                 if (ImGui::BeginTabItem("시스템 환경 및 보안 가이드 (Security & Info)")) {
                     ImGui::Spacing();
+#ifdef _WIN32
+                    ImGui::TextColored(ImVec4(0.95f, 0.82f, 0.40f, 1.0f), "■ Windows 메모리 접근 권한 안내");
+                    ImGui::Separator();
+                    ImGui::Spacing();
+                    ImGui::BulletText("게임(San13PK_kr.exe)과 동일한 권한 수준으로 에디터를 실행해 주세요.");
+                    ImGui::BulletText("게임을 관리자 권한으로 실행했다면 에디터도 관리자 권한으로 실행해야 합니다.");
+#else
                     ImGui::TextColored(ImVec4(0.95f, 0.82f, 0.40f, 1.0f), "■ 리눅스 메모리 접근 권한 및 보안 스코프 안내");
                     ImGui::Separator();
                     ImGui::Spacing();
@@ -313,6 +345,8 @@ int main(int argc, char** argv) {
                         ImGui::TextColored(ImVec4(0.95f, 0.3f, 0.2f, 1.0f), "  ▲ ptrace 접근이 제한되어 있습니다. 권한 부족 시 아래 명령어로 허용해 주세요:");
                         ImGui::TextDisabled("     sudo sysctl -w kernel.yama.ptrace_scope=1");
                     }
+
+#endif
 
                     ImGui::Spacing();
                     ImGui::Separator();

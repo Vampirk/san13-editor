@@ -6,8 +6,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <cstdint>
-#include <iconv.h>
-#include <unistd.h>
+#include "core/PlatformUtil.hpp"
 
 namespace San13::Game {
 
@@ -776,40 +775,21 @@ static std::vector<std::string> s_customOfficerNames;
 static bool s_customOfficerNamesLoaded = false;
 
 static std::string DecodeCP949(const char* data, size_t maxLen) {
-    if (!data || maxLen == 0 || data[0] == '\0') return "";
-    size_t inLen = 0;
-    while (inLen < maxLen && data[inLen] != '\0') inLen++;
-    if (inLen == 0) return "";
-
-    iconv_t cd = iconv_open("UTF-8", "CP949");
-    if (cd == (iconv_t)-1) return std::string(data, inLen);
-
-    size_t inbytes = inLen;
-    size_t outbytes = inLen * 3 + 1;
-    std::vector<char> outbuf(outbytes);
-    char* inptr = const_cast<char*>(data);
-    char* outptr = outbuf.data();
-
-    if (iconv(cd, &inptr, &inbytes, &outptr, &outbytes) == (size_t)-1) {
-        iconv_close(cd);
-        return std::string(data, inLen);
-    }
-    iconv_close(cd);
-    return std::string(outbuf.data(), outptr - outbuf.data());
+    return San13::Core::Cp949ToUtf8(data, maxLen);
 }
 
 static std::string FindEditDataPath(const std::string& customFilePath) {
-    if (!customFilePath.empty() && access(customFilePath.c_str(), R_OK) == 0) {
+    if (San13::Core::IsFileReadable(customFilePath)) {
         return customFilePath;
     }
 
-    const char* home = std::getenv("HOME");
-    if (!home) return "";
+    const std::string home = San13::Core::GetHomeDir();
+    if (home.empty()) return "";
 
     std::vector<std::string> candidates = {
-        std::string(home) + "/.local/share/Steam/steamapps/compatdata/363150/pfx/drive_c/users/steamuser/Documents/KoeiTecmo/San13/KR_SAVEDATA/editdata_pk.s13",
-        std::string(home) + "/.steam/steam/steamapps/compatdata/363150/pfx/drive_c/users/steamuser/Documents/KoeiTecmo/San13/KR_SAVEDATA/editdata_pk.s13",
-        std::string(home) + "/Documents/KoeiTecmo/San13/KR_SAVEDATA/editdata_pk.s13"
+        home + "/.local/share/Steam/steamapps/compatdata/363150/pfx/drive_c/users/steamuser/Documents/KoeiTecmo/San13/KR_SAVEDATA/editdata_pk.s13",
+        home + "/.steam/steam/steamapps/compatdata/363150/pfx/drive_c/users/steamuser/Documents/KoeiTecmo/San13/KR_SAVEDATA/editdata_pk.s13",
+        home + "/Documents/KoeiTecmo/San13/KR_SAVEDATA/editdata_pk.s13"
     };
 
     const char* userProfile = std::getenv("USERPROFILE");
@@ -818,7 +798,7 @@ static std::string FindEditDataPath(const std::string& customFilePath) {
     }
 
     for (const auto& path : candidates) {
-        if (access(path.c_str(), R_OK) == 0) {
+        if (San13::Core::IsFileReadable(path)) {
             return path;
         }
     }

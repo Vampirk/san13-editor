@@ -10,7 +10,7 @@ TEST_DIR = tests
 IMGUI_DIR = vendor/imgui
 
 # Source files
-CORE_SRCS = $(SRC_DIR)/core/LinuxMemoryDriver.cpp
+CORE_SRCS = $(SRC_DIR)/core/LinuxMemoryDriver.cpp $(SRC_DIR)/core/PlatformUtil.cpp
 CORE_OBJS = $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(CORE_SRCS))
 
 GAME_SRCS = $(SRC_DIR)/game/GameVersion.cpp $(SRC_DIR)/game/OfficerManager.cpp $(SRC_DIR)/game/OfficerNameTable.cpp $(SRC_DIR)/game/TacticManager.cpp $(SRC_DIR)/game/ForceManager.cpp $(SRC_DIR)/game/CityManager.cpp $(SRC_DIR)/game/SettlementManager.cpp $(SRC_DIR)/game/SettlementNameTable.cpp $(SRC_DIR)/game/ItemManager.cpp $(SRC_DIR)/game/ItemNameTable.cpp
@@ -310,3 +310,42 @@ clean:
 	rm -rf $(BUILD_DIR) $(BIN_DIR)/test_memory_driver $(BIN_DIR)/test_bounds $(BIN_DIR)/test_officer_manager $(BIN_DIR)/test_city_manager $(BIN_DIR)/test_settlement_manager $(BIN_DIR)/test_city_officers $(BIN_DIR)/test_city_detail_modal $(BIN_DIR)/test_gui_window $(BIN_DIR)/test_officer_table $(BIN_DIR)/test_officer_edit $(BIN_DIR)/test_city_table $(BIN_DIR)/test_batch_actions $(BIN_DIR)/test_hangul_automata $(BIN_DIR)/test_hangul_input_widget $(BIN_DIR)/test_officer_names $(TEST_TACTIC_BIN) $(TEST_MULTI_BONDS_BIN) $(TEST_FORCE_BIN) $(TEST_ITEM_BIN) $(APP_BIN) $(PACKAGE_DIR) $(PACKAGE_TAR)
 
 .PHONY: all test_memory test_bounds test_officer test_city test_settlement test_city_officers test_city_modal test_gui test_officer_table test_officer_edit test_city_table test_batch test_hangul test_hangul_widget test_officer_names test_tactic test_multi_bonds test_force test_item test test_offline test_live gui editor package tools clean
+
+# ---------------------------------------------------------------------------
+# Windows 크로스 컴파일 (MinGW-w64): make win  ->  bin/win/san13_editor.exe
+# GLFW는 vendor/glfw 소스를 직접 컴파일 (CMake 불필요)
+# ---------------------------------------------------------------------------
+WIN_CXX = x86_64-w64-mingw32-g++
+WIN_CC  = x86_64-w64-mingw32-gcc
+WIN_BUILD = build/win
+WIN_BIN = bin/win/san13_editor.exe
+WIN_CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -Iinclude -Ivendor/imgui -Ivendor/imgui/backends -Ivendor/glfw/include
+WIN_CFLAGS = -O2 -D_GLFW_WIN32 -Ivendor/glfw/include -Wno-unused-parameter
+WIN_LDFLAGS = -static -static-libgcc -static-libstdc++ -lgdi32 -lopengl32 -lwinmm -lole32 -lpsapi
+
+WIN_GLFW_SRCS = context init input monitor platform vulkan window egl_context osmesa_context null_init null_monitor null_window null_joystick win32_module win32_time win32_thread win32_init win32_joystick win32_monitor win32_window wgl_context
+WIN_GLFW_OBJS = $(addprefix $(WIN_BUILD)/glfw/, $(addsuffix .o, $(WIN_GLFW_SRCS)))
+
+WIN_CORE_SRCS = src/core/Win32MemoryDriver.cpp src/core/PlatformUtil.cpp
+WIN_OBJS = $(patsubst src/%.cpp, $(WIN_BUILD)/%.o, $(WIN_CORE_SRCS) $(GAME_SRCS) $(UI_SRCS) $(APP_SRC)) \
+           $(patsubst $(IMGUI_DIR)/%.cpp, $(WIN_BUILD)/imgui/%.o, $(IMGUI_SRCS)) $(WIN_GLFW_OBJS)
+
+win: $(WIN_BIN)
+
+$(WIN_BUILD)/glfw/%.o: vendor/glfw/src/%.c
+	@mkdir -p $(dir $@)
+	$(WIN_CC) $(WIN_CFLAGS) -c $< -o $@
+
+$(WIN_BUILD)/imgui/%.o: $(IMGUI_DIR)/%.cpp
+	@mkdir -p $(dir $@)
+	$(WIN_CXX) $(WIN_CXXFLAGS) -c $< -o $@
+
+$(WIN_BUILD)/%.o: src/%.cpp $(ALL_HEADERS)
+	@mkdir -p $(dir $@)
+	$(WIN_CXX) $(WIN_CXXFLAGS) -c $< -o $@
+
+$(WIN_BIN): $(WIN_OBJS)
+	@mkdir -p $(dir $@)
+	$(WIN_CXX) $(WIN_OBJS) -o $@ $(WIN_LDFLAGS)
+
+.PHONY: win
