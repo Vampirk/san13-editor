@@ -12,7 +12,8 @@ docs/
 │
 ├── specs/                  # [기술 명세 & 단일 진실 공급원 (SSOT)]
 │   ├── OFFSETS.md          # 메모리 주소, 구조체 레이아웃, 오프셋 확정 명세서
-│   └── ARCHITECTURE.md     # 3계층 시스템 아키텍처, 데이터 흐름, 디렉터리 구조
+│   ├── ARCHITECTURE.md     # 3계층 시스템 아키텍처, 데이터 흐름, 디렉터리 구조
+│   └── OFFICER_NAME_SYSTEM.md # 전체 무장 이름 시스템, XL13(1655) 포맷, PK 100인 명단
 │
 ├── plans/                  # [구현 로드맵 및 개발 계획]
 │   ├── 01_PROTAGONIST_PLAN.md      # 주인공(플레이어) 무장 감지 및 제어 계획
@@ -34,6 +35,11 @@ docs/
 ## 2. 분야별 문서 안내 (Quick Links & Overview)
 
 ### 📌 1. 기술 명세 (Specs)
+- **[`specs/OFFICER_NAME_SYSTEM.md`](specs/OFFICER_NAME_SYSTEM.md)**:
+  - 삼국지 13 PK 전체 무장 이름 시스템 및 게임 원본 데이터(`DATA1.S13` Entry 1655 / `pk_1655.tbl`) 역분석 명세.
+  - `XL13` 컨테이너 구조 및 성(6535), 명(7985), 자(9435) 균일 블록 오프셋 산출 공식.
+  - 0 ~ 1450 무장 슬롯 전체 분류표 및 **PK 공식 추가 사실무장 100인(1151 윤례 ~ 1250 이씨)** 전수 실명/자 매핑 목록.
+  - 유저 등록 신무장(`editdata_pk.s13`) 연동 아키텍처.
 - **[`specs/OFFSETS.md`](specs/OFFSETS.md)**:
   - Proton WoW64 환경에서의 `RootBase` 계산 공식 및 게임 버전별 해시.
   - 무장 (`COfficer` 4,796B), 도시 (`CCity` 368B), 요충/부락 성채 (`CChiiki` 20B), 명품 (`CItem` 36B), 전법(141종) 등 100% 실측 검증된 메모리 레이아웃.
