@@ -133,6 +133,21 @@ int main() {
     }
     std::cout << "  [\033[32mPASS\033[0m] 장량(853), 한신(854), 악비(892) 고대무장 표본 매핑 성공\n";
 
+    // 5.5. [PK-EXP] 삼국지 13 PK 공식 추가 사실무장 및 왜국/고대무장 (ID 1151 ~ 1263) 매핑 검증
+    std::cout << "\n[Step 5.5] [PK-EXP] PK 공식 추가 사실무장(유의 1242, 채옹 1186) 및 왜국무장(비미호 1263) 매핑 검증\n";
+    std::string_view liuyi = GetOfficerKoreanName(1242);
+    std::string_view caiyong = GetOfficerKoreanName(1186);
+    std::string_view himiko = GetOfficerKoreanName(1263);
+    if (liuyi != "유의" || caiyong != "채옹" || himiko != "비미호") {
+        std::cerr << "[-] Error: PK 추가 무장 매핑 오류! (1242: " << liuyi << ", 1186: " << caiyong << ", 1263: " << himiko << ")\n";
+        return 1;
+    }
+    if (!HasOfficerKoreanName(1242) || !HasOfficerKoreanName(1186) || !HasOfficerKoreanName(1263)) {
+        std::cerr << "[-] Error: HasOfficerKoreanName PK 추가 무장 실패!\n";
+        return 1;
+    }
+    std::cout << "  [\033[32mPASS\033[0m] 유의(1242), 채옹(1186), 비미호(1263) PK 추가 무장 매핑 성공\n";
+
     // 6. [EDGE-26 & 27] 190년 시점 아회남(미등장) vs 범증(현역) 상태 판별식 검증
     std::cout << "\n[Step 6] [EDGE-26 & 27] 등장년도 기반 무장 상태 판별식 검증 (190년 기준)\n";
     uint16_t curYear = 190;

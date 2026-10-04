@@ -119,8 +119,10 @@ bool OfficerManager::LoadOfficer(uint16_t id, OfficerRecord& outRecord) {
     std::string_view korName = GetOfficerKoreanName(id);
     if (!korName.empty()) {
         outRecord.name = std::string(korName);
+    } else if (id >= 1151 && id <= 1263) {
+        outRecord.name = "PK 추가 무장 #" + std::to_string(id);
     } else if (outRecord.is_extended) {
-        outRecord.name = "신무장 / 자녀 #" + std::to_string(id);
+        outRecord.name = "신무장 / 가상 #" + std::to_string(id);
     } else {
         outRecord.name = "역사 무장 #" + std::to_string(id);
     }

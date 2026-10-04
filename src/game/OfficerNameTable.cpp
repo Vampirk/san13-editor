@@ -879,6 +879,45 @@ void ClearCustomOfficerNames() {
     s_customOfficerNamesLoaded = false;
 }
 
+// 삼국지 13 PK 공식 추가 사실무장 및 고대/왜국 무장 (ID 1151 ~ 1263)
+static const std::unordered_map<uint16_t, const char*> PK_ADDITIONAL_OFFICER_NAMES = {
+    { 1155, "왕상" },
+    { 1157, "왕필" },
+    { 1167, "위월" },
+    { 1170, "허사" },
+    { 1175, "경기" },
+    { 1180, "오습" },
+    { 1182, "오돈" },
+    { 1183, "채훈" },
+    { 1184, "최주평" },
+    { 1186, "채옹" },
+    { 1187, "좌령" },
+    { 1189, "사적" },
+    { 1190, "사정" },
+    { 1191, "주선" },
+    { 1194, "순운" },
+    { 1196, "종진" },
+    { 1199, "심영" },
+    { 1202, "성렴" },
+    { 1206, "송충" },
+    { 1213, "탁응" },
+    { 1215, "장의" },
+    { 1216, "조엄" },
+    { 1217, "장숙" },
+    { 1219, "장선" },
+    { 1222, "진취" },
+    { 1227, "등룡" },
+    { 1228, "두습" },
+    { 1242, "유의" },   // 공손도 세력(양평) 무장
+    { 1254, "한세충" }, // PK 추가 고대무장
+    { 1255, "양홍옥" }, // PK 추가 고대무장
+    { 1256, "범려" },   // PK 추가 고대무장
+    { 1257, "순관" },   // PK 추가 고대무장
+    { 1261, "난승미" }, // PK 추가 왜국 무장
+    { 1262, "도시우리" },// PK 추가 왜국 무장
+    { 1263, "비미호" }, // PK 추가 왜국 무장 (히미코)
+};
+
 std::string_view GetOfficerKoreanName(uint16_t id) {
     if (id < HISTORICAL_OFFICER_NAME_COUNT) {
         return HISTORICAL_OFFICER_NAMES[id];
@@ -889,7 +928,15 @@ std::string_view GetOfficerKoreanName(uint16_t id) {
         return ANCIENT_OFFICER_NAMES[id - 850];
     }
 
-    // Phase 5.9-A & Phase 6.6: 등록 신무장 슬롯(ID 700+) 한글 성명 지원
+    // PK 공식 추가 사실무장 및 고대/왜국 무장 (ID 1151 ~ 1263)
+    if (id >= 1151 && id <= 1263) {
+        auto it = PK_ADDITIONAL_OFFICER_NAMES.find(id);
+        if (it != PK_ADDITIONAL_OFFICER_NAMES.end()) {
+            return it->second;
+        }
+    }
+
+    // Phase 5.9-A & Phase 6.6: 등록 신무장 슬롯(ID 700~849, 900~999) 한글 성명 지원
     if (!s_customOfficerNamesLoaded) {
         LoadCustomOfficerNames();
     }
@@ -898,7 +945,7 @@ std::string_view GetOfficerKoreanName(uint16_t id) {
         if (customIdx < s_customOfficerNames.size()) {
             return s_customOfficerNames[customIdx];
         }
-    } else if (id >= 900) {
+    } else if (id >= 900 && id < 1000) {
         size_t customIdx = (id - 900) + 150;
         if (customIdx < s_customOfficerNames.size()) {
             return s_customOfficerNames[customIdx];
@@ -916,13 +963,16 @@ bool HasOfficerKoreanName(uint16_t id) {
     if (id >= 850 && id < 900) {
         return true;
     }
+    if (id >= 1151 && id <= 1263) {
+        return PK_ADDITIONAL_OFFICER_NAMES.find(id) != PK_ADDITIONAL_OFFICER_NAMES.end();
+    }
     if (!s_customOfficerNamesLoaded) {
         LoadCustomOfficerNames();
     }
     if (id >= 700 && id < 850) {
         size_t customIdx = id - 700;
         return (customIdx < s_customOfficerNames.size());
-    } else if (id >= 900) {
+    } else if (id >= 900 && id < 1000) {
         size_t customIdx = (id - 900) + 150;
         return (customIdx < s_customOfficerNames.size());
     }

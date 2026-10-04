@@ -75,6 +75,12 @@ bool CityManager::LoadCity(uint8_t id, CityRecord& outRecord) {
         if (!rName.empty()) {
             outRecord.ruler_name = std::string(rName);
             outRecord.force_name = std::string(rName) + "군";
+        } else if (raw.ruler_id >= 1151 && raw.ruler_id <= 1263) {
+            outRecord.ruler_name = "PK 추가 무장 #" + std::to_string(raw.ruler_id);
+            outRecord.force_name = outRecord.ruler_name + "군";
+        } else if (raw.ruler_id >= 1000) {
+            outRecord.ruler_name = "신무장 / 가상 #" + std::to_string(raw.ruler_id);
+            outRecord.force_name = outRecord.ruler_name + "군";
         } else {
             outRecord.ruler_name = "무장 #" + std::to_string(raw.ruler_id);
             outRecord.force_name = outRecord.ruler_name + "군";
@@ -224,13 +230,12 @@ bool CityManager::LoadCityOfficers(uint8_t cityId, CityOfficerCategory category,
                 std::string_view kName = GetOfficerKoreanName(entry.officer_id);
                 if (!kName.empty()) {
                     entry.name = std::string(kName);
+                } else if (entry.officer_id >= 1151 && entry.officer_id <= 1263) {
+                    entry.name = "PK 추가 무장 #" + std::to_string(entry.officer_id);
+                } else if (entry.officer_id >= 1000) {
+                    entry.name = "신무장 / 가상 #" + std::to_string(entry.officer_id);
                 } else {
-                    const char* fam = GetFamousOfficerName(entry.officer_id);
-                    if (fam) {
-                        entry.name = fam;
-                    } else {
-                        entry.name = "무장 #" + std::to_string(entry.officer_id);
-                    }
+                    entry.name = "무장 #" + std::to_string(entry.officer_id);
                 }
 
                 // Status description
