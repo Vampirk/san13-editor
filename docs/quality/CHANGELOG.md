@@ -1,7 +1,7 @@
 # 프로젝트 진행 로그 및 품질 보증(EDGE) 이력 (CHANGELOG)
 
-> **기준 판본:** v5.7  
-> **최종 갱신일:** 2026-10-03  
+> **기준 판본:** v6.0 (Dual-Platform Release)  
+> **최종 갱신일:** 2026-10-05  
 
 ---
 
@@ -105,9 +105,20 @@
 - Step 6.7-5: 무장 상세 모달(`OfficerDetailModal`)에 5번째 탭 **`소유 명품`** 추가 (무장 소유 명품 리스트 및 원클릭 몰수 지원).
 - Step 6.7-6: 단위 테스트 스위트(`tests/test_item_manager.cpp`) 100% 통과 및 120프레임 GUI 스모크 테스트 통과.
 
+### Phase 6.8: Native Windows (x86_64) 포팅 및 듀얼 플랫폼 배포 파이프라인 완성
+- Step 6.8-1: `IMemoryDriver` 기반 Windows 네이티브 드라이버 `Win32MemoryDriver` 구현 (`OpenProcess`, `ReadProcessMemory`, `WriteProcessMemory`).
+- Step 6.8-2: 64비트 에디터 $\rightarrow$ 32비트 WoW64 게임 프로세스 모듈 베이스 RVA 추출 호환성 확보 (`EnumProcessModulesEx` + `LIST_MODULES_ALL`, EDGE-53).
+- Step 6.8-3: 플랫폼 독립 유틸리티 레이어 `PlatformUtil` 구축: Win32 네이티브 `MultiByteToWideChar` CP949 디코더 및 `$HOME` / `%USERPROFILE%` 크로스플랫폼 경로 탐색.
+- Step 6.8-4: MinGW-w64 (`x86_64-w64-mingw32-g++`) 크로스 컴파일 파이프라인 구축 (`make win`), GLFW Win32 백엔드 직접 정적 컴파일 및 무의존성 스탠드얼론 실행 바이너리(`bin/win/san13_editor.exe`) 생성.
+- Step 6.8-5: 듀얼 플랫폼 배포 패키징 파이프라인 완성:
+  - Linux: `make package` -> `dist/san13_editor_linux_x86_64.tar.gz` (1.4MB, 스크립트/데스크톱 항목 포함)
+  - Windows: `make package_win` -> `dist/san13_editor_windows_x64.zip` (1.7MB, 나눔고딕 폰트 번들링, Windows 1분 가이드 포함)
+  - 원클릭 듀얼 빌드: `make package_all` 지원.
+- Step 6.8-6: Proton 환경 실시간 프로세스 부착 및 120프레임 무결성 GUI 스모크 테스트 100% 통과 (Linux & Windows 양방향 무결성 검증 완료).
+
 ---
 
-## 2. 품질 보증(QA) 엣지 케이스 이력 (EDGE-01 ~ EDGE-37)
+## 2. 품질 보증(QA) 엣지 케이스 이력 (EDGE-01 ~ EDGE-54)
 
 | 케이스 ID | 분류 | 상황 및 위험 현상 | 적용된 방어 조치 |
 | :---: | :---: | :--- | :--- |
@@ -163,4 +174,6 @@
 | **EDGE-50** | 반응형 UI 및 유동적 스케일링 | 고정 픽셀 레이아웃으로 창 크기 조절 시 글자/테이블 잘림 및 우측 공백 | 창 크기 비례 `FontGlobalScale` 동적 스케일링, 테이블 `WidthStretch` 가변 비율 컬럼 및 모달 뷰포트 상대 제약 적용 |
 | **EDGE-51** | 테마 & 비주얼 폴리싱 | 기본 다크 회색 테마의 단조로움 및 정보 가독성 부족 | 삼국지 감성의 앤틱 다크 골드/오크 팔레트, 7열 도시 테이블(세력/태수 연동), 무장 신분/스탯/병종 및 부락/명품 뱃지 전면 스타일링 |
 | **EDGE-52** | PK 추가 사실무장 슬롯 규명 & 성명 매핑 | 도시 소속 인물 중 1000번대 슬롯 무장이 "무장 #1242"로 표출되는 버그 | PK 공식 추가 사실무장 100인 및 고대/왜국 무장 슬롯(ID 1151~1263) 규명, 양평 공손도 수하 장수 유의(1242, 柳毅) 및 채옹(1186), 비미호(1263) 등 한글 실명 매핑 및 폴백 로직 통일 |
+| **EDGE-53** | WoW64 모듈 탐색 | 64비트 Win32 프로세스에서 32비트 게임의 모듈 스냅샷 탐색 시 `ERROR_NOACCESS (998)` 실패 | `CreateToolhelp32Snapshot` 대신 `EnumProcessModulesEx(LIST_MODULES_ALL)` PSAPI 기반으로 모듈 베이스 주소 취득 |
+| **EDGE-54** | 플랫폼 독립 유틸리티 | Windows 환경에서 Linux 전용 `iconv` 및 `$HOME` 환경 변수 부재로 신무장/등록전법 로드 실패 | `PlatformUtil`에 Win32 API(`MultiByteToWideChar`) 및 `%USERPROFILE%` 폴백 추상화 레이어 도입 |
 

@@ -8,7 +8,9 @@ tools/san13_tool
 
 # Distribution packages and unpacked build
 dist/san13_editor_linux_x86_64/
+dist/san13_editor_windows_x64/
 dist/*.tar.gz
+dist/*.zip
 
 # Runtime configuration and temporary directories
 imgui.ini

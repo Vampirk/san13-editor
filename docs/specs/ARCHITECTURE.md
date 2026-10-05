@@ -30,7 +30,7 @@ flowchart TD
     subgraph MemoryCore ["Abstracted Memory Core (OS 추상화 계층)"]
         IMem["IMemoryDriver (추상 인터페이스)<br/>- Read<T> / Write<T><br/>- ReadRaw / WriteRaw<br/>- PatternScan / ResolvePointerChain"]
         Driver_Linux["LinuxMemoryDriver<br/>- process_vm_readv / process_vm_writev<br/>- /proc/$PID/mem (GE-Proton WoW64 호환)"]
-        Driver_Win["Win32MemoryDriver (향후 Windows 네이티브 지원용)<br/>- OpenProcess / ReadProcessMemory / WriteProcessMemory"]
+        Driver_Win["Win32MemoryDriver (Windows 네이티브 완성)<br/>- OpenProcess / ReadProcessMemory / WriteProcessMemory<br/>- EnumProcessModulesEx (PSAPI WoW64 완벽 호환)"]
     end
 
     subgraph TargetGame ["Target Process (삼국지 13 PK)"]
@@ -74,9 +74,11 @@ vaneditor/
 ├── vendor/                      # 서드파티 라이브러리
 │   └── imgui/                   # Dear ImGui (Docking) 경량화 소스
 ├── include/                     # C++ 공용 헤더 디렉터리
-│   ├── core/                    # OS 추상 메모리 드라이버
+│   ├── core/                    # OS 추상 메모리 드라이버 및 플랫폼 유틸
 │   │   ├── IMemoryDriver.hpp
-│   │   └── LinuxMemoryDriver.hpp
+│   │   ├── LinuxMemoryDriver.hpp
+│   │   ├── Win32MemoryDriver.hpp
+│   │   └── PlatformUtil.hpp
 │   ├── game/                    # 게임 도메인 로직 및 데이터 구조체
 │   │   ├── Bounds.hpp           # 수치 상하한 및 클램핑 로직
 │   │   ├── City.hpp             # 도시 데이터 구조체

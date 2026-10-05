@@ -1,12 +1,12 @@
-# San13PK Linux Memory Editor & Trainer Suite
+# San13PK Cross-Platform Memory Editor & Trainer Suite
 
-> 삼국지 13 with 파워업키트 (Romance of the Three Kingdoms 13 PK) Linux/Proton 전용 네이티브 실시간 메모리 에디터입니다.
+> 삼국지 13 with 파워업키트 (Romance of the Three Kingdoms 13 PK) Linux/Proton & Windows 10/11 네이티브 실시간 메모리 에디터입니다.
 
 ---
 
 ## 1. 프로젝트 소개
 
-본 프로젝트는 리눅스 환경(Steam Proton WoW64)에서 실행 중인 삼국지 13 PK 한국어판(v1.0.2)의 게임 메모리를 실시간으로 읽고 패치할 수 있는 독립 실행형(GUI) 에디터입니다.
+본 프로젝트는 리눅스(Steam Proton WoW64) 및 윈도우(Windows 10/11 64-bit) 환경에서 실행 중인 삼국지 13 PK 한국어판(v1.0.2)의 게임 메모리를 실시간으로 읽고 패치할 수 있는 고성능 독립 실행형(GUI) 에디터 & 트레이너입니다.
 
 - **삼국지 앤틱 다크 골드 테마 & 반응형 UI:** 딥 차콜 오크 & 브론즈 테두리, 창 크기별 폰트/테이블 자동 스케일링(`FontGlobalScale`).
 - **네이티브 한글 지원:** 2벌식 한글 오토마타 엔진 내장 및 나눔고딕 폰트 렌더링.
@@ -26,19 +26,20 @@
   - 234종 공식 명품 + 확장 슬롯, 능력치 보정, 부가 특기
   - 소유 무장 원클릭 수여/몰수 및 **미소유 보물 시장(소재지 도시) 위치 추적/필터**
 - **대규모 일괄 수정 및 트랜잭션 롤백:** 다중 선택, 일괄 버프, 수명 일괄 연장, 실행 취소(Undo 롤백).
+- **크로스플랫폼 듀얼 빌드:** Linux 네이티브 바이너리 및 Windows 네이티브 `.exe` 정적 빌드 100% 지원.
 
 ---
 
 ## 2. 요구 환경 (Prerequisites)
 
-- **운영체제:** Linux x86_64 (Fedora, Ubuntu, Arch, SteamOS 등)
 - **타깃 게임:** Steam판 Romance of the Three Kingdoms 13 with Power Up Kit (한국어판 최신 v1.0.2)
-- **실행 레이어:** Valve Proton (GE-Proton 또는 Proton Experimental)
-- **필수 빌드 패키지:**
-  - `g++` (C++17 지원)
-  - `make`
-  - `glfw` 개발 라이브러리 (`glfw-devel` 또는 `libglfw3-dev`)
-  - `OpenGL` 및 `dl` 개발 라이브러리
+- **지원 운영체제:**
+  - **Linux x86_64:** Fedora, Ubuntu, Arch, SteamOS 등 (Proton WoW64 호환)
+  - **Windows:** Windows 10 / 11 (64-bit 네이티브 실행)
+- **리눅스 빌드 필수 패키지:**
+  - `g++` (C++17 지원), `make`
+  - `glfw` 개발 라이브러리 (`glfw-devel` 또는 `libglfw3-dev`), `OpenGL` / `dl`
+  - `mingw64-gcc-c++` (Windows 크로스 컴파일 시)
 
 ---
 
@@ -48,36 +49,41 @@
 # 저장소 루트로 이동
 cd ~/Downloads/vaneditor
 
-# 1. 메인 에디터 및 전체 단위/통합 테스트 빌드
+# 1. Linux 에디터 및 16개 전체 단위/통합 테스트 빌드 & 실행
 make -j$(nproc)
-
-# 2. 16개 전체 단위/통합 테스트 스위트 실행
 make test
 
-# 3. 120프레임 무결성 GUI 스모크 테스트
-./bin/san13_editor --smoke-test
+# 2. Windows 64-bit 네이티브 바이너리 크로스 컴파일 (MinGW-w64)
+make win
+# 산출물: bin/win/san13_editor.exe (약 2.5MB 스트립 바이너리)
 
-# 4. Linux Standalone 배포 아카이브 패키징
-make package
-# 결과물: dist/san13_editor_linux_x86_64.tar.gz (약 1.4MB)
+# 3. 듀얼 플랫폼 독립 배포 패키징 (Linux tar.gz + Windows zip)
+make package_all
+# 산출물:
+# - Linux:   dist/san13_editor_linux_x86_64.tar.gz (약 1.4MB)
+# - Windows: dist/san13_editor_windows_x64.zip    (약 1.7MB)
 ```
 
 ---
 
 ## 4. 실행 방법 (Usage)
 
+### [Linux 환경]
 1. Steam에서 **삼국지 13 PK**를 실행하고 시나리오에 진입합니다.
 2. 터미널에서 에디터를 실행합니다:
+   ```bash
+   ./bin/san13_editor
+   # 배포판 사용 시: ./run.sh
+   ```
 
-```bash
-./bin/san13_editor
-```
+> **참고 (Linux ptrace 권한 안내):**  
+> Linux 보안 정책(`yama ptrace_scope`)에 따라 메모리 접근이 차단될 경우, `sudo sysctl -w kernel.yama.ptrace_scope=0`을 실행하거나 `dist/run.sh` 런처를 이용하십시오.
 
+### [Windows 환경]
+1. 삼국지 13 PK를 실행하고 시나리오에 진입합니다.
+2. `san13_editor.exe`를 더블 클릭하여 실행합니다. (게임을 관리자 권한으로 실행한 경우 에디터도 '관리자 권한으로 실행')
 3. 에디터가 게임 프로세스(`San13PK_kr.exe`)를 자동으로 감지하고 `RootBase` 주소를 바인딩합니다.
 4. 무장/도시/명품 테이블에서 원하는 항목을 **더블클릭**하거나 우클릭하여 상세 편집 창을 열고 실시간 수정을 적용합니다.
-
-> **참고 (ptrace 권한 안내):**  
-> Linux 보안 정책(`yama ptrace_scope`)에 따라 일반 유저 권한에서 타깃 프로세스의 메모리 읽기/쓰기가 차단될 경우, `sudo sysctl kernel.yama.ptrace_scope=0`을 실행하거나 `dist/run.sh` 런처를 이용하십시오.
 
 ---
 

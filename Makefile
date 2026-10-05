@@ -93,6 +93,8 @@ APP_BIN = $(BIN_DIR)/san13_editor
 DIST_DIR = dist
 PACKAGE_DIR = $(DIST_DIR)/san13_editor_linux_x86_64
 PACKAGE_TAR = $(DIST_DIR)/san13_editor_linux_x86_64.tar.gz
+PACKAGE_WIN_DIR = $(DIST_DIR)/san13_editor_windows_x64
+PACKAGE_WIN_ZIP = $(DIST_DIR)/san13_editor_windows_x64.zip
 
 all: $(APP_BIN)
 
@@ -219,6 +221,21 @@ package: $(APP_BIN)
 	@echo "=== Package Created: $(PACKAGE_TAR) ==="
 	@ls -lh $(PACKAGE_TAR)
 
+package_win: $(WIN_BIN)
+	@echo "=== Building Standalone Windows Distribution Package ==="
+	@rm -rf $(PACKAGE_WIN_DIR) $(PACKAGE_WIN_ZIP)
+	@mkdir -p $(PACKAGE_WIN_DIR)/assets/fonts
+	@cp $(WIN_BIN) $(PACKAGE_WIN_DIR)/
+	@x86_64-w64-mingw32-strip -s $(PACKAGE_WIN_DIR)/san13_editor.exe
+	@cp $(DIST_DIR)/README_WINDOWS.txt $(PACKAGE_WIN_DIR)/
+	@cp assets/fonts/NanumGothic.ttf $(PACKAGE_WIN_DIR)/assets/fonts/
+	@cd $(DIST_DIR) && zip -q -r san13_editor_windows_x64.zip san13_editor_windows_x64
+	@rm -rf $(PACKAGE_WIN_DIR)
+	@echo "=== Windows Package Created: $(PACKAGE_WIN_ZIP) ==="
+	@ls -lh $(PACKAGE_WIN_ZIP)
+
+package_all: package package_win
+
 test_memory: $(TEST_MEMORY_BIN)
 	@echo "=== Running Phase 4.1 Core Memory Driver Unit Tests ==="
 	./$(TEST_MEMORY_BIN)
@@ -307,9 +324,9 @@ gui: $(TEST_GUI_BIN)
 	./$(TEST_GUI_BIN)
 
 clean:
-	rm -rf $(BUILD_DIR) $(BIN_DIR)/test_memory_driver $(BIN_DIR)/test_bounds $(BIN_DIR)/test_officer_manager $(BIN_DIR)/test_city_manager $(BIN_DIR)/test_settlement_manager $(BIN_DIR)/test_city_officers $(BIN_DIR)/test_city_detail_modal $(BIN_DIR)/test_gui_window $(BIN_DIR)/test_officer_table $(BIN_DIR)/test_officer_edit $(BIN_DIR)/test_city_table $(BIN_DIR)/test_batch_actions $(BIN_DIR)/test_hangul_automata $(BIN_DIR)/test_hangul_input_widget $(BIN_DIR)/test_officer_names $(TEST_TACTIC_BIN) $(TEST_MULTI_BONDS_BIN) $(TEST_FORCE_BIN) $(TEST_ITEM_BIN) $(APP_BIN) $(PACKAGE_DIR) $(PACKAGE_TAR)
+	rm -rf $(BUILD_DIR) $(BIN_DIR)/test_memory_driver $(BIN_DIR)/test_bounds $(BIN_DIR)/test_officer_manager $(BIN_DIR)/test_city_manager $(BIN_DIR)/test_settlement_manager $(BIN_DIR)/test_city_officers $(BIN_DIR)/test_city_detail_modal $(BIN_DIR)/test_gui_window $(BIN_DIR)/test_officer_table $(BIN_DIR)/test_officer_edit $(BIN_DIR)/test_city_table $(BIN_DIR)/test_batch_actions $(BIN_DIR)/test_hangul_automata $(BIN_DIR)/test_hangul_input_widget $(BIN_DIR)/test_officer_names $(TEST_TACTIC_BIN) $(TEST_MULTI_BONDS_BIN) $(TEST_FORCE_BIN) $(TEST_ITEM_BIN) $(APP_BIN) $(PACKAGE_DIR) $(PACKAGE_TAR) $(PACKAGE_WIN_DIR) $(PACKAGE_WIN_ZIP)
 
-.PHONY: all test_memory test_bounds test_officer test_city test_settlement test_city_officers test_city_modal test_gui test_officer_table test_officer_edit test_city_table test_batch test_hangul test_hangul_widget test_officer_names test_tactic test_multi_bonds test_force test_item test test_offline test_live gui editor package tools clean
+.PHONY: all test_memory test_bounds test_officer test_city test_settlement test_city_officers test_city_modal test_gui test_officer_table test_officer_edit test_city_table test_batch test_hangul test_hangul_widget test_officer_names test_tactic test_multi_bonds test_force test_item test test_offline test_live gui editor package package_win package_all tools clean
 
 # ---------------------------------------------------------------------------
 # Windows 크로스 컴파일 (MinGW-w64): make win  ->  bin/win/san13_editor.exe

@@ -99,6 +99,15 @@
   - 재야 무장 수: 1명 (`+0x154`, 화면 1명 일치) [유력]
 - **단위 테스트 통과:** `bin/test_city_manager` [Step 3-2] 17개 전수 검증 통과 및 `San13CityRaw` `sizeof == 0x170` 컴파일타임 static_assert 보장.
 
+### 3.6. 듀얼 플랫폼 바이너리 및 배포 패키지 실측 검증 (Phase 6.8)
+- **리눅스 네이티브 배포 패키지 (`dist/san13_editor_linux_x86_64.tar.gz` / 1.4MB):**
+  - 독립 디렉터리 압축 해제 후 `./run.sh --smoke-test` 단독 실행 검증.
+  - 실행 중인 `San13PK_kr.exe` 자동 감지, `RootBase (0x73b6c5d8)` 바인딩, 나눔고딕 폰트 로드 및 120프레임 무결성 통과.
+- **윈도우 네이티브 배포 패키지 (`dist/san13_editor_windows_x64.zip` / 1.7MB):**
+  - MinGW-w64 정적 스트립 바이너리(`san13_editor.exe`, 2.5MB) + 한글 폰트 + 안내서 구성.
+  - GE-Proton WoW64 가상 윈도우 환경에서 `proton run san13_editor.exe --smoke-test` 실행 검증.
+  - Win32 API(`EnumProcessModulesEx`, `OpenProcess`, `ReadProcessMemory`) 기반으로 게임 프로세스 정상 바인딩 및 120프레임 무결성 통과.
+
 ---
 
 ## 4. 미확인 및 추가 관찰 필요 항목 (Unverified)
