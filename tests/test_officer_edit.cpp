@@ -6,6 +6,7 @@
 #include "imgui.h"
 
 #include <iostream>
+#include <cstring>
 #include <iomanip>
 #include <vector>
 #include <string>
@@ -65,6 +66,10 @@ int main(int argc, char** argv) {
 
     // 3. 편집 모달 열기 및 버퍼 상태 검증
     std::cout << "\n[Step 3] 무장 상세 편집 모달(OpenEditModal) 호출 및 버퍼 상태 검증\n";
+    // 원본 능력치/적성 블록 16바이트 보관 (Step 7에서 바이트 단위 원복, 고정값 '복구' 금지)
+    const uintptr_t statsAddr = officerMgr.GetOfficerAddress(333) + OfficerMemoryLayout::STATS_OFFSET;
+    San13OfficerLiveStats originalStats{};
+    TEST_ASSERT(driver.Read<San13OfficerLiveStats>(statsAddr, originalStats), "조조 원본 능력치 블록 스냅샷");
     tableView.OpenEditModal(333);
     TEST_ASSERT(tableView.IsEditModalOpen(), "조조(ID 333) 편집 모달 플래그 활성화");
     TEST_ASSERT(tableView.GetEditingOfficerId() == 333, "편집 대상 ID 333 일치 확인");
@@ -125,24 +130,13 @@ int main(int argc, char** argv) {
                 verifyRec.stats.base_intel == 100 && verifyRec.stats.base_politics == 100,
                 "조조 통솔/무력/지력/정치 전원 100 실시간 메모리 패치 검증");
 
-    // 테스트 완료 후 조조 원래 수치로 안전 복구 (통솔 99, 무력 99, 지력 92, 정치 91, 적성 A/A/A)
+    // 테스트 완료 후 조조 원본 16바이트로 원복 (TECH-05: 과거 고정값 99/99/92/91 '복구'가 실제 데이터를 변경했음)
     std::cout << "\n[Step 7] 검증 후 데이터 안전 원상 복구\n";
-    tableView.SetLimitBreakMode(false);
-    tableView.GetEditStats().base_leadership = 99; tableView.GetEditStats().curr_leadership = 99;
-    tableView.GetEditStats().base_war = 99;        tableView.GetEditStats().curr_war = 99;
-    tableView.GetEditStats().base_intel = 92;      tableView.GetEditStats().curr_intel = 92;
-    tableView.GetEditStats().base_politics = 91;   tableView.GetEditStats().curr_politics = 91;
-    tableView.GetEditStats().spear_apt = 2;        // A
-    tableView.GetEditStats().horse_apt = 2;        // A
-    tableView.GetEditStats().bow_apt = 2;          // A
-    tableView.CommitEditToMemory();
-
-    officerMgr.LoadOfficer(333, verifyRec);
-    TEST_ASSERT(verifyRec.stats.base_leadership == 99 && verifyRec.stats.base_war == 99 &&
-                verifyRec.stats.base_intel == 92 && verifyRec.stats.base_politics == 91,
-                "조조 스탯 원래 값 복구 완료 (99/99/92/91)");
-    TEST_ASSERT(verifyRec.stats.spear_apt == 2 && verifyRec.stats.horse_apt == 2 && verifyRec.stats.bow_apt == 2,
-                "조조 적성 원래 값 복구 완료 (A/A/A)");
+    San13OfficerLiveStats restoredStats{};
+    bool restoreOk = driver.Write<San13OfficerLiveStats>(statsAddr, originalStats) &&
+                     driver.Read<San13OfficerLiveStats>(statsAddr, restoredStats) &&
+                     std::memcmp(&restoredStats, &originalStats, sizeof(originalStats)) == 0;
+    TEST_ASSERT(restoreOk, "조조 능력치·적성 원본 16바이트 원복 완료");
 
     // 8. GUI 파이프라인 및 편집 모달 120프레임 렌더링 검증
     std::cout << "\n[Step 8] Dear ImGui 편집 모달 렌더링 무결성 검증\n";

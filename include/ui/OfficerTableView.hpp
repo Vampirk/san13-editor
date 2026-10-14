@@ -223,6 +223,7 @@ private:
     bool                             m_showEditModal = false;
     int                              m_editingOfficerId = -1;
     Game::OfficerRecord              m_editingRecord;
+    Game::San13OfficerCharacter      m_openedCharacter{};   // 편집 창을 열 때의 성향/실적 (실적은 변경 시에만 기록, BUG-06)
     Game::San13OfficerLiveStats      m_editStats{};
     bool                             m_limitBreakMode = false;
     bool                             m_autoSync = true;

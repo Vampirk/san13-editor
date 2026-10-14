@@ -394,7 +394,7 @@ int main() {
     guanYu.character.loyalty_justice = 4; // 매우중시
     guanYu.character.valuing_courage = 3; // 중시
     guanYu.character.valuing_talent = 2;  // 보통
-    guanYu.character.affinity = 50;
+    guanYu.character.justice_merit = -500;   // 의리실적은 음수 가능 (여포 실측, BUG-06)
 
     if (std::string(guanYu.GetDrinkDescription()) != "대음" ||
         std::string(guanYu.GetGreedDescription()) != "무욕" ||

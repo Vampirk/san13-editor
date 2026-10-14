@@ -7,6 +7,7 @@
 #include "imgui.h"
 
 #include <iostream>
+#include <cstring>
 #include <iomanip>
 #include <vector>
 #include <string>
@@ -133,6 +134,9 @@ int main(int argc, char** argv) {
 
     // 5. 도시 상세 편집 모달 호출 및 버퍼 상태 검증 (낙양 ID 23)
     std::cout << "\n[Step 5] 도시 상세 편집 모달(OpenEditModal) 호출 및 버퍼 검증 (낙양 ID 23)\n";
+    // 낙양 도시 구조체 원본 0x170바이트 보관 (Step 8에서 바이트 단위 원복, 고정값 '복구' 금지)
+    San13CityRaw originalCity{};
+    TEST_ASSERT(driver.Read<San13CityRaw>(cityMgr.GetCityAddress(23), originalCity), "낙양 원본 도시 구조체 스냅샷");
     tableView.OpenEditModal(23);
     TEST_ASSERT(tableView.IsEditModalOpen(), "낙양(ID 23) 편집 모달 활성화 확인");
     TEST_ASSERT(tableView.GetEditingCityId() == 23, "편집 대상 ID 23 일치 확인");
@@ -174,18 +178,13 @@ int main(int argc, char** argv) {
     TEST_ASSERT(verifyCity.gold == 999999 && verifyCity.provisions == 999999,
                 "낙양 자원 풀충전 치트 (자금/군량 999,999) 확인");
 
-    // 8. 데이터 안전 원상 복구 (낙양: 자금 4,000, 군량 44,400, 병력 22,200)
+    // 8. 데이터 안전 원상 복구: 원본 0x170바이트로 원복 (TECH-05: 과거 고정값 4,000/44,400/22,200 '복구'는 세이브마다 데이터를 변경)
     std::cout << "\n[Step 8] 검증 후 데이터 안전 원상 복구\n";
-    tableView.SetLimitBreakMode(false);
-    tableView.GetEditRecord().gold = 4000;
-    tableView.GetEditRecord().provisions = 44400;
-    tableView.GetEditRecord().troops = 22200;
-    tableView.CommitEditToMemory();
-
-    cityMgr.LoadCity(23, verifyCity);
-    TEST_ASSERT(verifyCity.gold == 4000 && verifyCity.provisions == 44400 &&
-                verifyCity.troops == 22200,
-                "낙양 원래 자원 수치 완벽 복구 완료 (자금 4,000 / 군량 44,400 / 병력 22,200)");
+    San13CityRaw restoredCity{};
+    bool restoreOk = driver.Write<San13CityRaw>(cityMgr.GetCityAddress(23), originalCity) &&
+                     driver.Read<San13CityRaw>(cityMgr.GetCityAddress(23), restoredCity) &&
+                     std::memcmp(&restoredCity, &originalCity, sizeof(originalCity)) == 0;
+    TEST_ASSERT(restoreOk, "낙양 도시 구조체 원본 0x170바이트 원복 완료");
 
     // 9. GUI 파이프라인 및 도시 테이블 120프레임 렌더링 검증
     std::cout << "\n[Step 9] Dear ImGui 도시 테이블 및 편집 모달 렌더링 무결성 검증\n";

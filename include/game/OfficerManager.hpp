@@ -91,6 +91,11 @@ public:
     bool SetCharacter(uint16_t id, const San13OfficerCharacter& character);
 
     /**
+     * @brief 의리/용애/재애 실적 쓰기 (+0x58 int16, +0x5A uint16, +0x5C uint16, BUG-06)
+     */
+    bool SetValueMerits(uint16_t id, int16_t justice, uint16_t courage, uint16_t talent);
+
+    /**
      * @brief 무장 가족 및 인연 관계 설정 (+0x40 ~ +0x4D: 부친, 모친, 배우자 1~3, 의형제, 원수)
      */
     bool SetRelations(uint16_t id, uint16_t father, uint16_t mother, uint16_t spouse1, uint16_t swornBrother,

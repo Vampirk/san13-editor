@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 #include <string>
 #include "game/TacticManager.hpp"
 
@@ -63,7 +64,8 @@ struct San13OfficerHeader {
 };
 
 /**
- * @brief 무장 성향/기호/가치관 블록 (오프셋 +0x50 ~ +0x5F, 16바이트)
+ * @brief 무장 성향/기호/가치관 + 가치관 실적 블록 (오프셋 +0x50 ~ +0x5D, 14바이트)
+ * +0x5E부터는 인연 성립 비트셋[2165]이 시작되므로 이 구조체에 포함하지 않습니다 (OFFSETS.md §4.5, BUG-06).
  */
 struct San13OfficerCharacter {
     uint8_t  like_weapon;        // +0x00 (+0x50): 선호무기 (0:무관심, 1:관심)
@@ -74,9 +76,14 @@ struct San13OfficerCharacter {
     uint8_t  loyalty_justice;    // +0x05 (+0x55): 의리 (0:경시, 1:낮음, 2:보통, 3:중시, 4:매우중시)
     uint8_t  valuing_courage;    // +0x06 (+0x56): 용애 (0:경시, 1:낮음, 2:보통, 3:중시, 4:매우중시)
     uint8_t  valuing_talent;     // +0x07 (+0x57): 재애 (0:경시, 1:낮음, 2:보통, 3:중시, 4:매우중시)
-    uint8_t  affinity;           // +0x08 (+0x58): 상성 (0~149, 유비 3형제=50, 손견/동탁=100)
-    uint8_t  pad_59_5f[7];       // +0x09 ~ +0x0F (+0x59 ~ +0x5F): 패딩 아님 — +0x5A/+0x5C 미확인 uint16 수치, +0x5E부터 인연 비트셋[2165] 시작 (OFFSETS.md §4.5, RE-01)
+    int16_t  justice_merit;      // +0x08 (+0x58): 의리실적 (음수 가능, 유비 500 / 여포 -500 화면 실측 일치, BUG-06)
+    uint16_t courage_merit;      // +0x0A (+0x5A): 용애실적 (유비 50 화면 실측 일치)
+    uint16_t talent_merit;       // +0x0C (+0x5C): 재애실적 (유비 150 화면 실측 일치)
 };
+
+static_assert(sizeof(San13OfficerCharacter) == 14, "San13OfficerCharacter must cover +0x50 ~ +0x5D only");
+static_assert(offsetof(San13OfficerCharacter, justice_merit) == 0x08, "justice_merit offset mismatch");
+static_assert(offsetof(San13OfficerCharacter, talent_merit) == 0x0C, "talent_merit offset mismatch");
 
 #pragma pack(pop)
 
@@ -122,7 +129,7 @@ struct OfficerRecord {
     uint16_t sworn_brothers[3] = {0xFFFF, 0xFFFF, 0xFFFF}; // 의형제 3인 슬롯 (+0x1296, +0x1298, +0x129A)
     uint16_t friends[6] = {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF}; // 친애 무장 6인 슬롯 (+0x1284 ~ +0x128E)
     uint16_t rivals[3] = {0xFFFF, 0xFFFF, 0xFFFF}; // 원수/혐오 무장 3인 슬롯 (+0x129C, +0x129E, +0x12A0)
-    San13OfficerCharacter character{}; // 8대 성향/기호/가치관/상성 (+0x50 ~ +0x58)
+    San13OfficerCharacter character{}; // 8대 성향/기호/가치관 + 의리/용애/재애 실적 (+0x50 ~ +0x5D)
     uint16_t city_id = 0xFFFF;
     uint8_t  rank = 0;           // 관직 품관 (0: 군주, 1~9: 1품관~9품관)
     uint8_t  loyalty = 0;

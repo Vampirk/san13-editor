@@ -148,6 +148,7 @@ void OfficerTableView::OpenEditModal(int officerId) {
     if (!m_officerMgr || officerId < 0) return;
     if (m_officerMgr->LoadOfficer(static_cast<uint16_t>(officerId), m_editingRecord)) {
         m_editingOfficerId = officerId;
+        m_openedCharacter = m_editingRecord.character;
         m_selectedOfficerId = officerId;
         m_editStats = m_editingRecord.stats;
         if (m_officerMgr->IsProtagonist(officerId)) {
@@ -175,6 +176,13 @@ bool OfficerTableView::CommitEditToMemory() {
     ok &= m_officerMgr->SetFaceId(id, m_editingRecord.face_id);
     ok &= m_officerMgr->SetPersonality(id, m_editingRecord.personality);
     ok &= m_officerMgr->SetCharacter(id, m_editingRecord.character);
+    // 실적은 사용자가 바꾼 경우에만 기록 (창을 열어둔 사이 게임이 바꾼 값을 되돌리지 않도록)
+    const auto& ch = m_editingRecord.character;
+    if (ch.justice_merit != m_openedCharacter.justice_merit || ch.courage_merit != m_openedCharacter.courage_merit ||
+        ch.talent_merit != m_openedCharacter.talent_merit) {
+        ok &= m_officerMgr->SetValueMerits(id, ch.justice_merit, ch.courage_merit, ch.talent_merit);
+        m_openedCharacter = ch;
+    }
     ok &= m_officerMgr->SetRelations(id, m_editingRecord.father_id, m_editingRecord.mother_id, m_editingRecord.spouse_1_id, m_editingRecord.sworn_brother_id,
                                      m_editingRecord.spouse_2_id, m_editingRecord.spouse_3_id, m_editingRecord.rival_id);
     ok &= m_officerMgr->SetSwornBrothers(id, m_editingRecord.sworn_brothers);
@@ -1253,7 +1261,7 @@ void OfficerTableView::RenderEditModal() {
                 ImGui::Separator();
                 ImGui::Spacing();
 
-                ImGui::TextColored(ImVec4(0.4f, 0.85f, 1.0f, 1.0f), "▶ 4대 가치관 및 상성");
+                ImGui::TextColored(ImVec4(0.4f, 0.85f, 1.0f, 1.0f), "▶ 4대 가치관 및 실적");
                 const char* greedItems[] = { "무욕 (0)", "보통 (1)", "강욕 (2)" };
                 int greed = m_editingRecord.character.greed;
                 if (greed > 2) greed = 2;
@@ -1282,9 +1290,20 @@ void OfficerTableView::RenderEditModal() {
                     valueChanged = true;
                 }
 
-                int aff = m_editingRecord.character.affinity;
-                if (ImGui::SliderInt("상성 (Affinity)##EditAff", &aff, 0, 149)) {
-                    m_editingRecord.character.affinity = static_cast<uint8_t>(aff);
+                // 의리/용애/재애 실적 (+0x58 ~ +0x5D). 기존 '상성' 슬라이더는 의리실적 하위 바이트를 덮어쓰던 오매핑이라 제거 (BUG-06)
+                int justiceMerit = m_editingRecord.character.justice_merit;
+                if (ImGui::InputInt("의리실적##EditJusticeMerit", &justiceMerit)) {
+                    m_editingRecord.character.justice_merit = static_cast<int16_t>(std::clamp(justiceMerit, -32768, 32767));
+                    valueChanged = true;
+                }
+                int courageMerit = m_editingRecord.character.courage_merit;
+                if (ImGui::InputInt("용애실적##EditCourageMerit", &courageMerit)) {
+                    m_editingRecord.character.courage_merit = static_cast<uint16_t>(std::clamp(courageMerit, 0, 65535));
+                    valueChanged = true;
+                }
+                int talentMerit = m_editingRecord.character.talent_merit;
+                if (ImGui::InputInt("재애실적##EditTalentMerit", &talentMerit)) {
+                    m_editingRecord.character.talent_merit = static_cast<uint16_t>(std::clamp(talentMerit, 0, 65535));
                     valueChanged = true;
                 }
                 ImGui::PopItemWidth();

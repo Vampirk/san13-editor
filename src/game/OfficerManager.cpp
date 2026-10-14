@@ -3,6 +3,7 @@
 #include "game/CityManager.hpp"
 #include <iostream>
 #include <cstring>
+#include <cstddef>
 
 namespace San13::Game {
 
@@ -106,7 +107,7 @@ bool OfficerManager::LoadOfficer(uint16_t id, OfficerRecord& outRecord) {
     // +0x129C ~ +0x12A0: 원수 3인 슬롯 읽기
     m_driver->ReadRaw(objAddr + OfficerMemoryLayout::RIVALS_OFFSET, outRecord.rivals, sizeof(outRecord.rivals));
 
-    // +0x50 ~ +0x5F: 성향/기호/가치관/상성 8대 특성 블록 읽기
+    // +0x50 ~ +0x5D: 성향/기호/가치관 + 의리/용애/재애 실적 블록 읽기 (BUG-06)
     m_driver->Read<San13OfficerCharacter>(objAddr + 0x50, outRecord.character);
 
     outRecord.city_id = header.city_id;
@@ -327,8 +328,21 @@ bool OfficerManager::SetCharacter(uint16_t id, const San13OfficerCharacter& char
     if (!m_driver || m_officerArrayBase == 0 || id >= OfficerMemoryLayout::MAX_TOTAL_SLOTS) {
         return false;
     }
+    // 성향/기호/가치관 8바이트(+0x50 ~ +0x57)만 기록합니다. 실적(+0x58~)은 SetValueMerits로 따로 쓰고,
+    // +0x5E 이후 인연 비트셋은 절대 건드리지 않습니다 (BUG-06).
     uintptr_t charAddr = GetOfficerAddress(id) + 0x50;
-    return m_driver->Write<San13OfficerCharacter>(charAddr, character);
+    return m_driver->WriteRaw(charAddr, &character, offsetof(San13OfficerCharacter, justice_merit));
+}
+
+bool OfficerManager::SetValueMerits(uint16_t id, int16_t justice, uint16_t courage, uint16_t talent) {
+    if (!m_driver || m_officerArrayBase == 0 || id >= OfficerMemoryLayout::MAX_TOTAL_SLOTS) {
+        return false;
+    }
+    uintptr_t addr = GetOfficerAddress(id);
+    bool ok = m_driver->Write<int16_t>(addr + 0x58, justice);
+    ok &= m_driver->Write<uint16_t>(addr + 0x5A, courage);
+    ok &= m_driver->Write<uint16_t>(addr + 0x5C, talent);
+    return ok;
 }
 
 bool OfficerManager::SetRelations(uint16_t id, uint16_t father, uint16_t mother, uint16_t spouse1, uint16_t swornBrother,
