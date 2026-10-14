@@ -150,7 +150,7 @@ int main(int argc, char** argv) {
     // 초기 연결 시도
     TryConnect();
 
-    int ptraceScope = ReadPtraceScope();
+    [[maybe_unused]] int ptraceScope = ReadPtraceScope();  // Linux ptrace 권한 안내 전용 (Windows에서는 미사용)
     int frameCount = 0;
     auto lastPollTime = std::chrono::steady_clock::now();
 

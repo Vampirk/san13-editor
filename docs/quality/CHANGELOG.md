@@ -122,6 +122,13 @@
 - Step 6.9-3: 신규 작업 단일 관리 문서 `plans/05_BACKLOG.md` 신설 (BUG-01 고대무장 제보 1차 조사, FEAT-01 주인공 Phase C, TECH-01/02, FUTURE-01 San13PicTool 현대화 기록).
 - Step 6.9-4: 서드파티 참고 도구 `San13pictool/`을 `.gitignore`에 추가.
 
+### Phase 6.10: 버그 일괄 수정, 테스트 안전화, 무장 구조체 역분석 1차 (2026-10-14)
+- Step 6.10-1 (버그 수정): 고대무장 이름 38건 교정(EDGE-55), 모듈 베이스 변동으로 ID 800+ 무장·주인공 미감지(EDGE-56), 등록 신무장 1명만 로드(EDGE-57), 무장 출신 분류·빈 슬롯 노출·명품 수여 대상 제한(EDGE-58), 가치관 실적 오매핑/덮어쓰기(EDGE-59), 현재 일자를 시나리오 시작일로 오판독(EDGE-60).
+- Step 6.10-2 (테스트 안전화): `test_protagonist` 등록, `test_offline`의 라이브 쓰기 제거(`test_tactic_live` 분리), 실패 시 exit 0 반환 교정, 세이브 의존 단언 → 불변식, 모든 쓰기 테스트를 '판정 전 원본 바이트 원복'으로 교체 (TECH-01/04/05, BUG-07).
+- Step 6.10-3 (빌드): `make tools` 전체 빌드 복구 및 도구 VTable RVA화 (TECH-03/06), `vendor/glfw` 이관으로 `make win` 복구, Windows 빌드 `ptraceScope` 미사용 경고 제거.
+- Step 6.10-4 (역분석): 등록 신무장 열전 저장 위치(`editdata_pk.s13` 레코드 +0x35, 메모리 사본 2종 +0x3B) 규명, 무장 미매핑 4.6KB를 무장 ID별 관계 배열 3종 + 후미 필드로 1차 매핑(RE-01), 경과 일수 `RootBase + 0x6` 규명, 읽기 전용 스냅샷 도구 `tools/officer_snapshot.py` 추가.
+- Step 6.10-5 (최종 검증): `make clean` 후 Linux 에디터·테스트 20종·분석 도구 전체 빌드 성공(에디터/테스트 경고 0, 분석 도구 기존 미사용 변수 경고 11건), `make win` 성공(경고 0), `make test_offline` 통과, 에디터 `--smoke-test` 120프레임 정상 종료. 라이브 테스트는 190년 세이브에서 수정 후 개별 실행 시 원본 바이트 동일 확인.
+
 ---
 
 ## 2. 품질 보증(QA) 엣지 케이스 이력 (EDGE-01 ~ EDGE-60)
