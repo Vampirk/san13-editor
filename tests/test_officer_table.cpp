@@ -16,7 +16,7 @@
     do { \
         if (!(cond)) { \
             std::cerr << "  [\033[31mFAIL\033[0m] " << msg << " (" << #cond << ")\n"; \
-            return false; \
+            return 1; /* main()에서 false는 exit 0(성공)이 되므로 1 반환 (TECH-05) */ \
         } else { \
             std::cout << "  [\033[32mPASS\033[0m] " << msg << "\n"; \
         } \
@@ -62,7 +62,8 @@ int main(int argc, char** argv) {
     bool dateOk = officerMgr.GetGameDate(gameYear, gameMonth, gameDay);
     TEST_ASSERT(dateOk, "시나리오 게임 일자 판독 성공");
     std::cout << "         -> 판독된 인게임 일자: " << gameYear << "년 " << gameMonth << "월 " << gameDay << "일\n";
-    TEST_ASSERT(gameYear == 195 && gameMonth == 7 && gameDay == 1, "195년 7월 1일 일자 정합성 검증 성공");
+    TEST_ASSERT(gameYear >= 184 && gameYear <= 400 && gameMonth >= 1 && gameMonth <= 12 && gameDay >= 1 && gameDay <= 31,
+                "게임 일자 범위 정합성 검증 성공 (세이브 무관, TECH-05)");
 
     // 2. OfficerTableView 데이터 바인딩 및 동적 슬롯 확장 로드 검증
     std::cout << "\n[Step 2] 800명 역사 무장 + 285+ 확장 슬롯 동적 스캔 로드 검증\n";

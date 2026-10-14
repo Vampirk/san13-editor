@@ -73,102 +73,134 @@ int main() {
     }
 
     ItemManager itemMgr;
-    assert(itemMgr.Initialize(&driver, rootBase));
+    if (!itemMgr.Initialize(&driver, rootBase)) {
+        std::cerr << "  [FAIL] ItemManager 초기화 실패\n";
+        return 1;
+    }
     std::cout << "  -> ItemBase 주소: 0x" << std::hex << itemMgr.GetItemAddress(0) << std::dec << "\n";
 
     // 234개 명품 일괄 로드
     std::vector<ItemRecord> allItems;
-    assert(itemMgr.LoadAllItems(allItems));
+    if (!itemMgr.LoadAllItems(allItems)) {
+        std::cerr << "  [FAIL] 명품 일괄 로드 실패\n";
+        return 1;
+    }
     std::cout << "  -> 로드된 유효 명품 수: " << allItems.size() << "\n";
     assert(allItems.size() == OFFICIAL_ITEM_COUNT);
 
-    // 대표 명품 검증
+    // 대표 명품 검증: 이름/분류는 고정 데이터, 소유자는 세이브마다 다르므로 출력만 (TECH-05)
+    auto printItem = [](const ItemRecord& it) {
+        std::cout << "  [Item " << it.id << "] 이름: " << it.name << ", 분류: " << it.category_name
+                  << ", 보정: " << it.stat_boost_desc << ", 특기: " << it.skill_desc
+                  << ", 소유자: " << it.owner_name << " (ID: " << it.owner_id << ")\n";
+    };
     const auto& redHare = allItems[0];
-    std::cout << "  [Item 0] 이름: " << redHare.name << ", 분류: " << redHare.category_name 
-              << ", 보정: " << redHare.stat_boost_desc << ", 특기: " << redHare.skill_desc 
-              << ", 소유자: " << redHare.owner_name << " (ID: " << redHare.owner_id << ")\n";
-    assert(redHare.name == "적토마");
-    assert(redHare.category_name == "명마");
-    assert(redHare.owner_id == 635); // 여포
-
     const auto& blade = allItems[28];
-    std::cout << "  [Item 28] 이름: " << blade.name << ", 분류: " << blade.category_name 
-              << ", 보정: " << blade.stat_boost_desc << ", 특기: " << blade.skill_desc 
-              << ", 소유자: " << blade.owner_name << " (ID: " << blade.owner_id << ")\n";
-    assert(blade.name == "청룡언월도");
-    assert(blade.owner_id == 94); // 관우
-
     const auto& spear = allItems[34];
-    std::cout << "  [Item 34] 이름: " << spear.name << ", 분류: " << spear.category_name 
-              << ", 보정: " << spear.stat_boost_desc << ", 특기: " << spear.skill_desc 
-              << ", 소유자: " << spear.owner_name << " (ID: " << spear.owner_id << ")\n";
-    assert(spear.name == "사모");
-    assert(spear.owner_id == 418); // 장비
-
-    // Step 4: 무장별 소유 명품 목록 조회 검증
-    std::cout << "\n[Step 4] 특정 무장 소유 명품 역색인(GetOfficerItems) 검증\n";
-    std::vector<ItemRecord> lubuItems;
-    assert(itemMgr.GetOfficerItems(635, lubuItems)); // 여포
-    std::cout << "  -> 여포(635) 보유 명품 수: " << lubuItems.size() << "\n";
-    bool hasRedHare = false, hasHalberd = false;
-    for (const auto& it : lubuItems) {
-        std::cout << "     * " << it.name << " (" << it.category_name << ", " << it.stat_boost_desc << ")\n";
-        if (it.id == 0) hasRedHare = true;
-        if (it.id == 39) hasHalberd = true;
+    printItem(redHare);
+    printItem(blade);
+    printItem(spear);
+    if (redHare.name != "적토마" || redHare.category_name != "명마" || blade.name != "청룡언월도" || spear.name != "사모") {
+        std::cerr << "  [FAIL] 대표 명품(0 적토마, 28 청룡언월도, 34 사모) 이름/분류 불일치\n";
+        return 1;
     }
-    assert(hasRedHare && hasHalberd);
-    std::cout << "  [PASS] 여포의 적토마 & 방천화극 소유 목록 정상 역색인 확인\n";
+    std::cout << "  [PASS] 대표 명품 이름/분류 매핑 확인\n";
 
-    // Step 5: 소유권 변경 및 100% 무결성 롤백 쓰기 검증
+    // Step 4: 무장별 소유 명품 역색인 검증 (세이브 무관: 적토마 소유자의 목록에 적토마가 있어야 함)
+    std::cout << "\n[Step 4] 특정 무장 소유 명품 역색인(GetOfficerItems) 검증\n";
+    if (!redHare.is_owned) {
+        std::cout << "  [SKIP] 적토마 미소유 상태 — 역색인 검증 생략\n";
+    } else {
+        std::vector<ItemRecord> ownerItems;
+        bool listed = false;
+        if (itemMgr.GetOfficerItems(redHare.owner_id, ownerItems)) {
+            for (const auto& it : ownerItems) {
+                std::cout << "     * " << it.name << " (" << it.category_name << ", " << it.stat_boost_desc << ")\n";
+                if (it.id == redHare.id) listed = true;
+            }
+        }
+        if (!listed) {
+            std::cerr << "  [FAIL] 적토마 소유자(" << redHare.owner_name << ")의 역색인 목록에 적토마 없음\n";
+            return 1;
+        }
+        std::cout << "  [PASS] " << redHare.owner_name << "(" << redHare.owner_id << ") 소유 목록에서 적토마 역색인 확인\n";
+    }
+
+    // 원복은 API가 아닌 원본 36바이트 스냅샷으로 수행 (SetItemOwner/SetItemLocation이 +0x21 상태 플래그를
+    // 고정값으로 덮어써 API만으로는 정확한 원복이 불가, BUG-04)
+    auto snapshotItem = [&](uint16_t itemId, San13ItemRaw& out) {
+        return driver.ReadRaw(itemMgr.GetItemAddress(itemId), &out, sizeof(out));
+    };
+    auto restoreItem = [&](uint16_t itemId, const San13ItemRaw& snap) {
+        San13ItemRaw now{};
+        return driver.WriteRaw(itemMgr.GetItemAddress(itemId), &snap, sizeof(snap)) &&
+               driver.ReadRaw(itemMgr.GetItemAddress(itemId), &now, sizeof(now)) &&
+               std::memcmp(&now, &snap, sizeof(snap)) == 0;
+    };
+
+    // Step 5: 소유권 변경 및 무결성 롤백 (판정 전에 무조건 원복)
     std::cout << "\n[Step 5] 명품 소유권 변경(SetItemOwner) 및 100% 무결성 롤백 검증\n";
-    // 사모(34)의 원래 소유자(장비: 418)
-    uint16_t originalOwner = spear.owner_id;
-    assert(originalOwner == 418);
+    {
+        const uint16_t itemId = spear.id;
+        const uint16_t originalOwner = spear.owner_id;
+        San13ItemRaw snap{};
+        if (!snapshotItem(itemId, snap)) {
+            std::cerr << "  [FAIL] 사모 원본 스냅샷 판독 실패\n";
+            return 1;
+        }
+        ItemRecord granted, confiscated, restored;
+        bool grantOk = itemMgr.GrantItem(itemId, 333) && itemMgr.LoadItem(itemId, granted);
+        bool confiscateOk = itemMgr.ConfiscateItem(itemId) && itemMgr.LoadItem(itemId, confiscated);
+        bool restoreOk = restoreItem(itemId, snap) && itemMgr.LoadItem(itemId, restored);
 
-    // 1) 조조(333)에게 수여 테스트
-    assert(itemMgr.GrantItem(34, 333));
-    ItemRecord modifiedItem;
-    assert(itemMgr.LoadItem(34, modifiedItem));
-    std::cout << "  -> 조조에게 수여 후 사모 소유자: " << modifiedItem.owner_name << " (ID: " << modifiedItem.owner_id << ")\n";
-    assert(modifiedItem.owner_id == 333);
+        std::cout << "  -> 조조 수여 후: " << granted.owner_name << " (ID: " << granted.owner_id << "), 몰수 후: "
+                  << confiscated.owner_id << ", 원복 후: " << restored.owner_name << " (ID: " << restored.owner_id << ")\n";
+        if (!grantOk || granted.owner_id != 333 || !confiscateOk || confiscated.owner_id != 0xFFFF || confiscated.is_owned) {
+            std::cerr << "  [FAIL] 수여/몰수 쓰기 결과 불일치\n";
+            return 1;
+        }
+        if (!restoreOk || restored.owner_id != originalOwner) {
+            std::cerr << "  [FAIL] 사모 원본 36바이트 원복 실패 (원래 소유자 " << originalOwner << ")\n";
+            return 1;
+        }
+        std::cout << "  [PASS] 소유권 변경/몰수/수여 및 원본 36바이트 원복 100% 무결성 검증 통과\n";
+    }
 
-    // 2) 몰수(0xFFFF) 테스트
-    assert(itemMgr.ConfiscateItem(34));
-    assert(itemMgr.LoadItem(34, modifiedItem));
-    std::cout << "  -> 몰수 후 사모 소유자: " << modifiedItem.owner_name << " (ID: " << modifiedItem.owner_id << ")\n";
-    assert(modifiedItem.owner_id == 0xFFFF);
-    assert(!modifiedItem.is_owned);
-
-    // 3) 원래 소유자(장비: 418)로 100% 안전 원복
-    assert(itemMgr.SetItemOwner(34, originalOwner));
-    assert(itemMgr.LoadItem(34, modifiedItem));
-    std::cout << "  -> 원복 후 사모 소유자: " << modifiedItem.owner_name << " (ID: " << modifiedItem.owner_id << ")\n";
-    assert(modifiedItem.owner_id == 418);
-    std::cout << "  [PASS] 소유권 변경/몰수/수여 및 안전 원복 100% 무결성 검증 통과\n";
-
-    // Step 6: 미소유 명품의 소재지 도시 판독 및 시장 이동(SetItemLocation) 검증
+    // Step 6: 미소유 명품 소재 도시(시장) 판독 및 이동/원복 (세이브 무관: 첫 번째 미소유 명품 사용)
     std::cout << "\n[Step 6] 미소유 명품 소재 도시(시장) 판독 및 위치 이동 검증\n";
-    ItemRecord sword15;
-    assert(itemMgr.LoadItem(15, sword15));
-    std::cout << "  [Item 15 참사검] 소유: " << sword15.owner_name << ", 소재지: " << sword15.location_name << " (CityID: " << (int)sword15.location_city_id << ")\n";
-    assert(!sword15.is_owned);
-    assert(sword15.location_city_id == 23); // 낙양
-    assert(sword15.location_name.find("낙양") != std::string::npos);
+    const ItemRecord* marketItem = nullptr;
+    for (const auto& it : allItems) {
+        if (!it.is_owned && it.location_city_id < 60) { marketItem = &it; break; }
+    }
+    if (!marketItem) {
+        std::cout << "  [SKIP] 시장에 있는 미소유 명품 없음 — 이동 검증 생략\n";
+    } else {
+        const uint16_t itemId = marketItem->id;
+        const uint8_t origCity = marketItem->location_city_id;
+        const uint8_t destCity = (origCity == 25) ? 23 : 25;  // 장안(25) 또는 낙양(23)
+        std::cout << "  [Item " << itemId << " " << marketItem->name << "] 소재지: " << marketItem->location_name
+                  << " (CityID: " << (int)origCity << ")\n";
 
-    // 시장 위치 이동 테스트: 장안(25)으로 이동 후 원복
-    uint8_t origCity = sword15.location_city_id;
-    assert(itemMgr.SetItemLocation(15, 25)); // 장안으로 이동
-    ItemRecord movedSword;
-    assert(itemMgr.LoadItem(15, movedSword));
-    assert(movedSword.location_city_id == 25);
-    assert(movedSword.location_name.find("장안") != std::string::npos);
-    std::cout << "  -> 장안으로 시장 이동 확인: " << movedSword.location_name << "\n";
+        San13ItemRaw snap{};
+        if (!snapshotItem(itemId, snap)) {
+            std::cerr << "  [FAIL] 명품 " << itemId << " 원본 스냅샷 판독 실패\n";
+            return 1;
+        }
+        ItemRecord moved, restored;
+        bool moveOk = itemMgr.SetItemLocation(itemId, destCity) && itemMgr.LoadItem(itemId, moved);
+        bool restoreOk = restoreItem(itemId, snap) && itemMgr.LoadItem(itemId, restored);
 
-    // 원래 도시(낙양 23)로 100% 안전 원복
-    assert(itemMgr.SetItemLocation(15, origCity));
-    assert(itemMgr.LoadItem(15, movedSword));
-    assert(movedSword.location_city_id == origCity);
-    std::cout << "  [PASS] 미소유 명품 소재지 도시(시장) 판독 및 이동/원복 무결성 통과\n";
+        if (!moveOk || moved.location_city_id != destCity) {
+            std::cerr << "  [FAIL] 시장 이동 결과 불일치 (판독 " << (int)moved.location_city_id << ")\n";
+            return 1;
+        }
+        std::cout << "  -> 시장 이동 확인: " << moved.location_name << "\n";
+        if (!restoreOk || restored.location_city_id != origCity) {
+            std::cerr << "  [FAIL] 원래 소재지(" << (int)origCity << ") 원복 실패\n";
+            return 1;
+        }
+        std::cout << "  [PASS] 미소유 명품 소재지 도시(시장) 판독 및 이동/원복 무결성 통과\n";
+    }
 
     std::cout << "\n============================================================\n";
     std::cout << " 결과 요약: 명품(Item) 매니저 전수 검증 100% 통과 (Green)\n";

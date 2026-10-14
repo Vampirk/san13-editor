@@ -13,7 +13,7 @@
     do { \
         if (!(cond)) { \
             std::cerr << "  [\033[31mFAIL\033[0m] " << msg << " (" << #cond << ")\n"; \
-            return false; \
+            return 1; /* main()에서 false는 exit 0(성공)이 되므로 1 반환 (TECH-05) */ \
         } else { \
             std::cout << "  [\033[32mPASS\033[0m] " << msg << "\n"; \
         } \
