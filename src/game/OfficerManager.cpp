@@ -128,7 +128,8 @@ bool OfficerManager::LoadOfficer(uint16_t id, OfficerRecord& outRecord) {
         outRecord.name = std::string(korName);
     } else if (id >= 1151 && id <= 1263) {
         outRecord.name = "PK 추가 무장 #" + std::to_string(id);
-    } else if (outRecord.is_extended) {
+    } else if (outRecord.is_extended || id >= 700) {
+        // ID 700~799는 MAX_HISTORICAL_COUNT(800) 미만이지만 등록 신무장 슬롯 (BUG-02)
         outRecord.name = "신무장 / 가상 #" + std::to_string(id);
     } else {
         outRecord.name = "역사 무장 #" + std::to_string(id);

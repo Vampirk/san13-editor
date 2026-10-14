@@ -20,9 +20,13 @@ constexpr bool IsAncientOfficerId(uint16_t id) {
     return (id >= 850 && id < 900) || (id >= 1251 && id <= 1263);
 }
 
-// 등록 신무장(editdata_pk.s13) 한글 이름 로더 (Phase 5.9-A)
-// Steam Proton 경로 또는 지정된 파일에서 유저 생성 신무장 성명을 로드합니다.
+// 등록 신무장(editdata_pk.s13) 성명/열전 로더 (Phase 5.9-A, BUG-02)
+// Steam Proton 경로 또는 지정된 파일에서 1,000개 레코드를 파싱합니다 (레코드 0~149 → ID 700~849, 150~999 → ID 1315~2164).
+// 반환값: 성명이 있는(사용 중인) 레코드 수
 size_t LoadCustomOfficerNames(const std::string& customFilePath = "");
+
+// 등록 신무장 열전 조회 (BUG-02). 등록 신무장 슬롯이 아니거나 열전이 없으면 빈 string_view
+std::string_view GetCustomOfficerBiography(uint16_t id);
 void ClearCustomOfficerNames();
 
 } // namespace San13::Game

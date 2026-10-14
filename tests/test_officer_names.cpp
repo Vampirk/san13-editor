@@ -4,6 +4,9 @@
 #include <cassert>
 #include <string>
 #include <vector>
+#include <cstring>
+#include <fstream>
+#include <filesystem>
 
 using namespace San13::Game;
 
@@ -98,6 +101,46 @@ int main() {
     }
     std::cout << "  [\033[32mPASS\033[0m] ID 999: 빈 문자열 반환 및 HasOfficerKoreanName == false 확인\n";
 
+    // 4-0. [BUG-02] 합성 editdata로 다중 레코드 파싱 / ID 매핑 / 열전 검증 (오프라인)
+    std::cout << "\n[Step 4-0] [BUG-02] 합성 editdata 다중 레코드(0, 1, 150) 파싱 및 열전 검증\n";
+    {
+        const std::string synthPath = (std::filesystem::temp_directory_path() / "san13_test_editdata_pk.s13").string();
+        std::vector<char> buf(0x30000, 0);
+        const size_t marker = 0x100;
+        std::memcpy(&buf[marker], "EntryBushou", 11);
+        auto putRecord = [&](size_t k, const char* sur, const char* given, const char* bio) {
+            char* rec = &buf[marker + 0x20 + k * 0x464];
+            std::memcpy(rec + 0x00, sur, std::strlen(sur));
+            std::memcpy(rec + 0x05, given, std::strlen(given));
+            if (bio) std::memcpy(rec + 0x35, bio, std::strlen(bio));
+        };
+        putRecord(0, "\xc0\xe5", "\xba\xf1", "\xbf\xad\xc0\xfc\x20\xc5\xd7\xbd\xba\xc6\xae"); // 장비, "열전 테스트"
+        putRecord(1, "\xb0\xfc", "\xbf\xec", nullptr);                                  // 관우
+        putRecord(150, "\xc7\xcf\xc8\xc4", "\xc6\xd0", nullptr);                        // 하후패 → ID 1315
+        {
+            std::ofstream out(synthPath, std::ios::binary);
+            out.write(buf.data(), static_cast<std::streamsize>(buf.size()));
+        }
+
+        size_t synthLoaded = LoadCustomOfficerNames(synthPath);
+        std::filesystem::remove(synthPath);
+        const bool ok = synthLoaded == 3 &&
+                        GetOfficerKoreanName(700) == "장비" && GetOfficerKoreanName(701) == "관우" &&
+                        GetOfficerKoreanName(1315) == "하후패" &&
+                        !HasOfficerKoreanName(702) && HasOfficerKoreanName(701) &&
+                        GetOfficerKoreanName(900).empty() && !HasOfficerKoreanName(900) &&
+                        GetCustomOfficerBiography(700) == "열전 테스트" && GetCustomOfficerBiography(701).empty() &&
+                        GetCustomOfficerBiography(333).empty();
+        if (!ok) {
+            std::cerr << "[-] Error: 합성 editdata 파싱 실패 (로드 " << synthLoaded << "명, 700='" << GetOfficerKoreanName(700)
+                      << "', 701='" << GetOfficerKoreanName(701) << "', 1315='" << GetOfficerKoreanName(1315)
+                      << "', 열전='" << GetCustomOfficerBiography(700) << "')\n";
+            return 1;
+        }
+        std::cout << "  [\033[32mPASS\033[0m] 레코드 0/1/150 → ID 700/701/1315 성명, 열전, 빈 레코드·NPC(900) 제외 검증 성공 (BUG-02)\n";
+        ClearCustomOfficerNames();
+    }
+
     // 4. Phase 5.9-A 등록 신무장(editdata_pk.s13) 한글 이름 연동 검증
     std::cout << "\n[Step 4] [Phase 5.9-A] 등록 신무장 한글 이름 연동 검증\n";
     size_t customLoaded = LoadCustomOfficerNames();
@@ -110,6 +153,12 @@ int main() {
             return 1;
         }
         std::cout << "  [\033[32mPASS\033[0m] ID 700: '강월' 신무장 한글 성명 파싱 및 매핑 성공\n";
+        std::string_view bio700 = GetCustomOfficerBiography(700);
+        if (bio700.rfind("출신과 성씨조차", 0) != 0) {
+            std::cerr << "[-] Error: ID 700 열전 파싱 실패 ('" << bio700.substr(0, 40) << "')\n";
+            return 1;
+        }
+        std::cout << "  [\033[32mPASS\033[0m] ID 700: 강월 열전 파싱 성공 (" << bio700.size() << " bytes UTF-8)\n";
     } else {
         std::cout << "  [\033[33mSKIP\033[0m] editdata_pk.s13 파일 미발견 환경 (건너뜀)\n";
     }

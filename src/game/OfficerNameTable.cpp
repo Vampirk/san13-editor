@@ -1,4 +1,5 @@
 #include "game/OfficerNameTable.hpp"
+#include <algorithm>
 #include <unordered_map>
 #include <vector>
 #include <string>
@@ -770,9 +771,32 @@ static const char* const ANCIENT_OFFICER_NAMES[49] = {
     /* 898 */ "이사"
 };
 
-// Phase 5.9-A: 등록 신무장(editdata_pk.s13) 한글 이름 저장 벡터
+// Phase 5.9-A & BUG-02: 등록 신무장(editdata_pk.s13) 레코드별 성명/열전 (레코드 인덱스 순, 빈 레코드는 빈 문자열)
 static std::vector<std::string> s_customOfficerNames;
+static std::vector<std::string> s_customOfficerBiographies;
 static bool s_customOfficerNamesLoaded = false;
+
+// editdata_pk.s13 EntryBushou 블록 레이아웃 (OFFICER_NAME_SYSTEM.md §6.1, BUG-02)
+// 마커는 블록 헤더로 1개뿐이며, 레코드는 마커 + 0x20부터 0x464 간격으로 1,000개가 이어집니다.
+struct EditDataBushouLayout {
+    static constexpr size_t FIRST_RECORD_OFFSET = 0x20;   // 마커로부터 첫 레코드까지
+    static constexpr size_t RECORD_STRIDE = 0x464;        // 레코드 1개 크기 (1,124 B)
+    static constexpr size_t RECORD_COUNT = 1000;          // 레코드 0~149 → ID 700~849, 150~999 → ID 1315~2164
+    static constexpr size_t SURNAME_OFFSET = 0x00;        // 성 (CP949)
+    static constexpr size_t SURNAME_MAX = 5;
+    static constexpr size_t GIVEN_NAME_OFFSET = 0x05;     // 명 (CP949)
+    static constexpr size_t GIVEN_NAME_MAX = 6;
+    static constexpr size_t BIOGRAPHY_OFFSET = 0x35;      // 열전 (CP949, NUL 종료)
+    static constexpr size_t BIOGRAPHY_MAX = 0x3EA;        // 다음 데이터 블록(+0x41F) 전까지
+};
+
+// 무장 ID → 등록 신무장 레코드 인덱스 (라이브 레지스트리 +0x04 무장 ID 실측 매핑, BUG-02)
+// 900~999는 도적/NPC 슬롯이므로 등록 신무장이 아닙니다.
+static int CustomOfficerRecordIndex(uint16_t id) {
+    if (id >= 700 && id < 850) return id - 700;
+    if (id >= 1315 && id < 2165) return 150 + (id - 1315);
+    return -1;
+}
 
 static std::string DecodeCP949(const char* data, size_t maxLen) {
     return San13::Core::Cp949ToUtf8(data, maxLen);
@@ -808,6 +832,7 @@ static std::string FindEditDataPath(const std::string& customFilePath) {
 
 size_t LoadCustomOfficerNames(const std::string& customFilePath) {
     s_customOfficerNames.clear();
+    s_customOfficerBiographies.clear();
     s_customOfficerNamesLoaded = true;
 
     std::string path = FindEditDataPath(customFilePath);
@@ -826,36 +851,31 @@ size_t LoadCustomOfficerNames(const std::string& customFilePath) {
 
     const char marker[] = "EntryBushou";
     const size_t markerLen = sizeof(marker) - 1;
+    auto it = std::search(data.begin(), data.end(), marker, marker + markerLen);
+    if (it == data.end()) return 0;
 
-    for (size_t i = 0; i + markerLen <= data.size(); ++i) {
-        if (std::memcmp(&data[i], marker, markerLen) == 0) {
-            // EntryBushou 구조:
-            // +0x20: 성 (Surname, 최대 6바이트 CP949)
-            // +0x25 / +0x26: 명 (First Name, 최대 6바이트 CP949)
-            std::string surname, firstname;
-            if (i + 0x20 < data.size()) {
-                surname = DecodeCP949(reinterpret_cast<const char*>(&data[i + 0x20]), 6);
-            }
-            if (i + 0x25 < data.size()) {
-                firstname = DecodeCP949(reinterpret_cast<const char*>(&data[i + 0x25]), 6);
-                if (firstname.empty() && i + 0x26 < data.size()) {
-                    firstname = DecodeCP949(reinterpret_cast<const char*>(&data[i + 0x26]), 6);
-                }
-            }
+    using L = EditDataBushouLayout;
+    const size_t firstRecord = static_cast<size_t>(it - data.begin()) + L::FIRST_RECORD_OFFSET;
+    size_t loaded = 0;
 
-            std::string fullName = surname + firstname;
-            if (fullName.empty()) {
-                fullName = "신무장 #" + std::to_string(800 + s_customOfficerNames.size());
-            }
-            s_customOfficerNames.push_back(fullName);
-        }
+    for (size_t k = 0; k < L::RECORD_COUNT; ++k) {
+        const size_t rec = firstRecord + k * L::RECORD_STRIDE;
+        if (rec + L::RECORD_STRIDE > data.size()) break;
+        const char* base = reinterpret_cast<const char*>(&data[rec]);
+
+        std::string fullName = DecodeCP949(base + L::SURNAME_OFFSET, L::SURNAME_MAX) +
+                               DecodeCP949(base + L::GIVEN_NAME_OFFSET, L::GIVEN_NAME_MAX);
+        if (!fullName.empty()) loaded++;
+        s_customOfficerNames.push_back(std::move(fullName));
+        s_customOfficerBiographies.push_back(DecodeCP949(base + L::BIOGRAPHY_OFFSET, L::BIOGRAPHY_MAX));
     }
 
-    return s_customOfficerNames.size();
+    return loaded;
 }
 
 void ClearCustomOfficerNames() {
     s_customOfficerNames.clear();
+    s_customOfficerBiographies.clear();
     s_customOfficerNamesLoaded = false;
 }
 
@@ -988,18 +1008,13 @@ std::string_view GetOfficerKoreanName(uint16_t id) {
         }
     }
 
-    // Phase 5.9-A & Phase 6.6: 등록 신무장 슬롯(ID 700~849, 900~999) 한글 성명 지원
-    if (!s_customOfficerNamesLoaded) {
-        LoadCustomOfficerNames();
-    }
-    if (id >= 700 && id < 850) {
-        size_t customIdx = id - 700;
-        if (customIdx < s_customOfficerNames.size()) {
-            return s_customOfficerNames[customIdx];
+    // Phase 5.9-A & BUG-02: 등록 신무장 슬롯(ID 700~849, 1315~2164) 한글 성명 지원
+    int customIdx = CustomOfficerRecordIndex(id);
+    if (customIdx >= 0) {
+        if (!s_customOfficerNamesLoaded) {
+            LoadCustomOfficerNames();
         }
-    } else if (id >= 900 && id < 1000) {
-        size_t customIdx = (id - 900) + 150;
-        if (customIdx < s_customOfficerNames.size()) {
+        if (static_cast<size_t>(customIdx) < s_customOfficerNames.size()) {
             return s_customOfficerNames[customIdx];
         }
     }
@@ -1018,17 +1033,19 @@ bool HasOfficerKoreanName(uint16_t id) {
     if (id >= 1151 && id <= 1263) {
         return PK_ADDITIONAL_OFFICER_NAMES.find(id) != PK_ADDITIONAL_OFFICER_NAMES.end();
     }
+    return CustomOfficerRecordIndex(id) >= 0 && !GetOfficerKoreanName(id).empty();
+}
+
+std::string_view GetCustomOfficerBiography(uint16_t id) {
+    int customIdx = CustomOfficerRecordIndex(id);
+    if (customIdx < 0) return {};
     if (!s_customOfficerNamesLoaded) {
         LoadCustomOfficerNames();
     }
-    if (id >= 700 && id < 850) {
-        size_t customIdx = id - 700;
-        return (customIdx < s_customOfficerNames.size());
-    } else if (id >= 900 && id < 1000) {
-        size_t customIdx = (id - 900) + 150;
-        return (customIdx < s_customOfficerNames.size());
+    if (static_cast<size_t>(customIdx) < s_customOfficerBiographies.size()) {
+        return s_customOfficerBiographies[customIdx];
     }
-    return false;
+    return {};
 }
 
 } // namespace San13::Game
