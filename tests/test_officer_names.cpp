@@ -114,8 +114,8 @@ int main() {
         std::cout << "  [\033[33mSKIP\033[0m] editdata_pk.s13 파일 미발견 환경 (건너뜀)\n";
     }
 
-    // 5. EDGE-24 공식 고대무장 50인 슬롯(ID 850 ~ 899) 및 '범증'(ID 851) 매핑 검증
-    std::cout << "\n[Step 5] [EDGE-24] 공식 고대무장 50인 슬롯(ID 850 ~ 899) 및 범증 매핑 검증\n";
+    // 5. EDGE-24 공식 고대무장 49인 슬롯(ID 850 ~ 898) 및 '범증'(ID 851) 매핑 검증
+    std::cout << "\n[Step 5] [EDGE-24] 공식 고대무장 49인 슬롯(ID 850 ~ 898) 및 범증 매핑 검증\n";
     std::string_view fanzeng = GetOfficerKoreanName(851);
     std::cout << "         -> ID 851 (고대무장): " << fanzeng << "\n";
     if (fanzeng != "범증") {
@@ -132,6 +132,28 @@ int main() {
         return 1;
     }
     std::cout << "  [\033[32mPASS\033[0m] 장량(853), 한신(854), 악비(892) 고대무장 표본 매핑 성공\n";
+
+    // [EDGE-55] 원본 pk_1655.tbl 디코딩 결과 대조: 구형 테이블에서 오기되었던 슬롯 표본 검증
+    const std::vector<std::pair<uint16_t, std::string_view>> ancientSamples = {
+        { 856, "유방" }, { 859, "영정" }, { 861, "공구" }, { 862, "곽거병" },
+        { 866, "이신" }, { 881, "조승" }, { 883, "소진" }, { 893, "여상" },
+        { 895, "포숙아" }, { 898, "이사" }
+    };
+    for (const auto& [id, expected] : ancientSamples) {
+        std::string_view actual = GetOfficerKoreanName(id);
+        if (actual != expected) {
+            std::cerr << "[-] Error: ID " << id << " 예상 '" << expected << "' vs 실제 '" << actual << "'\n";
+            return 1;
+        }
+    }
+    std::cout << "  [\033[32mPASS\033[0m] 유방(856), 곽거병(862), 이사(898) 등 원본 대조 표본 10명 매핑 성공 (EDGE-55)\n";
+
+    // [EDGE-55] ID 899는 원본에서 빈 슬롯이므로 이름이 없어야 함
+    if (HasOfficerKoreanName(899) || !GetOfficerKoreanName(899).empty()) {
+        std::cerr << "[-] Error: ID 899 빈 슬롯에 이름이 매핑되어 있음 ('" << GetOfficerKoreanName(899) << "')\n";
+        return 1;
+    }
+    std::cout << "  [\033[32mPASS\033[0m] ID 899: 원본 빈 슬롯 미매핑 확인 (EDGE-55)\n";
 
     // 5.5. [PK-EXP] 삼국지 13 PK 공식 추가 사실무장 및 왜국/고대무장 (ID 1151 ~ 1263) 매핑 검증
     std::cout << "\n[Step 5.5] [PK-EXP] PK 공식 추가 사실무장(유의 1242, 채옹 1186) 및 왜국무장(비미호 1263) 매핑 검증\n";
@@ -182,20 +204,20 @@ int main() {
     }
     std::cout << "  [\033[32mPASS\033[0m] 범증(181년 등장, status_flag=0): 190년 기준 '재야' 올바르게 판정 (EDGE-29)\n";
 
-    // 번쾌 (ID 866): 184년 등장, 세력 25 (조조군), status_flag=1 (현역 사관), rank=3
-    OfficerRecord fanKuai;
-    fanKuai.id = 866;
-    fanKuai.appear_year = 184;
-    fanKuai.force_id = 25;
-    fanKuai.rank = 3;
-    fanKuai.status_flag = 1; // 정식 사관 현역
-    fanKuai.current_year = curYear;
-    std::string_view kuaiStatus = fanKuai.GetStatusDescription();
-    if (kuaiStatus != "일반 (3품관)") {
-        std::cerr << "[-] Error: 번쾌 상태 판별 실패! 예상 '일반 (3품관)' vs 실제 '" << kuaiStatus << "'\n";
+    // 이신 (ID 866): 184년 등장, 세력 25 (조조군), status_flag=1 (현역 사관), rank=3
+    OfficerRecord liXin;
+    liXin.id = 866;
+    liXin.appear_year = 184;
+    liXin.force_id = 25;
+    liXin.rank = 3;
+    liXin.status_flag = 1; // 정식 사관 현역
+    liXin.current_year = curYear;
+    std::string_view xinStatus = liXin.GetStatusDescription();
+    if (xinStatus != "일반 (3품관)") {
+        std::cerr << "[-] Error: 이신 상태 판별 실패! 예상 '일반 (3품관)' vs 실제 '" << xinStatus << "'\n";
         return 1;
     }
-    std::cout << "  [\033[32mPASS\033[0m] 번쾌(184년 등장, status_flag=1, 세력 25): 190년 기준 '일반 (3품관)' 올바르게 판정\n";
+    std::cout << "  [\033[32mPASS\033[0m] 이신(184년 등장, status_flag=1, 세력 25): 190년 기준 '일반 (3품관)' 올바르게 판정\n";
 
     // 조조 (ID 333): 184년 등장, 세력 25, rank 0, lord 333
     OfficerRecord caoCao;

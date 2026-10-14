@@ -162,9 +162,9 @@ $(TEST_HANGUL_WIDGET_BIN): $(ALL_OBJS) $(UI_OBJS) $(IMGUI_OBJS) $(TEST_HANGUL_WI
 	@mkdir -p $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) $(TEST_HANGUL_WIDGET_SRC) $(ALL_OBJS) $(UI_OBJS) $(IMGUI_OBJS) -o $@ $(UI_LDFLAGS)
 
-$(TEST_OFFICER_NAMES_BIN): $(BUILD_DIR)/game/OfficerNameTable.o $(BUILD_DIR)/game/TacticManager.o $(TEST_OFFICER_NAMES_SRC)
+$(TEST_OFFICER_NAMES_BIN): $(BUILD_DIR)/core/PlatformUtil.o $(BUILD_DIR)/game/OfficerNameTable.o $(BUILD_DIR)/game/TacticManager.o $(TEST_OFFICER_NAMES_SRC)
 	@mkdir -p $(BIN_DIR)
-	$(CXX) $(CXXFLAGS) $(TEST_OFFICER_NAMES_SRC) $(BUILD_DIR)/game/OfficerNameTable.o $(BUILD_DIR)/game/TacticManager.o -o $@ $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $(TEST_OFFICER_NAMES_SRC) $(BUILD_DIR)/core/PlatformUtil.o $(BUILD_DIR)/game/OfficerNameTable.o $(BUILD_DIR)/game/TacticManager.o -o $@ $(LDFLAGS)
 
 $(TEST_TACTIC_BIN): $(ALL_OBJS) $(TEST_TACTIC_SRC)
 	@mkdir -p $(BIN_DIR)
@@ -188,7 +188,7 @@ $(APP_BIN): $(ALL_OBJS) $(UI_OBJS) $(IMGUI_OBJS) $(APP_SRC)
 
 TOOL_SRCS = $(wildcard tools/*.cpp)
 TOOL_BINS = $(patsubst tools/%.cpp, $(BIN_DIR)/%, $(TOOL_SRCS))
-TOOL_COMMON_OBJS = $(BUILD_DIR)/core/LinuxMemoryDriver.o $(BUILD_DIR)/game/GameVersion.o $(BUILD_DIR)/game/OfficerNameTable.o $(BUILD_DIR)/game/TacticManager.o $(BUILD_DIR)/game/CityManager.o
+TOOL_COMMON_OBJS = $(BUILD_DIR)/core/LinuxMemoryDriver.o $(BUILD_DIR)/core/PlatformUtil.o $(BUILD_DIR)/game/GameVersion.o $(BUILD_DIR)/game/OfficerNameTable.o $(BUILD_DIR)/game/TacticManager.o $(BUILD_DIR)/game/CityManager.o
 
 $(BIN_DIR)/san13_tool: tools/san13_tool.c
 	@mkdir -p $(BIN_DIR)
