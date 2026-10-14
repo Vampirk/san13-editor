@@ -23,7 +23,7 @@ docs/
 │   └── 05_BACKLOG.md               # [진행 중] 버그 제보 / 기능 개선 / 픽툴 현대화 백로그
 │
 ├── quality/                # [품질 보증 및 릴리즈 관리]
-│   ├── VERIFICATION.md     # 19개 단위/통합 테스트 스위트 및 실측 검증 규격
+│   ├── VERIFICATION.md     # 20개 단위/통합 테스트 스위트 및 실측 검증 규격
 │   ├── QA_CHECKLIST.md     # 릴리즈 배포 전 필수 QA 점검표 (체크리스트)
 │   └── CHANGELOG.md        # 버전별 변경 이력 및 이슈 해결 기록
 │
@@ -64,7 +64,7 @@ docs/
 
 ### 📌 3. 품질 및 검증 (Quality & Release)
 - **[`quality/VERIFICATION.md`](quality/VERIFICATION.md)**:
-  - 19개 자동화 단위/라이브 통합 테스트 스위트(오프라인 5 + 라이브 14)의 구성과 실행 방법, 승인 기준(Acceptance Criteria).
+  - 20개 자동화 단위/라이브 통합 테스트 스위트(오프라인 5 + 라이브 15)의 구성과 실행 방법, 승인 기준(Acceptance Criteria).
 - **[`quality/QA_CHECKLIST.md`](quality/QA_CHECKLIST.md)**:
   - UI 렌더링, 실시간 메모리 핫싱크, 한계 돌파 모드, 한국어 IME 한글 입력 무결성 체크리스트.
 - **[`quality/CHANGELOG.md`](quality/CHANGELOG.md)**:

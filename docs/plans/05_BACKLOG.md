@@ -24,7 +24,7 @@
 |  **BUG-02**   | 버그  | 등록 신무장 이름 로더가 첫 번째 신무장(700)만 읽음                      | **높음** |             완료 (EDGE-57)             |
 |  **FEAT-01**  | 기능  | 주인공 전용 편의 치트 (01 계획서 Phase C)                          |   중간   |                  접수                   |
 |  **FEAT-02**  | 기능  | 게임 프레임 상한 해제 (60 / 120 / 144 / 240 FPS)                |   중간   |                  접수                   |
-|  **TECH-01**  | 정합성 | `tests/test_protagonist.cpp` Makefile 미등록              |   낮음   |                  접수                   |
+|  **TECH-01**  | 정합성 | `tests/test_protagonist.cpp` Makefile 미등록              |   낮음   |                  완료                   |
 |  **TECH-02**  | 검증  | VERIFICATION §4 미확인 항목 4건 인게임 확인                       |   낮음   |                  접수                   |
 |  **TECH-03**  | 빌드  | `make tools` 일부 도구 5개 링크 실패                            |   낮음   |                  접수                   |
 |  **TECH-04**  | 테스트 | `test_tactic_manager`가 오프라인 분류이나 게임 실행 시 라이브 메모리 쓰기 수행 |   중간   |                  접수                   |
@@ -124,10 +124,10 @@
 
 ## 4. 기술 부채 및 정합성 (TECH)
 
-### TECH-01: `test_protagonist` Makefile 미등록 [접수]
+### TECH-01: `test_protagonist` Makefile 미등록 [완료 — 2026-10-14]
 
 - `tests/test_protagonist.cpp`(Phase 6.6 주인공 도메인 테스트)가 소스로만 존재하고 `Makefile`의 `test_live` 타깃에 등록되어 있지 않아 `make test`에서 실행되지 않습니다.
-- 조치: `TEST_PROTAGONIST_SRC/BIN` 및 `test_protagonist` 타깃 추가, `test_live`에 포함, `VERIFICATION.md` 표를 20개로 갱신.
+- ~~조치: 타깃 추가, `test_live` 포함, 표 20개 갱신~~ → **완료:** 등록 및 라이브 실행 통과 (주인공 항적 857 감지, 소지금 2,000 → 50,000 → 2,000 원복). 쓰기 실패 시에도 판정 전에 무조건 원복하도록 `assert` 기반 로직을 교체.
 
 ### TECH-02: 미확인 항목 인게임 검증 [접수]
 

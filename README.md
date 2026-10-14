@@ -49,10 +49,10 @@
 # 저장소 루트로 이동
 cd san13-editor
 
-# 1. Linux 에디터 빌드 및 19개 단위/통합 테스트 실행
+# 1. Linux 에디터 빌드 및 20개 단위/통합 테스트 실행
 make -j$(nproc)
 make test_offline   # 게임 미실행 상태에서도 가능한 5개 오프라인 테스트
-make test_live      # 게임 실행 중에만 가능한 14개 라이브 테스트 (실제 게임 메모리에 쓰기 후 원복)
+make test_live      # 게임 실행 중에만 가능한 15개 라이브 테스트 (실제 게임 메모리에 쓰기 후 원복)
 make test           # 위 두 타깃 전체
 
 # 2. Windows 64-bit 네이티브 바이너리 크로스 컴파일 (MinGW-w64)
@@ -104,7 +104,7 @@ make package_all
   - [`docs/plans/04_UI_ENHANCEMENT_PLAN.md`](docs/plans/04_UI_ENHANCEMENT_PLAN.md): 버그 수정, 반응형, 테마 폴리싱 계획
   - [`docs/plans/05_BACKLOG.md`](docs/plans/05_BACKLOG.md): **진행 중/예정 작업 백로그** (버그 제보, 기능 개선, 픽툴 현대화)
 - **품질 관리 (Quality):**
-  - [`docs/quality/VERIFICATION.md`](docs/quality/VERIFICATION.md): 19개 테스트 스위트 및 실측 증거 보고서
+  - [`docs/quality/VERIFICATION.md`](docs/quality/VERIFICATION.md): 20개 테스트 스위트 및 실측 증거 보고서
   - [`docs/quality/QA_CHECKLIST.md`](docs/quality/QA_CHECKLIST.md): 배포 전 필수 QA 점검표
   - [`docs/quality/CHANGELOG.md`](docs/quality/CHANGELOG.md): 버전별 마일스톤 및 변경 이력 로그
 

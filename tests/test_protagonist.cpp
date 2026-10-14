@@ -1,5 +1,4 @@
 #include <iostream>
-#include <cassert>
 #include "core/LinuxMemoryDriver.hpp"
 #include "game/GameVersion.hpp"
 #include "game/OfficerManager.hpp"
@@ -47,8 +46,10 @@ int main() {
               << " Intel=" << (int)prot.intel << " Pol=" << (int)prot.politics << "\n";
 
     std::cout << "\n[Step 2] IsProtagonist Query Verification\n";
-    assert(mgr.IsProtagonist(prot.officer_id) == true);
-    assert(mgr.IsProtagonist(9999) == false);
+    if (!mgr.IsProtagonist(prot.officer_id) || mgr.IsProtagonist(9999)) {
+        std::cerr << "[-] FAIL: IsProtagonist query mismatch\n";
+        return 1;
+    }
     std::cout << "  [PASS] IsProtagonist true for ID " << prot.officer_id << "\n";
     std::cout << "  [PASS] IsProtagonist false for invalid ID\n";
 
@@ -56,18 +57,25 @@ int main() {
     uint32_t originalGold = prot.personal_gold;
     uint32_t testGold = 50000;
 
-    // 수정
-    mgr.SetProtagonistGold(testGold);
+    // 수정 → 판독 → (판정 전) 무조건 원복하여 실패 시에도 게임 메모리를 오염시키지 않음
+    bool writeOk = mgr.SetProtagonistGold(testGold);
     ProtagonistRecord modProt;
-    mgr.GetProtagonistInfo(modProt);
-    assert(modProt.personal_gold == testGold);
-    std::cout << "  [PASS] Gold modified to " << testGold << " 금\n";
+    bool readOk = mgr.GetProtagonistInfo(modProt);
 
-    // 100% 안전 롤백
-    mgr.SetProtagonistGold(originalGold);
+    bool restoreOk = mgr.SetProtagonistGold(originalGold);
     ProtagonistRecord rollProt;
     mgr.GetProtagonistInfo(rollProt);
-    assert(rollProt.personal_gold == originalGold);
+
+    if (!writeOk || !readOk || modProt.personal_gold != testGold) {
+        std::cerr << "[-] FAIL: Gold modification not reflected (read " << modProt.personal_gold << ")\n";
+        return 1;
+    }
+    std::cout << "  [PASS] Gold modified to " << testGold << " 금\n";
+
+    if (!restoreOk || rollProt.personal_gold != originalGold) {
+        std::cerr << "[-] FAIL: Gold rollback failed (read " << rollProt.personal_gold << ", expected " << originalGold << ")\n";
+        return 1;
+    }
     std::cout << "  [PASS] Gold safely restored to original " << originalGold << " 금 (100% Safe Rollback)\n";
 
     std::cout << "\n============================================================\n";

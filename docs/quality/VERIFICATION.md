@@ -20,7 +20,7 @@
 
 ---
 
-## 2. 단위 테스트 스위트 및 타깃 분리 (19개 테스트 요약)
+## 2. 단위 테스트 스위트 및 타깃 분리 (20개 테스트 요약)
 
 테스트는 게임 프로세스 의존성에 따라 `make test_offline`과 `make test_live`로 분리되어 관리됩니다:
 
@@ -45,6 +45,7 @@
 | 17 | `bin/test_multi_bonds` | `OfficerManager` | 의형제 3 / 친애 6 / 원수 3 다중 인연 슬롯 읽기·쓰기 및 원복 | `test_live` | 필요 (`San13PK_kr.exe`) |
 | 18 | `bin/test_force_manager` | `ForceManager` | 세력 청크 파싱, 190년 시나리오 군주 실명 매핑 | `test_live` | 필요 (`San13PK_kr.exe`) |
 | 19 | `bin/test_item_manager` | `ItemManager` | `CItem` 36B 구조체, 234종 명칭, 라이브 소유자/소재지 판독 | `test_live` | 필요 (`San13PK_kr.exe`) |
+| 20 | `bin/test_protagonist` | `OfficerManager` | 주인공 감지(VTable RVA), 소지금 쓰기 후 무조건 원복 | `test_live` | 필요 (`San13PK_kr.exe`, 세이브 무관) |
 
 - **`make test_offline`**: CI 환경이나 게임이 미실행 중일 때도 100% 통과할 수 있는 핵심 도메인 로직/오토마타/규격 단위 테스트.
 - **`make test_live`**: Proton 환경에서 실제 게임이 구동 중일 때 `/proc/$PID/mem` 접근 및 메모리 핫싱크 무결성을 검증하는 실시간 테스트.
@@ -54,7 +55,6 @@
 > - 라이브 테스트는 모두 `LinuxMemoryDriver`를 직접 사용하므로 **Linux(Proton) 환경 전용**입니다. Windows 빌드는 `--smoke-test` 실행 검증(3.6절)으로 대체합니다.
 > - 라이브 테스트는 실제 게임 메모리에 쓴 뒤 원본 스냅샷으로 원복합니다(EDGE-36). 테스트 도중 강제 중단 시 원복이 누락될 수 있으므로 **세이브 백업 후 실행**하십시오.
 > - 일부 라이브 테스트는 190년 「반동탁 연합」 시나리오와 주인공 강월(ID 700) 세이브를 전제로 작성되어 있습니다.
-> - `tests/test_protagonist.cpp`는 소스만 존재하고 Makefile 타깃에 등록되어 있지 않습니다 (`05_BACKLOG.md` TECH-01).
 
 ---
 

@@ -88,6 +88,9 @@ TEST_FORCE_BIN = $(BIN_DIR)/test_force_manager
 TEST_ITEM_SRC = $(TEST_DIR)/test_item_manager.cpp
 TEST_ITEM_BIN = $(BIN_DIR)/test_item_manager
 
+TEST_PROTAGONIST_SRC = $(TEST_DIR)/test_protagonist.cpp
+TEST_PROTAGONIST_BIN = $(BIN_DIR)/test_protagonist
+
 APP_SRC = $(SRC_DIR)/main.cpp
 APP_BIN = $(BIN_DIR)/san13_editor
 DIST_DIR = dist
@@ -181,6 +184,10 @@ $(TEST_FORCE_BIN): $(ALL_OBJS) $(TEST_FORCE_SRC)
 $(TEST_ITEM_BIN): $(ALL_OBJS) $(TEST_ITEM_SRC)
 	@mkdir -p $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) $(TEST_ITEM_SRC) $(ALL_OBJS) -o $@ $(LDFLAGS)
+
+$(TEST_PROTAGONIST_BIN): $(ALL_OBJS) $(TEST_PROTAGONIST_SRC)
+	@mkdir -p $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) $(TEST_PROTAGONIST_SRC) $(ALL_OBJS) -o $@ $(LDFLAGS)
 
 $(APP_BIN): $(ALL_OBJS) $(UI_OBJS) $(IMGUI_OBJS) $(APP_SRC)
 	@mkdir -p $(BIN_DIR)
@@ -312,10 +319,14 @@ test_item: $(TEST_ITEM_BIN)
 	@echo "=== Running Phase 5 Item Manager Domain Unit Tests ==="
 	./$(TEST_ITEM_BIN)
 
+test_protagonist: $(TEST_PROTAGONIST_BIN)
+	@echo "=== Running Phase 6.6 Protagonist Domain Unit Tests ==="
+	./$(TEST_PROTAGONIST_BIN)
+
 test_offline: test_bounds test_hangul test_hangul_widget test_officer_names test_tactic
 	@echo "=== All Offline Unit & Integration Tests Passed (No Live Process Required) ==="
 
-test_live: test_memory test_officer test_city test_settlement test_city_officers test_city_modal test_gui test_officer_table test_officer_edit test_city_table test_batch test_multi_bonds test_force test_item
+test_live: test_memory test_officer test_city test_settlement test_city_officers test_city_modal test_gui test_officer_table test_officer_edit test_city_table test_batch test_multi_bonds test_force test_item test_protagonist
 	@echo "=== All Live In-Game Memory Tests Passed (Active Process Verified) ==="
 
 test: test_offline test_live

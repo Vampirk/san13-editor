@@ -51,7 +51,7 @@ flowchart TD
 ```text
 san13-editor/
 ├── README.md                    # 프로젝트 소개, 빌드 및 실행 가이드, 면책 조항
-├── Makefile                     # 컴파일, 19개 테스트, Windows 크로스 컴파일(make win), 배포 패키징 단일 빌드 스크립트
+├── Makefile                     # 컴파일, 20개 테스트, Windows 크로스 컴파일(make win), 배포 패키징 단일 빌드 스크립트
 ├── .gitignore                   # 빌드 산출물, 바이너리, scratch 격리 규칙
 ├── assets/                      # 번들 폰트 및 에셋 디렉터리
 │   └── fonts/
@@ -113,7 +113,7 @@ san13-editor/
 │   ├── game/
 │   ├── ui/
 │   └── main.cpp                 # 독립 실행형 에디터 진입점 (반응형 폰트/레이아웃)
-├── tests/                       # 단위/통합 테스트 소스 (Makefile 등록 19개, test_offline 5 + test_live 14)
+├── tests/                       # 단위/통합 테스트 소스 (Makefile 등록 20개, test_offline 5 + test_live 15)
 ├── tools/                       # 메모리 덤프/스캔 분석 도구 및 S13 아카이브 언패커(unpack_s13.py)
 ├── scratch/                     # 격리된 임시/실험 스크립트 (.gitignore)
 ├── San13pictool/                # 서드파티 얼굴 CG 교체 도구 원본 (로컬 참고용, .gitignore)
