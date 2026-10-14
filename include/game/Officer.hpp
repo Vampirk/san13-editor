@@ -75,7 +75,7 @@ struct San13OfficerCharacter {
     uint8_t  valuing_courage;    // +0x06 (+0x56): 용애 (0:경시, 1:낮음, 2:보통, 3:중시, 4:매우중시)
     uint8_t  valuing_talent;     // +0x07 (+0x57): 재애 (0:경시, 1:낮음, 2:보통, 3:중시, 4:매우중시)
     uint8_t  affinity;           // +0x08 (+0x58): 상성 (0~149, 유비 3형제=50, 손견/동탁=100)
-    uint8_t  pad_59_5f[7];       // +0x09 ~ +0x0F (+0x59 ~ +0x5F): 패딩
+    uint8_t  pad_59_5f[7];       // +0x09 ~ +0x0F (+0x59 ~ +0x5F): 패딩 아님 — +0x5A/+0x5C 미확인 uint16 수치, +0x5E부터 인연 비트셋[2165] 시작 (OFFSETS.md §4.5, RE-01)
 };
 
 #pragma pack(pop)
