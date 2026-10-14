@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include "core/LinuxMemoryDriver.hpp"
+#include "game/Officer.hpp"
 #include "game/GameVersion.hpp"
 #include "game/OfficerNameTable.hpp"
 
@@ -91,7 +92,7 @@ int main() {
         uintptr_t offAddr = OFFICER_BASE + i * OFFICER_STRIDE;
         uint32_t vtable = 0;
         driver.Read<uint32_t>(offAddr, vtable);
-        if (vtable != 0x7291c510) continue;
+        if (vtable != static_cast<uint32_t>(driver.GetModuleBase() + San13::Game::OfficerMemoryLayout::VTABLE_RVA) /* EDGE-56 */) continue;
 
         uint8_t act = 0;
         driver.Read<uint8_t>(offAddr + 0x4F, act);

@@ -10,7 +10,7 @@ namespace San13::Game {
 // 삼국지 13 PK 명품(아이템) 바이너리 원본 구조체 (Stride: 36바이트, 0x24)
 // 주소: RootBase + 0x9FE8CC + (item_id * 0x24)
 struct San13ItemRaw {
-    uint32_t vtable;             // +0x00: VTable 포인터 (0x72919da8)
+    uint32_t vtable;             // +0x00: VTable 포인터 (모듈 베이스 + 0xD69DA8)
     uint16_t item_id;            // +0x04: 고유 명품 ID (0 ~ 399)
     uint8_t  category;           // +0x06: 대분류 (0:명마, 1:검, 2:도, 3:대도, 4:창/모, 5:극, 6:부, 7:편, 8:추, 9:암기, 10:궁, 11:병서, 12:경서, 13:사서, 14:자서, 15:문집, 16:의서, 17:정서, 18:지도, 19:보물, 20:주류, 21:약재 등)
     uint8_t  sub_category;       // +0x07: 소분류 (0xFF=없음)

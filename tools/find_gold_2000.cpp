@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <vector>
 #include "core/LinuxMemoryDriver.hpp"
+#include "game/Officer.hpp"
 #include "game/GameVersion.hpp"
 
 using namespace San13::Core;
@@ -61,7 +62,7 @@ int main() {
         uintptr_t addr = POOL + id * STRIDE;
         uint32_t vtable = 0;
         driver.Read<uint32_t>(addr, vtable);
-        if (vtable != 0x7291c510) continue;
+        if (vtable != static_cast<uint32_t>(driver.GetModuleBase() + San13::Game::OfficerMemoryLayout::VTABLE_RVA) /* EDGE-56 */) continue;
 
         // 앞쪽 0x100 바이트 내에 2000이 있는지
         for (size_t off = 0; off < 0x100; off += 2) {

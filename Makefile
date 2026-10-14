@@ -195,7 +195,7 @@ $(APP_BIN): $(ALL_OBJS) $(UI_OBJS) $(IMGUI_OBJS) $(APP_SRC)
 
 TOOL_SRCS = $(wildcard tools/*.cpp)
 TOOL_BINS = $(patsubst tools/%.cpp, $(BIN_DIR)/%, $(TOOL_SRCS))
-TOOL_COMMON_OBJS = $(BUILD_DIR)/core/LinuxMemoryDriver.o $(BUILD_DIR)/core/PlatformUtil.o $(BUILD_DIR)/game/GameVersion.o $(BUILD_DIR)/game/OfficerNameTable.o $(BUILD_DIR)/game/TacticManager.o $(BUILD_DIR)/game/CityManager.o
+TOOL_COMMON_OBJS = $(ALL_OBJS)
 
 $(BIN_DIR)/san13_tool: tools/san13_tool.c
 	@mkdir -p $(BIN_DIR)

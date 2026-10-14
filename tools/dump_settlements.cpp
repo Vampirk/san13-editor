@@ -59,11 +59,12 @@ int main() {
         std::cout << " | 첫 오프셋: +0x" << std::hex << offsets[0] << std::dec << "\n";
     }
 
-    // VTable 0x72919AC4 정밀 분석
-    uint32_t targetVt = 0x72919AC4;
+    // 부락 VTable (모듈 베이스 + 0xD69AC4) 정밀 분석
+    // 부락 VTable RVA 0xD69AC4 (절대 주소는 모듈 로드 베이스에 따라 변동, EDGE-56)
+    uint32_t targetVt = static_cast<uint32_t>(driver.GetModuleBase() + 0xD69AC4);
     if (vtables.find(targetVt) != vtables.end()) {
         const auto& offsets = vtables[targetVt];
-        std::cout << "\n[Step 2] VTable 0x72919AC4 오브젝트 상세 분석 (" << offsets.size() << " 개):\n";
+        std::cout << "\n[Step 2] VTable 0x" << std::hex << targetVt << std::dec << " 오브젝트 상세 분석 (" << offsets.size() << " 개):\n";
         size_t stride = (offsets.size() >= 2) ? (offsets[1] - offsets[0]) : 32;
 
         std::cout << "  스트라이드: " << stride << " 바이트\n";

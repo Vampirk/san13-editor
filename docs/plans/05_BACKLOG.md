@@ -150,10 +150,11 @@
 - `quality/VERIFICATION.md` §4의 4개 항목 (배우자 2·3 반영, `+0x14` 플래그, 중신특성 발동, 시나리오별 일자 오프셋 불변 여부).
 - `QA_CHECKLIST.md` 시나리오 점검 시 함께 수행.
 
-### TECH-03: `make tools` 일부 도구 링크 실패 [접수]
+### TECH-03: `make tools` 일부 도구 링크 실패 [완료 — 2026-10-14]
 
 - `test_load_kangwol`, `compare_700_800`, `find_kangwol_id`, `simulate_city_modal`, `inspect_full_hierarchy` 5개가 `TOOL_COMMON_OBJS`에 없는 객체(`OfficerManager.o` 등)를 참조하여 링크 실패. (`PlatformUtil.o` 누락분은 2026-10-14 교정 완료)
 - 조치: 도구별 의존 객체 추가 또는 일회성 조사 도구는 정리(삭제/아카이브) 여부 결정.
+- **완료:** `TOOL_COMMON_OBJS`를 전체 코어/게임 객체(`$(ALL_OBJS)`)로 교체하여 `make tools` 전체(분석 도구 45개 + `san13_tool`) 빌드 성공. 일회성 조사 도구 정리 여부는 별도 판단.
 
 ### TECH-04: `test_tactic_manager` 라이브 쓰기 분류 오류 [완료 — 2026-10-14]
 
@@ -173,9 +174,10 @@
   - `test_item_manager`: 소유자 고정 단언(적토마=여포 등) → 역색인 불변식, 참사검(15)=낙양 고정 → 첫 번째 시장 명품 사용, 원복은 원본 36바이트 스냅샷으로 수행.
   - 결과: 190년 1월 1일 세이브(항적 주인공)에서 `make test_live` 15개 전체 통과, `make test_offline` 통과.
 
-### TECH-06: 분석 도구 VTable 절대 주소 하드코딩 [접수]
+### TECH-06: 분석 도구 VTable 절대 주소 하드코딩 [완료 — 2026-10-14]
 
 - `tools/find_protagonist.cpp`, `tools/find_gold_2000.cpp`, `tools/scan_protagonist_unique.cpp`가 `0x7291c510`을 직접 비교 → 모듈 베이스가 바뀐 실행에서 결과 0건. EDGE-56과 같은 방식(RVA)으로 교정 또는 TECH-03과 함께 도구 정리.
+- **완료:** 위 3종과 추가로 발견된 3종(`dump_settlements` 부락 `0xD69AC4`, `inspect_controllers` 세력 `0xD6A030`, `scan_vtable_tactic` 전법 `0xD69D54`)을 모두 `모듈 베이스 + RVA`로 교체. `find_gold_2000` 라이브 실행으로 주인공 소지금(RootBase+0x14C4) 탐지 확인.
 
 ### TECH-07: 미할당 빈 슬롯 목록 노출 [접수]
 

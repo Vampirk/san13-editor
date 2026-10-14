@@ -44,7 +44,7 @@ int main() {
         uintptr_t addr = FORCE_BASE + f * FORCE_STRIDE;
         uint32_t vtable = 0;
         driver.Read<uint32_t>(addr, vtable);
-        if (vtable != 0x7291a030) continue; // Force VTable
+        if (vtable != static_cast<uint32_t>(driver.GetModuleBase() + 0xD6A030)) continue; // Force VTable RVA (EDGE-56)
 
         // 328바이트 중 처음 64바이트 덤프
         uint8_t fbuf[64] = {0};

@@ -15,12 +15,12 @@ int main() {
     std::string verDesc;
     GameVersionDetector::DetectRootBase(driver, root_base, verDesc);
 
-    // VTable: 0x72919d54 스캔 (RootBase ~ RootBase + 0x1000000)
-    const uint32_t TARGET_VTABLE = 0x72919d54;
+    // 전법 VTable (모듈 베이스 + 0xD69D54) 스캔 (RootBase + 0x800000 ~ + 0xF00000)
+    const uint32_t TARGET_VTABLE = static_cast<uint32_t>(driver.GetModuleBase() + 0xD69D54);  // 전법 VTable RVA (EDGE-56)
     const uintptr_t SCAN_START = root_base + 0x800000;
     const uintptr_t SCAN_END   = root_base + 0xF00000;
 
-    std::cout << "=== [VTable 0x72919d54 스캔: 0x" << std::hex << SCAN_START << " ~ 0x" << SCAN_END << "] ===\n";
+    std::cout << "=== [VTable 0x" << std::hex << TARGET_VTABLE << " 스캔: 0x" << std::hex << SCAN_START << " ~ 0x" << SCAN_END << "] ===\n";
 
     std::vector<uintptr_t> matches;
     const size_t CHUNK_SZ = 64 * 1024;

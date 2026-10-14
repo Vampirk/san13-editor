@@ -13,7 +13,7 @@ namespace San13::Game {
  * RootBase + 0x00CA48, 총 300개 (ID 0 ~ 299)
  */
 struct San13SettlementRaw {
-    uint32_t vtable;                   // +0x00: VTable 포인터 (0x72919AC4) [확정]
+    uint32_t vtable;                   // +0x00: VTable 포인터 (모듈 베이스 + 0xD69AC4) [확정]
     uint16_t settlement_id;            // +0x04: 부락 고유 ID (0 ~ 299) [확정]
     uint16_t default_effect_id;        // +0x06: 부락 기본 효과/타입 ID (0:상업소, 3:농업소, 11:호표기 등) [확정]
     uint16_t global_site_id;           // +0x08: 글로벌 거점 ID (60 + settlement_id) [확정]
