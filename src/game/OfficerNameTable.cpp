@@ -793,9 +793,8 @@ struct EditDataBushouLayout {
 // 무장 ID → 등록 신무장 레코드 인덱스 (라이브 레지스트리 +0x04 무장 ID 실측 매핑, BUG-02)
 // 900~999는 도적/NPC 슬롯이므로 등록 신무장이 아닙니다.
 static int CustomOfficerRecordIndex(uint16_t id) {
-    if (id >= 700 && id < 850) return id - 700;
-    if (id >= 1315 && id < 2165) return 150 + (id - 1315);
-    return -1;
+    if (!IsCustomOfficerSlotId(id)) return -1;
+    return (id < 850) ? (id - 700) : (150 + (id - 1315));
 }
 
 static std::string DecodeCP949(const char* data, size_t maxLen) {

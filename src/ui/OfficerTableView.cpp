@@ -69,10 +69,13 @@ void OfficerTableView::ApplyFilter() {
         }
 
         // 1-2. 출신/분류 필터 검사 (역사 / 등록 신무장 / 고대)
+        // 도적/NPC/이벤트 인물 등 어느 분류에도 속하지 않는 슬롯은 '전체'에서만 표시 (BUG-01 B-2)
+        // 신무장은 미할당 빈 슬롯(status 0xFF + 이름 없음)을 제외 (TECH-07)
         if (m_originFilter == OfficerOriginFilter::Historical) {
-            if (off.id >= 700) continue;
+            if (!IsHistoricalOfficerId(off.id)) continue;
         } else if (m_originFilter == OfficerOriginFilter::Created) {
-            if (off.id < 700 || IsAncientOfficerId(off.id)) continue;
+            if (!IsCustomOfficerSlotId(off.id)) continue;
+            if (off.status_flag == 0xFF && !HasOfficerKoreanName(off.id)) continue;
         } else if (m_originFilter == OfficerOriginFilter::Ancient) {
             if (!IsAncientOfficerId(off.id)) continue;
         }
@@ -88,7 +91,8 @@ void OfficerTableView::ApplyFilter() {
             if (!matched && queryLower == "항우" && nameLower.find("항적") != std::string::npos) {
                 matched = true;
             }
-            if (!matched && (queryLower == "신무장" || queryLower == "등록무장") && (off.id >= 700 && !IsAncientOfficerId(off.id))) {
+            if (!matched && (queryLower == "신무장" || queryLower == "등록무장") && IsCustomOfficerSlotId(off.id) &&
+                (off.status_flag != 0xFF || HasOfficerKoreanName(off.id))) {
                 matched = true;
             }
             if (!matched && (queryLower == "고대" || queryLower == "고대무장") && IsAncientOfficerId(off.id)) {
@@ -867,11 +871,12 @@ void OfficerTableView::Render() {
                     ImGui::TextColored(ImVec4(0.85f, 0.55f, 0.95f, 1.0f), "[고대]");
                     ImGui::SameLine();
                     ImGui::Text("%s", off.name.c_str());
-                } else if (off.id >= 700) {
+                } else if (IsCustomOfficerSlotId(off.id)) {
                     ImGui::TextColored(ImVec4(0.35f, 0.85f, 0.95f, 1.0f), "[신무장]");
                     ImGui::SameLine();
                     ImGui::Text("%s", off.name.c_str());
-                } else if (off.is_extended) {
+                } else if (!IsHistoricalOfficerId(off.id)) {
+                    // 도적/NPC/이벤트 인물 등 (BUG-01 B-2)
                     ImGui::TextColored(ImVec4(0.95f, 0.70f, 0.30f, 1.0f), "[특수]");
                     ImGui::SameLine();
                     ImGui::Text("%s", off.name.c_str());

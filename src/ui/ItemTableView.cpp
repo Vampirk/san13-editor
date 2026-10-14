@@ -392,8 +392,8 @@ void ItemTableView::RenderAssignModal() {
             std::string searchLower = m_assignSearchBuffer;
             std::transform(searchLower.begin(), searchLower.end(), searchLower.begin(), ::tolower);
 
-            // 역사 700 + 고대 50 + 신무장
-            for (uint16_t oid = 0; oid < 900; oid++) {
+            // 이름이 있는 전체 무장 슬롯 (역사·고대·신무장·PK 추가무장 1151~1263·신무장 1315+, BUG-01 B-2)
+            for (uint16_t oid = 0; oid < Game::OfficerMemoryLayout::MAX_TOTAL_SLOTS; oid++) {
                 std::string_view oname = Game::GetOfficerKoreanName(oid);
                 if (oname.empty()) continue;
 

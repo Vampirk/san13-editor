@@ -213,6 +213,16 @@ int main() {
     }
     std::cout << "  [\033[32mPASS\033[0m] IsAncientOfficerId 경계값(849/850/899/900, 1250/1251/1263/1264) 판별 성공 (EDGE-56)\n";
 
+    // [BUG-01 B-2] 역사(사실) 무장 / 등록 신무장 슬롯 판별 경계값
+    if (!IsHistoricalOfficerId(0) || !IsHistoricalOfficerId(699) || IsHistoricalOfficerId(700) ||
+        IsHistoricalOfficerId(1150) || !IsHistoricalOfficerId(1151) || !IsHistoricalOfficerId(1250) || IsHistoricalOfficerId(1251) ||
+        !IsCustomOfficerSlotId(700) || !IsCustomOfficerSlotId(849) || IsCustomOfficerSlotId(850) || IsCustomOfficerSlotId(900) ||
+        IsCustomOfficerSlotId(1314) || !IsCustomOfficerSlotId(1315) || !IsCustomOfficerSlotId(2164) || IsCustomOfficerSlotId(2165)) {
+        std::cerr << "[-] Error: IsHistoricalOfficerId / IsCustomOfficerSlotId 경계값 판별 오류!\n";
+        return 1;
+    }
+    std::cout << "  [\033[32mPASS\033[0m] 역사(0~699, 1151~1250) / 신무장(700~849, 1315~2164) 슬롯 경계값 판별 성공 (BUG-01 B-2)\n";
+
     // 5.5. [PK-EXP] 삼국지 13 PK 공식 추가 사실무장 및 왜국/고대무장 (ID 1151 ~ 1263) 매핑 검증
     std::cout << "\n[Step 5.5] [PK-EXP] PK 공식 추가 사실무장(유의 1242, 채옹 1186) 및 왜국무장(비미호 1263) 매핑 검증\n";
     std::string_view liuyi = GetOfficerKoreanName(1242);

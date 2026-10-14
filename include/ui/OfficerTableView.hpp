@@ -22,8 +22,8 @@ enum class OfficerFilterMode {
 
 enum class OfficerOriginFilter {
     All = 0,         // 전체 분류
-    Historical = 1,  // 역사 무장 (ID 0 ~ 799)
-    Created = 2,     // 등록 신무장 및 기타 확장 슬롯 (ID >= 700, 고대무장 제외)
+    Historical = 1,  // 역사 무장 (ID 0 ~ 699, PK 추가 사실무장 1151 ~ 1250 — IsHistoricalOfficerId)
+    Created = 2,     // 사용 중인 등록 신무장 (ID 700 ~ 849, 1315 ~ 2164 중 이름 또는 활성 상태가 있는 슬롯)
     Ancient = 3      // 고대 무장 (ID 850 ~ 899, 1251 ~ 1263 — IsAncientOfficerId)
 };
 

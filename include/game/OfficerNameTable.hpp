@@ -20,6 +20,16 @@ constexpr bool IsAncientOfficerId(uint16_t id) {
     return (id >= 850 && id < 900) || (id >= 1251 && id <= 1263);
 }
 
+// 역사(사실) 무장 슬롯 판별 (BUG-01 B-2): 오리지널 700인(0 ~ 699) + PK 공식 추가 사실무장 100인(1151 ~ 1250)
+constexpr bool IsHistoricalOfficerId(uint16_t id) {
+    return id < 700 || (id >= 1151 && id <= 1250);
+}
+
+// 등록 신무장 슬롯 판별 (BUG-02): editdata 레코드 0 ~ 149 → ID 700 ~ 849, 레코드 150 ~ 999 → ID 1315 ~ 2164
+constexpr bool IsCustomOfficerSlotId(uint16_t id) {
+    return (id >= 700 && id < 850) || (id >= 1315 && id < 2165);
+}
+
 // 등록 신무장(editdata_pk.s13) 성명/열전 로더 (Phase 5.9-A, BUG-02)
 // Steam Proton 경로 또는 지정된 파일에서 1,000개 레코드를 파싱합니다 (레코드 0~149 → ID 700~849, 150~999 → ID 1315~2164).
 // 반환값: 성명이 있는(사용 중인) 레코드 수

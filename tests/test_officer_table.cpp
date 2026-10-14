@@ -214,15 +214,17 @@ int main(int argc, char** argv) {
     std::cout << "         -> 출신/분류 필터(역사/고대/신무장) 검증\n";
     tableView.SetFilterMode(OfficerFilterMode::All);
 
-    // 역사 무장 (ID < 800)
+    // 역사 무장 (ID 0 ~ 699 + PK 추가 사실무장 1151 ~ 1250)
     tableView.SetOriginFilter(OfficerOriginFilter::Historical);
     size_t histCount = tableView.GetFilteredCount();
-    std::cout << "         -> 역사 무장(ID < 800) 수: " << histCount << "명\n";
+    std::cout << "         -> 역사 무장(0~699, 1151~1250) 수: " << histCount << "명\n";
     TEST_ASSERT(histCount >= 700 && histCount <= 800, "역사 무장 700~800명 범위 검증");
-    for (size_t i = 0; i < std::min(histCount, (size_t)30); i++) {
+    bool allHist = true;
+    for (size_t i = 0; i < histCount; i++) {
         const auto* off = tableView.GetOfficerAt(i);
-        TEST_ASSERT(off && off->id < 800, "역사 무장 ID < 800 확인");
+        if (!off || !IsHistoricalOfficerId(off->id)) { allHist = false; break; }
     }
+    TEST_ASSERT(allHist, "역사 무장 ID 범위(0~699, 1151~1250) 확인 (BUG-01 B-2)");
 
     // 고대 무장 (ID 850 ~ 899, 1251 ~ 1263)
     tableView.SetOriginFilter(OfficerOriginFilter::Ancient);
@@ -234,14 +236,19 @@ int main(int argc, char** argv) {
         TEST_ASSERT(off && IsAncientOfficerId(off->id), "고대 무장 ID 범위(850~899, 1251~1263) 확인");
     }
 
-    // 등록 신무장 (ID >= 700, 고대무장 제외)
+    // 등록 신무장 (ID 700 ~ 849, 1315 ~ 2164 중 사용 중인 슬롯)
     tableView.SetOriginFilter(OfficerOriginFilter::Created);
     size_t createdCount = tableView.GetFilteredCount();
-    std::cout << "         -> 등록 신무장(ID >= 700, 고대 제외) 수: " << createdCount << "명\n";
-    for (size_t i = 0; i < std::min(createdCount, (size_t)30); i++) {
+    std::cout << "         -> 등록 신무장(사용 중 슬롯) 수: " << createdCount << "명\n";
+    bool allCreated = true;
+    for (size_t i = 0; i < createdCount; i++) {
         const auto* off = tableView.GetOfficerAt(i);
-        TEST_ASSERT(off && off->id >= 700 && !IsAncientOfficerId(off->id), "등록 신무장 ID 범위 확인");
+        if (!off || !IsCustomOfficerSlotId(off->id) || (off->status_flag == 0xFF && !HasOfficerKoreanName(off->id))) {
+            allCreated = false;
+            break;
+        }
     }
+    TEST_ASSERT(allCreated, "등록 신무장 슬롯 범위 및 미할당 빈 슬롯 제외 확인 (TECH-07)");
 
     // 출신 필터 리셋
     tableView.SetOriginFilter(OfficerOriginFilter::All);
