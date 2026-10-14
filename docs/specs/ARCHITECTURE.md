@@ -1,7 +1,7 @@
 # 시스템 아키텍처 및 디렉터리 구조 명세서 (ARCHITECTURE)
 
-> **기준 판본:** v5.6  
-> **최종 갱신일:** 2026-10-01  
+> **기준 판본:** v6.0  
+> **최종 갱신일:** 2026-10-14  
 
 ---
 
@@ -22,9 +22,11 @@ flowchart TD
         DM_Item["ItemManager (명품 매니저)<br/>- 234+ 명품 소유권, 시장 소재지 도시 제어"]
         DM_Force["ForceManager (세력 매니저)<br/>- 64개 세력 군주 실명화 및 소속 판별"]
         DM_Tactic["TacticManager (전법 매니저)<br/>- 141개 전법 마스터 테이블"]
-        DM_Names["OfficerNameTable (이름 테이블)<br/>- 700 역사무장 + 50 고대무장 + 신무장 파싱"]
+        DM_Names["Name Tables (이름 테이블)<br/>- OfficerNameTable: 역사 700 + 고대 + PK 추가 100 + 신무장<br/>- ItemNameTable / SettlementNameTable"]
+        DM_Prot["Protagonist (주인공 컨트롤러)<br/>- RootBase + 0x14BC 플레이어 무장/소지금"]
         DM_Bounds["BoundsValidator (수치 검증기)<br/>- SafeVanilla vs LimitBreak 클램핑"]
         DM_Version["GameVersionDetector (버전 감지기)<br/>- PE TimeDateStamp 기반 루트 주소 산출"]
+        DM_Platform["PlatformUtil (플랫폼 유틸)<br/>- CP949 디코딩 (iconv / MultiByteToWideChar)<br/>- $HOME / %USERPROFILE% 경로 탐색"]
     end
 
     subgraph MemoryCore ["Abstracted Memory Core (OS 추상화 계층)"]
@@ -47,9 +49,9 @@ flowchart TD
 ## 2. 디렉터리 구조 및 역할 (Directory Structure)
 
 ```text
-vaneditor/
+san13-editor/
 ├── README.md                    # 프로젝트 소개, 빌드 및 실행 가이드, 면책 조항
-├── Makefile                     # 컴파일, 16개 테스트, 배포 패키징 단일 빌드 스크립트
+├── Makefile                     # 컴파일, 19개 테스트, Windows 크로스 컴파일(make win), 배포 패키징 단일 빌드 스크립트
 ├── .gitignore                   # 빌드 산출물, 바이너리, scratch 격리 규칙
 ├── assets/                      # 번들 폰트 및 에셋 디렉터리
 │   └── fonts/
@@ -59,12 +61,14 @@ vaneditor/
 │   ├── README.md                # 전체 문서 인덱스 및 분야별 가이드
 │   ├── specs/                   # 기술 명세 및 메모리 구조체 (SSOT)
 │   │   ├── OFFSETS.md           # 오프셋, 구조체, 검증 수준 명세
-│   │   └── ARCHITECTURE.md      # 아키텍처 및 디렉터리 명세 (본 문서)
+│   │   ├── ARCHITECTURE.md      # 아키텍처 및 디렉터리 명세 (본 문서)
+│   │   └── OFFICER_NAME_SYSTEM.md # 무장 이름 시스템 및 ID 슬롯 분류표
 │   ├── plans/                   # 마일스톤별 구현 로드맵 및 계획서
 │   │   ├── 01_PROTAGONIST_PLAN.md    # 주인공 기능 구현 계획
 │   │   ├── 02_CITY_EXPANSION_PLAN.md # 도시/부락 확장 계획
 │   │   ├── 03_CORE_ENHANCEMENT_PLAN.md # Phase 1~5 코어 확장 계획
-│   │   └── 04_UI_ENHANCEMENT_PLAN.md   # 버그 수정, 반응형, 테마 폴리싱 계획
+│   │   ├── 04_UI_ENHANCEMENT_PLAN.md   # 버그 수정, 반응형, 테마 폴리싱 계획
+│   │   └── 05_BACKLOG.md               # 진행 중/예정 작업 백로그
 │   ├── quality/                 # 품질 검증 및 릴리즈 관리
 │   │   ├── VERIFICATION.md      # 테스트 스위트 및 인게임 실측 증거
 │   │   ├── QA_CHECKLIST.md      # 배포 전 필수 QA 점검표
@@ -87,11 +91,14 @@ vaneditor/
 │   │   ├── GameVersion.hpp      # PE 버전 판별 및 RootBase 산출
 │   │   ├── Item.hpp             # 명품 데이터 구조체
 │   │   ├── ItemManager.hpp      # 명품 도메인 매니저
+│   │   ├── ItemNameTable.hpp    # 234종 명품 한글 명칭/설명 매핑
 │   │   ├── Officer.hpp          # 무장 데이터 구조체, 스탯, 전법, 성향, 인연
 │   │   ├── OfficerManager.hpp   # 무장 도메인 매니저
 │   │   ├── OfficerNameTable.hpp # 한글 무장 이름 매핑
+│   │   ├── Protagonist.hpp      # 주인공(플레이어) 컨트롤러 구조체
 │   │   ├── Settlement.hpp       # 부락/요충 데이터 구조체
 │   │   ├── SettlementManager.hpp# 부락/요충 도메인 매니저
+│   │   ├── SettlementNameTable.hpp # 부락 지명 및 특수 효과 매핑
 │   │   └── TacticManager.hpp    # 전법 도메인 매니저
 │   └── ui/                      # Dear ImGui UI 계층 헤더
 │       ├── CityDetailModal.hpp  # 도시 종합 4탭 인스펙터
@@ -106,11 +113,13 @@ vaneditor/
 │   ├── game/
 │   ├── ui/
 │   └── main.cpp                 # 독립 실행형 에디터 진입점 (반응형 폰트/레이아웃)
-├── tests/                       # 16개 단위/통합 테스트 스위트 소스
-├── tools/                       # 데이터 추출 및 분석 도구
+├── tests/                       # 단위/통합 테스트 소스 (Makefile 등록 19개, test_offline 5 + test_live 14)
+├── tools/                       # 메모리 덤프/스캔 분석 도구 및 S13 아카이브 언패커(unpack_s13.py)
 ├── scratch/                     # 격리된 임시/실험 스크립트 (.gitignore)
-└── dist/                        # Linux 독립 배포 패키징 산출물
+├── San13pictool/                # 서드파티 얼굴 CG 교체 도구 원본 (로컬 참고용, .gitignore)
+└── dist/                        # Linux / Windows 독립 배포 패키징 자원
     ├── README_LINUX.md          # 리눅스 유저 실행 가이드
+    ├── README_WINDOWS.txt       # 윈도우 유저 실행 가이드 (zip 번들)
     ├── run.sh                   # ptrace 검사 및 자동 런처
     └── san13_editor.desktop     # 데스크톱 바로가기 엔트리
 ```

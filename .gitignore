@@ -22,6 +22,9 @@ __pycache__/
 # Proprietary legacy binaries (reverse engineering references, not redistributable)
 legacy_van/
 
+# Third-party Windows tools kept locally as reference only (not redistributable)
+San13pictool/
+
 # Editor / workspace metadata
 .obsidian/
 .trash/

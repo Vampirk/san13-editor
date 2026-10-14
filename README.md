@@ -47,11 +47,13 @@
 
 ```bash
 # 저장소 루트로 이동
-cd ~/Downloads/vaneditor
+cd san13-editor
 
-# 1. Linux 에디터 및 16개 전체 단위/통합 테스트 빌드 & 실행
+# 1. Linux 에디터 빌드 및 19개 단위/통합 테스트 실행
 make -j$(nproc)
-make test
+make test_offline   # 게임 미실행 상태에서도 가능한 5개 오프라인 테스트
+make test_live      # 게임 실행 중에만 가능한 14개 라이브 테스트 (실제 게임 메모리에 쓰기 후 원복)
+make test           # 위 두 타깃 전체
 
 # 2. Windows 64-bit 네이티브 바이너리 크로스 컴파일 (MinGW-w64)
 make win
@@ -94,13 +96,15 @@ make package_all
 - **기술 명세 (Specs):**
   - [`docs/specs/OFFSETS.md`](docs/specs/OFFSETS.md): 메모리 오프셋 및 구조체 규명 명세서 (검증 수준 표기)
   - [`docs/specs/ARCHITECTURE.md`](docs/specs/ARCHITECTURE.md): 3계층 시스템 아키텍처 및 디렉터리 구조
+  - [`docs/specs/OFFICER_NAME_SYSTEM.md`](docs/specs/OFFICER_NAME_SYSTEM.md): 무장 이름 시스템 및 ID 슬롯 분류표
 - **개발 로드맵 (Plans):**
   - [`docs/plans/01_PROTAGONIST_PLAN.md`](docs/plans/01_PROTAGONIST_PLAN.md): 주인공 무장 기능 계획
   - [`docs/plans/02_CITY_EXPANSION_PLAN.md`](docs/plans/02_CITY_EXPANSION_PLAN.md): 도시/부락 확장 계획
   - [`docs/plans/03_CORE_ENHANCEMENT_PLAN.md`](docs/plans/03_CORE_ENHANCEMENT_PLAN.md): 코어 확장 계획
   - [`docs/plans/04_UI_ENHANCEMENT_PLAN.md`](docs/plans/04_UI_ENHANCEMENT_PLAN.md): 버그 수정, 반응형, 테마 폴리싱 계획
+  - [`docs/plans/05_BACKLOG.md`](docs/plans/05_BACKLOG.md): **진행 중/예정 작업 백로그** (버그 제보, 기능 개선, 픽툴 현대화)
 - **품질 관리 (Quality):**
-  - [`docs/quality/VERIFICATION.md`](docs/quality/VERIFICATION.md): 16개 테스트 스위트 및 실측 증거 보고서
+  - [`docs/quality/VERIFICATION.md`](docs/quality/VERIFICATION.md): 19개 테스트 스위트 및 실측 증거 보고서
   - [`docs/quality/QA_CHECKLIST.md`](docs/quality/QA_CHECKLIST.md): 배포 전 필수 QA 점검표
   - [`docs/quality/CHANGELOG.md`](docs/quality/CHANGELOG.md): 버전별 마일스톤 및 변경 이력 로그
 

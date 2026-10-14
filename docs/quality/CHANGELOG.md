@@ -1,7 +1,7 @@
 # 프로젝트 진행 로그 및 품질 보증(EDGE) 이력 (CHANGELOG)
 
 > **기준 판본:** v6.0 (Dual-Platform Release)  
-> **최종 갱신일:** 2026-10-05  
+> **최종 갱신일:** 2026-10-14  
 
 ---
 
@@ -115,6 +115,12 @@
   - Windows: `make package_win` -> `dist/san13_editor_windows_x64.zip` (1.7MB, 나눔고딕 폰트 번들링, Windows 1분 가이드 포함)
   - 원클릭 듀얼 빌드: `make package_all` 지원.
 - Step 6.8-6: Proton 환경 실시간 프로세스 부착 및 120프레임 무결성 GUI 스모크 테스트 100% 통과 (Linux & Windows 양방향 무결성 검증 완료).
+
+### Phase 6.9: 문서 정합화 및 백로그 체계 도입 (v6.0 문서 기준선)
+- Step 6.9-1: 현행 문서(README, docs/README, ARCHITECTURE, VERIFICATION, QA_CHECKLIST) 판본을 v6.0으로 통일하고 테스트 개수(19개 = 오프라인 5 + 라이브 14), 빌드 경로, 디렉터리 트리를 실제 저장소와 일치시킴.
+- Step 6.9-2: `QA_CHECKLIST.md`의 시나리오 일자 오프셋을 EDGE-47 교정값(`0x137A`/`0x137C`/`0x1380`)으로 갱신, `02_CITY_EXPANSION_PLAN.md`의 깨진 절대 경로(`file:///…/vaneditor/`) 링크 32개 및 `OFFICER_NAME_SYSTEM.md`의 잘못된 상대 경로 링크 6개를 교정.
+- Step 6.9-3: 신규 작업 단일 관리 문서 `plans/05_BACKLOG.md` 신설 (BUG-01 고대무장 제보 1차 조사, FEAT-01 주인공 Phase C, TECH-01/02, FUTURE-01 San13PicTool 현대화 기록).
+- Step 6.9-4: 서드파티 참고 도구 `San13pictool/`을 `.gitignore`에 추가.
 
 ---
 

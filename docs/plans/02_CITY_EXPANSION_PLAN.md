@@ -448,18 +448,18 @@ bool CityManager::LoadCityOfficers(uint8_t cityId, CityOfficerCategory category,
 ### 9.5. Phase 3 구현 및 검증 결과 (100% 통과 완료)
 
 - **Step 3-1 (부락 도메인 모듈):**
-  - [`include/game/Settlement.hpp`](file:///home/user/Downloads/vaneditor/include/game/Settlement.hpp) (`San13SettlementRaw` 28B, Stride `0x1C`, `RootBase + 0x00CA48`, 300개).
-  - [`include/game/SettlementManager.hpp`](file:///home/user/Downloads/vaneditor/include/game/SettlementManager.hpp) 및 [`src/game/SettlementManager.cpp`](file:///home/user/Downloads/vaneditor/src/game/SettlementManager.cpp).
-  - [`tests/test_settlement_manager.cpp`](file:///home/user/Downloads/vaneditor/tests/test_settlement_manager.cpp) 전체 통과 (낙양 17, 20, 22, 24 부락 바인딩 및 300개 부락 전수 로드 무결성 확인).
+  - [`include/game/Settlement.hpp`](../../include/game/Settlement.hpp) (`San13SettlementRaw` 28B, Stride `0x1C`, `RootBase + 0x00CA48`, 300개).
+  - [`include/game/SettlementManager.hpp`](../../include/game/SettlementManager.hpp) 및 [`src/game/SettlementManager.cpp`](../../src/game/SettlementManager.cpp).
+  - [`tests/test_settlement_manager.cpp`](../../tests/test_settlement_manager.cpp) 전체 통과 (낙양 17, 20, 22, 24 부락 바인딩 및 300개 부락 전수 로드 무결성 확인).
 - **Step 3-2 (도시 소속 무장 연결 리스트 순회):**
-  - [`include/game/City.hpp`](file:///home/user/Downloads/vaneditor/include/game/City.hpp) (`San13CityOfficerNodeRaw` 12B, `CityOfficerCategory`, `CityOfficerEntry`).
-  - [`src/game/CityManager.cpp`](file:///home/user/Downloads/vaneditor/src/game/CityManager.cpp) (`LoadCityOfficers`, `LoadAllCityOfficers` 순환 방지 방문 가드 포함).
-  - [`tests/test_city_officers.cpp`](file:///home/user/Downloads/vaneditor/tests/test_city_officers.cpp) 전체 통과 (낙양 12현역/1재야/0포로 판독 및 전국 60개 도시 순회 0.2ms 초고속 통과).
+  - [`include/game/City.hpp`](../../include/game/City.hpp) (`San13CityOfficerNodeRaw` 12B, `CityOfficerCategory`, `CityOfficerEntry`).
+  - [`src/game/CityManager.cpp`](../../src/game/CityManager.cpp) (`LoadCityOfficers`, `LoadAllCityOfficers` 순환 방지 방문 가드 포함).
+  - [`tests/test_city_officers.cpp`](../../tests/test_city_officers.cpp) 전체 통과 (낙양 12현역/1재야/0포로 판독 및 전국 60개 도시 순회 0.2ms 초고속 통과).
 - **Step 3-3 (4탭 도시 종합 인스펙터 UI):**
-  - [`include/ui/CityDetailModal.hpp`](file:///home/user/Downloads/vaneditor/include/ui/CityDetailModal.hpp) 및 [`src/ui/CityDetailModal.cpp`](file:///home/user/Downloads/vaneditor/src/ui/CityDetailModal.cpp).
-  - [`include/ui/CityTableView.hpp`](file:///home/user/Downloads/vaneditor/include/ui/CityTableView.hpp) 및 [`src/ui/CityTableView.cpp`](file:///home/user/Downloads/vaneditor/src/ui/CityTableView.cpp) 더블클릭/컨텍스트 메뉴 완벽 연동.
-  - [`src/main.cpp`](file:///home/user/Downloads/vaneditor/src/main.cpp)에 `SettlementManager` 및 `CityTableView` 바인딩 완료.
-  - [`tests/test_city_detail_modal.cpp`](file:///home/user/Downloads/vaneditor/tests/test_city_detail_modal.cpp) 및 [`tests/test_city_table.cpp`](file:///home/user/Downloads/vaneditor/tests/test_city_table.cpp) 120프레임 스모크 테스트 100% 통과.
+  - [`include/ui/CityDetailModal.hpp`](../../include/ui/CityDetailModal.hpp) 및 [`src/ui/CityDetailModal.cpp`](../../src/ui/CityDetailModal.cpp).
+  - [`include/ui/CityTableView.hpp`](../../include/ui/CityTableView.hpp) 및 [`src/ui/CityTableView.cpp`](../../src/ui/CityTableView.cpp) 더블클릭/컨텍스트 메뉴 완벽 연동.
+  - [`src/main.cpp`](../../src/main.cpp)에 `SettlementManager` 및 `CityTableView` 바인딩 완료.
+  - [`tests/test_city_detail_modal.cpp`](../../tests/test_city_detail_modal.cpp) 및 [`tests/test_city_table.cpp`](../../tests/test_city_table.cpp) 120프레임 스모크 테스트 100% 통과.
 - **배포 패키지:**
   - `make package` -> `dist/san13_editor_linux_x86_64.tar.gz` (1.3MB) 빌드 검증 완료.
 
@@ -528,28 +528,28 @@ bool MaximizeCitySettlements(uint8_t cityId, const uint8_t settlementIds[4], uin
 ### 10.5. Phase 4 구현 및 검증 완료 보고 (완료일: 2026-10-03)
 
 - **Step 4-1 (수치 경계 및 세니타이저 수립):**
-  - [`include/game/Bounds.hpp`](file:///home/user/Downloads/vaneditor/include/game/Bounds.hpp):
+  - [`include/game/Bounds.hpp`](../../include/game/Bounds.hpp):
     - `StatBounds::CityPublicOrder`: 0 ~ 1,000 (Safe) / 0 ~ 5,000 (LimitBreak).
     - `StatBounds::CityDomestic`: 0 ~ 4,000 (Safe) / 0 ~ 10,000 (LimitBreak).
     - `StatBounds::CityProficiency`: 0 ~ 3,000 (Safe) / 0 ~ 5,000 (LimitBreak).
     - `StatBounds::SettlementDev`: 0 ~ 100 (%).
     - `BoundsValidator::SanitizeCityPublicOrder()`, `SanitizeCityDomestic()`, `SanitizeCityProficiency()`, `SanitizeSettlementDev()`.
 - **Step 4-2 (도메인 매니저 쓰기 메서드 구현):**
-  - [`include/game/CityManager.hpp`](file:///home/user/Downloads/vaneditor/include/game/CityManager.hpp) 및 [`src/game/CityManager.cpp`](file:///home/user/Downloads/vaneditor/src/game/CityManager.cpp):
+  - [`include/game/CityManager.hpp`](../../include/game/CityManager.hpp) 및 [`src/game/CityManager.cpp`](../../src/game/CityManager.cpp):
     - `SetCityPublicOrder`, `SetCityCommerce`, `SetCityAgriculture`, `SetCityCulture`.
     - `SetCitySpearProficiency`, `SetCityHorseProficiency`, `SetCityBowProficiency`.
     - `MaximizeCityDomestic`, `MaximizeCityProficiency`.
     - 실측 검증 중인 성벽 내구도(`+0x102`)는 안전 가드를 유지하여 기존 자금(`+0x58`) 오염 완벽 차단.
-  - [`include/game/SettlementManager.hpp`](file:///home/user/Downloads/vaneditor/include/game/SettlementManager.hpp) 및 [`src/game/SettlementManager.cpp`](file:///home/user/Downloads/vaneditor/src/game/SettlementManager.cpp):
+  - [`include/game/SettlementManager.hpp`](../../include/game/SettlementManager.hpp) 및 [`src/game/SettlementManager.cpp`](../../src/game/SettlementManager.cpp):
     - `SetSettlementDevProgress(id, val)` (Stride 28B, 오프셋 `+0x14`).
     - `MaximizeCitySettlements(ids, count)`.
 - **Step 4-3 (4탭 인스펙터 모달 직접 편집 UI 및 치트 버튼 완성):**
-  - [`include/ui/CityDetailModal.hpp`](file:///home/user/Downloads/vaneditor/include/ui/CityDetailModal.hpp) 및 [`src/ui/CityDetailModal.cpp`](file:///home/user/Downloads/vaneditor/src/ui/CityDetailModal.cpp):
+  - [`include/ui/CityDetailModal.hpp`](../../include/ui/CityDetailModal.hpp) 및 [`src/ui/CityDetailModal.cpp`](../../src/ui/CityDetailModal.cpp):
     - **탭 2 (내정 및 관할 부락):** 민심, 상업, 농업, 문화 `SliderInt` 컨트롤 및 프로그레스바 동시 제공. 빠른 치트(`내정 올 3,000 완충`, `관할 부락 100% 일괄 장악`, 한계돌파 10,000) 탑재. 부락별 개별 슬라이더 및 `[100%]` 즉시 장악 버튼 제공.
     - **탭 3 (군사 및 숙련도):** 창병, 기병, 궁병 숙련도 `SliderInt` (0 ~ 3,000/5,000) 및 병과 티어(초급/중급/고급) 실시간 인디케이터. 빠른 치트(`전 병종 숙련도 3,000 완충 (고급 병과 해금)`) 탑재.
     - **핫싱크(Hot-Sync):** 변경 감지 시 즉시 메모리 패치 (`Auto-Sync`) 및 `[메모리 적용]` 버튼 지원.
 - **Step 4-4 (단위 테스트 및 회귀 무결성 검증 통과):**
-  - [`tests/test_city_detail_modal.cpp`](file:///home/user/Downloads/vaneditor/tests/test_city_detail_modal.cpp):
+  - [`tests/test_city_detail_modal.cpp`](../../tests/test_city_detail_modal.cpp):
     - 낙양(ID 23) 대상 내정 4대치 직접 편집, Safe 모드 클램핑(민심 1,000 / 상업 4,000), 내정 치트 완충 확인.
     - 병과 3대 숙련도 직접 편집, 클램핑(3,000), 숙련도 치트 완충 확인.
     - 부락 장악도 직접 편집 및 100% 장악 치트 확인.
@@ -577,7 +577,7 @@ bool MaximizeCitySettlements(uint8_t cityId, const uint8_t settlementIds[4], uin
 ### 11.2. 아키텍처 및 모듈 설계
 
 #### 1) 부락 명칭 매핑 시스템 (`SettlementNameTable`)
-- [`include/game/SettlementNameTable.hpp`](file:///home/user/Downloads/vaneditor/include/game/SettlementNameTable.hpp) & [`src/game/SettlementNameTable.cpp`](file:///home/user/Downloads/vaneditor/src/game/SettlementNameTable.cpp)
+- [`include/game/SettlementNameTable.hpp`](../../include/game/SettlementNameTable.hpp) & [`src/game/SettlementNameTable.cpp`](../../src/game/SettlementNameTable.cpp)
 - **API 설계:**
   ```cpp
   class SettlementNameTable {
@@ -590,7 +590,7 @@ bool MaximizeCitySettlements(uint8_t cityId, const uint8_t settlementIds[4], uin
 - `SettlementManager::LoadSettlement()`에서 `outRecord.name`에 자동 적용.
 
 #### 2) 무장 통합 분류 필터 & 뱃지 시스템 (`OfficerTableView`)
-- [`include/ui/OfficerTableView.hpp`](file:///home/user/Downloads/vaneditor/include/ui/OfficerTableView.hpp):
+- [`include/ui/OfficerTableView.hpp`](../../include/ui/OfficerTableView.hpp):
   ```cpp
   enum class OfficerOriginFilter {
       All = 0,         // 전체
@@ -617,17 +617,17 @@ bool MaximizeCitySettlements(uint8_t cityId, const uint8_t settlementIds[4], uin
 ### 11.4. Phase 5 구현 및 검증 완료 보고 (완료일: 2026-10-03)
 
 - **Step 5-1 (부락 한글 지명 매핑 시스템 구축):**
-  - [`include/game/SettlementNameTable.hpp`](file:///home/user/Downloads/vaneditor/include/game/SettlementNameTable.hpp) & [`src/game/SettlementNameTable.cpp`](file:///home/user/Downloads/vaneditor/src/game/SettlementNameTable.cpp) 신규 개발.
+  - [`include/game/SettlementNameTable.hpp`](../../include/game/SettlementNameTable.hpp) & [`src/game/SettlementNameTable.cpp`](../../src/game/SettlementNameTable.cpp) 신규 개발.
   - 전국 주요 부락(답씨, 망평, 호로관, 밀, 옹구, 하동, 무평, 영음, 곤양, 성부, 여양, 박망, 무음, 고시, 육양, 신야, 채양, 장릉, 의성, 오장원, 견성, 제남, 평양, 누와, 동병, 낙, 칠 등) 실측 지명 매핑 및 미등록 슬롯 스마트 포맷팅 지원.
-  - [`src/game/SettlementManager.cpp`](file:///home/user/Downloads/vaneditor/src/game/SettlementManager.cpp)에 연동하여 `LoadSettlement` 호출 시 즉시 실제 지명으로 바인딩.
-  - [`tests/test_settlement_manager.cpp`](file:///home/user/Downloads/vaneditor/tests/test_settlement_manager.cpp)에서 답씨(0), 망평(1), 호로관(17) 지명 매핑 검증 100% 통과.
+  - [`src/game/SettlementManager.cpp`](../../src/game/SettlementManager.cpp)에 연동하여 `LoadSettlement` 호출 시 즉시 실제 지명으로 바인딩.
+  - [`tests/test_settlement_manager.cpp`](../../tests/test_settlement_manager.cpp)에서 답씨(0), 망평(1), 호로관(17) 지명 매핑 검증 100% 통과.
 - **Step 5-2 (무장 테이블 통합 분류 필터 & 뱃지 시스템 구축):**
-  - [`include/ui/OfficerTableView.hpp`](file:///home/user/Downloads/vaneditor/include/ui/OfficerTableView.hpp) & [`src/ui/OfficerTableView.cpp`](file:///home/user/Downloads/vaneditor/src/ui/OfficerTableView.cpp):
+  - [`include/ui/OfficerTableView.hpp`](../../include/ui/OfficerTableView.hpp) & [`src/ui/OfficerTableView.cpp`](../../src/ui/OfficerTableView.cpp):
     - `OfficerOriginFilter` (`All`, `Historical`, `Created`, `Ancient`) 도입.
     - 상단 툴바에 `출신: [전체 | 역사 | 신무장 | 고대]` 라디오 버튼 배치.
     - 테이블 목록 성명 컬럼에 `[신무장]`(하늘색), `[고대]`(보라색), `[특수]`(주황색) 컬러 뱃지 렌더링.
     - 검색창에 `신무장`, `등록무장`, `고대`, `고대무장` 입력 시 즉시 해당 그룹 스마트 매칭 지원.
-  - [`tests/test_officer_table.cpp`](file:///home/user/Downloads/vaneditor/tests/test_officer_table.cpp)에서 역사(800인), 고대(50인), 신무장(1,007인) 분류 필터링 및 표본 유효성 검증 100% 통과.
+  - [`tests/test_officer_table.cpp`](../../tests/test_officer_table.cpp)에서 역사(800인), 고대(50인), 신무장(1,007인) 분류 필터링 및 표본 유효성 검증 100% 통과.
 - **Step 5-3 (회귀 테스트 및 패키지 릴리스):**
   - `make test`: 전체 15개 단위 및 렌더링 테스트 스위트 100% PASS.
   - `make package` -> `dist/san13_editor_linux_x86_64.tar.gz` (1.3MB) 최신화 완료.

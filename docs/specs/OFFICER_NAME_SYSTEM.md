@@ -200,14 +200,14 @@ flowchart LR
 - **오프셋 구조**:
   - `Marker + 0x20`: 성(Surname, 최대 6바이트 CP949)
   - `Marker + 0x25` (또는 `+0x26`): 명(Given Name, 최대 6바이트 CP949)
-- **에디터 구현부**: [`src/game/OfficerNameTable.cpp`](../src/game/OfficerNameTable.cpp#L829-L875) 내의 `LoadCustomOfficerNames()` 함수가 이 파일을 직접 파싱하여 700~849번 슬롯에 실시간 동적 주입합니다.
+- **에디터 구현부**: [`src/game/OfficerNameTable.cpp`](../../src/game/OfficerNameTable.cpp#L829-L875) 내의 `LoadCustomOfficerNames()` 함수가 이 파일을 직접 파싱하여 700~849번 슬롯에 실시간 동적 주입합니다.
 
 ---
 
 ## 7. 관련 코드 참조
 
-- 인터페이스 선언: [`include/game/OfficerNameTable.hpp`](../include/game/OfficerNameTable.hpp)
-- 한글 테이블 구현: [`src/game/OfficerNameTable.cpp`](../src/game/OfficerNameTable.cpp)
-- 무장 매니저 연동: [`src/game/OfficerManager.cpp`](../src/game/OfficerManager.cpp)
-- 도시 매니저 연동: [`src/game/CityManager.cpp`](../src/game/CityManager.cpp)
-- 단위 테스트 검증: [`tests/test_officer_names.cpp`](../tests/test_officer_names.cpp)
+- 인터페이스 선언: [`include/game/OfficerNameTable.hpp`](../../include/game/OfficerNameTable.hpp)
+- 한글 테이블 구현: [`src/game/OfficerNameTable.cpp`](../../src/game/OfficerNameTable.cpp)
+- 무장 매니저 연동: [`src/game/OfficerManager.cpp`](../../src/game/OfficerManager.cpp)
+- 도시 매니저 연동: [`src/game/CityManager.cpp`](../../src/game/CityManager.cpp)
+- 단위 테스트 검증: [`tests/test_officer_names.cpp`](../../tests/test_officer_names.cpp)

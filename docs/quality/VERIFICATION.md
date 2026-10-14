@@ -1,7 +1,7 @@
 # 검증 및 실측 증거 보고서 (VERIFICATION)
 
-> **기준 판본:** v5.6  
-> **최종 갱신일:** 2026-10-01  
+> **기준 판본:** v6.0  
+> **최종 갱신일:** 2026-10-14  
 > **실측 타깃:** Romance of the Three Kingdoms 13 PK (San13PK_kr.exe, 32-bit PE)  
 > **실행 환경:** Fedora Linux x86_64, Valve GE-Proton, PID 182747, RootBase `0x73B6C5D8`  
 
@@ -20,7 +20,7 @@
 
 ---
 
-## 2. 단위 테스트 스위트 및 타깃 분리 (12개 테스트 요약)
+## 2. 단위 테스트 스위트 및 타깃 분리 (19개 테스트 요약)
 
 테스트는 게임 프로세스 의존성에 따라 `make test_offline`과 `make test_live`로 분리되어 관리됩니다:
 
@@ -30,18 +30,31 @@
 | 2 | `bin/test_hangul_automata` | `HangulAutomata` | 2벌식 조합, 연음, 1자모 백스페이스 역분해 (6/6) | `test_offline` | **불필요 (오프라인 통과)** |
 | 3 | `bin/test_hangul_input_widget` | `HangulInputText` | ImGui 입력 위젯 연동, 대소문자 무시 검색 (헤드리스) | `test_offline` | **불필요 (오프라인 통과)** |
 | 4 | `bin/test_officer_names` | `OfficerNameTable` | 700인 성명, 고대무장, 상태 진리표, 전법/특기/인연 (11/11) | `test_offline` | **불필요 (오프라인 통과)** |
-| 5 | `bin/test_memory_driver` | `LinuxMemoryDriver` | 프로세스 바인딩, 포인터 체인 연산, 패턴 스캔 | `test_live` | 필요 (`San13PK_kr.exe`) |
-| 6 | `bin/test_officer_manager` | `OfficerManager` | 800명 무장 로드, 스탯 읽기/쓰기 클램핑 | `test_live` | 필요 (`San13PK_kr.exe`) |
-| 7 | `bin/test_city_manager` | `CityManager` | 60개 도시 자원 읽기/쓰기, 내구도 오버플로 방지 | `test_live` | 필요 (`San13PK_kr.exe`) |
-| 8 | `bin/test_gui_window` | `UIManager` | GLFW 창 생성, OpenGL3 렌더 루프, 폰트 로드 | `test_live` | 필요 (GUI 스모크 120F) |
-| 9 | `bin/test_officer_table` | `OfficerTableView` | 가상 스크롤, 정렬, 검색, EDGE-32 재야 판정식 | `test_live` | 필요 (GUI 스모크 120F) |
-| 10 | `bin/test_officer_edit` | `OfficerTableView` | 인라인/모달 편집, 실시간 핫싱크 커밋, 복구 | `test_live` | 필요 (GUI 스모크 120F) |
-| 11 | `bin/test_city_table` | `CityTableView` | 도시 가상 스크롤, 자원 수정 및 치트 | `test_live` | 필요 (GUI 스모크 120F) |
-| 12 | `bin/test_batch_actions` | `OfficerTableView` | 50인 일괄 버프/수명 연장, 트랜잭션 롤백 | `test_live` | 필요 (GUI 스모크 120F) |
+| 5 | `bin/test_tactic_manager` | `TacticManager` | 바닐라 141종 전법 명칭, `editdata_pk.s13` 등록 전법(ID 250~) 로드 | `test_offline` | 불필요 (단, 로컬 `editdata_pk.s13` 존재 시 추가 검증) |
+| 6 | `bin/test_memory_driver` | `LinuxMemoryDriver` | 프로세스 바인딩, 포인터 체인 연산, 패턴 스캔 | `test_live` | 필요 (`San13PK_kr.exe`) |
+| 7 | `bin/test_officer_manager` | `OfficerManager` | 800명 무장 로드, 스탯 읽기/쓰기 클램핑 | `test_live` | 필요 (`San13PK_kr.exe`) |
+| 8 | `bin/test_city_manager` | `CityManager` | 60개 도시 자원 읽기/쓰기, 내구도 오버플로 방지 | `test_live` | 필요 (`San13PK_kr.exe`) |
+| 9 | `bin/test_gui_window` | `UIManager` | GLFW 창 생성, OpenGL3 렌더 루프, 폰트 로드 | `test_live` | 필요 (GUI 스모크 120F) |
+| 10 | `bin/test_officer_table` | `OfficerTableView` | 가상 스크롤, 정렬, 검색, EDGE-32 재야 판정식 | `test_live` | 필요 (GUI 스모크 120F) |
+| 11 | `bin/test_officer_edit` | `OfficerTableView` | 인라인/모달 편집, 실시간 핫싱크 커밋, 복구 | `test_live` | 필요 (GUI 스모크 120F) |
+| 12 | `bin/test_city_table` | `CityTableView` | 도시 가상 스크롤, 자원 수정 및 치트 | `test_live` | 필요 (GUI 스모크 120F) |
+| 13 | `bin/test_batch_actions` | `OfficerTableView` | 50인 일괄 버프/수명 연장, 트랜잭션 롤백 | `test_live` | 필요 (GUI 스모크 120F) |
+| 14 | `bin/test_settlement_manager` | `SettlementManager` | 300개 부락 로드, 도시 관할 바인딩, 부락 지명 매핑 | `test_live` | 필요 (`San13PK_kr.exe`) |
+| 15 | `bin/test_city_officers` | `CityManager` | 도시 소속/재야/포로 무장 연결 리스트 순회, 순환 방지 가드 | `test_live` | 필요 (`San13PK_kr.exe`) |
+| 16 | `bin/test_city_detail_modal` | `CityDetailModal` | 4탭 인스펙터 내정/숙련도/부락 쓰기, Safe 클램핑, 원복 | `test_live` | 필요 (GUI 스모크 120F) |
+| 17 | `bin/test_multi_bonds` | `OfficerManager` | 의형제 3 / 친애 6 / 원수 3 다중 인연 슬롯 읽기·쓰기 및 원복 | `test_live` | 필요 (`San13PK_kr.exe`) |
+| 18 | `bin/test_force_manager` | `ForceManager` | 세력 청크 파싱, 190년 시나리오 군주 실명 매핑 | `test_live` | 필요 (`San13PK_kr.exe`) |
+| 19 | `bin/test_item_manager` | `ItemManager` | `CItem` 36B 구조체, 234종 명칭, 라이브 소유자/소재지 판독 | `test_live` | 필요 (`San13PK_kr.exe`) |
 
 - **`make test_offline`**: CI 환경이나 게임이 미실행 중일 때도 100% 통과할 수 있는 핵심 도메인 로직/오토마타/규격 단위 테스트.
 - **`make test_live`**: Proton 환경에서 실제 게임이 구동 중일 때 `/proc/$PID/mem` 접근 및 메모리 핫싱크 무결성을 검증하는 실시간 테스트.
 - **`make test`**: 두 타깃을 순차적으로 전수 실행.
+
+> **주의 사항**
+> - 라이브 테스트는 모두 `LinuxMemoryDriver`를 직접 사용하므로 **Linux(Proton) 환경 전용**입니다. Windows 빌드는 `--smoke-test` 실행 검증(3.6절)으로 대체합니다.
+> - 라이브 테스트는 실제 게임 메모리에 쓴 뒤 원본 스냅샷으로 원복합니다(EDGE-36). 테스트 도중 강제 중단 시 원복이 누락될 수 있으므로 **세이브 백업 후 실행**하십시오.
+> - 일부 라이브 테스트는 190년 「반동탁 연합」 시나리오와 주인공 강월(ID 700) 세이브를 전제로 작성되어 있습니다.
+> - `tests/test_protagonist.cpp`는 소스만 존재하고 Makefile 타깃에 등록되어 있지 않습니다 (`05_BACKLOG.md` TECH-01).
 
 ---
 
