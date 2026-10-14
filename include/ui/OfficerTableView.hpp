@@ -23,8 +23,8 @@ enum class OfficerFilterMode {
 enum class OfficerOriginFilter {
     All = 0,         // 전체 분류
     Historical = 1,  // 역사 무장 (ID 0 ~ 799)
-    Created = 2,     // 등록 신무장 (ID >= 1000)
-    Ancient = 3      // 고대 무장 (ID 850 ~ 899)
+    Created = 2,     // 등록 신무장 및 기타 확장 슬롯 (ID >= 700, 고대무장 제외)
+    Ancient = 3      // 고대 무장 (ID 850 ~ 899, 1251 ~ 1263 — IsAncientOfficerId)
 };
 
 /**

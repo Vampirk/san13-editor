@@ -155,6 +155,15 @@ int main() {
     }
     std::cout << "  [\033[32mPASS\033[0m] ID 899: 원본 빈 슬롯 미매핑 확인 (EDGE-55)\n";
 
+    // [EDGE-56] 고대무장 슬롯 판별: 기본 블록(850~899) + PK 특전(1251~1263)
+    if (!IsAncientOfficerId(850) || !IsAncientOfficerId(899) || !IsAncientOfficerId(1251) || !IsAncientOfficerId(1263) ||
+        IsAncientOfficerId(849) || IsAncientOfficerId(900) || IsAncientOfficerId(1250) || IsAncientOfficerId(1264) ||
+        IsAncientOfficerId(700) || IsAncientOfficerId(1242)) {
+        std::cerr << "[-] Error: IsAncientOfficerId 경계값 판별 오류!\n";
+        return 1;
+    }
+    std::cout << "  [\033[32mPASS\033[0m] IsAncientOfficerId 경계값(849/850/899/900, 1250/1251/1263/1264) 판별 성공 (EDGE-56)\n";
+
     // 5.5. [PK-EXP] 삼국지 13 PK 공식 추가 사실무장 및 왜국/고대무장 (ID 1151 ~ 1263) 매핑 검증
     std::cout << "\n[Step 5.5] [PK-EXP] PK 공식 추가 사실무장(유의 1242, 채옹 1186) 및 왜국무장(비미호 1263) 매핑 검증\n";
     std::string_view liuyi = GetOfficerKoreanName(1242);

@@ -72,9 +72,9 @@ void OfficerTableView::ApplyFilter() {
         if (m_originFilter == OfficerOriginFilter::Historical) {
             if (off.id >= 700) continue;
         } else if (m_originFilter == OfficerOriginFilter::Created) {
-            if (off.id < 700 || (off.id >= 850 && off.id < 900)) continue;
+            if (off.id < 700 || IsAncientOfficerId(off.id)) continue;
         } else if (m_originFilter == OfficerOriginFilter::Ancient) {
-            if (off.id < 850 || off.id >= 900) continue;
+            if (!IsAncientOfficerId(off.id)) continue;
         }
 
         // 2. 검색어 필터 검사 (이름 또는 ID, 대소문자 무시, EDGE-31 항적/항우 별칭 지원)
@@ -88,10 +88,10 @@ void OfficerTableView::ApplyFilter() {
             if (!matched && queryLower == "항우" && nameLower.find("항적") != std::string::npos) {
                 matched = true;
             }
-            if (!matched && (queryLower == "신무장" || queryLower == "등록무장") && (off.id >= 700 && (off.id < 850 || off.id >= 900))) {
+            if (!matched && (queryLower == "신무장" || queryLower == "등록무장") && (off.id >= 700 && !IsAncientOfficerId(off.id))) {
                 matched = true;
             }
-            if (!matched && (queryLower == "고대" || queryLower == "고대무장") && (off.id >= 850 && off.id < 900)) {
+            if (!matched && (queryLower == "고대" || queryLower == "고대무장") && IsAncientOfficerId(off.id)) {
                 matched = true;
             }
             if (!matched) {
@@ -863,7 +863,7 @@ void OfficerTableView::Render() {
                     ImGui::TextColored(ImVec4(1.0f, 0.84f, 0.0f, 1.0f), "[★주인공]");
                     ImGui::SameLine();
                     ImGui::TextColored(ImVec4(1.0f, 0.95f, 0.5f, 1.0f), "%s", off.name.c_str());
-                } else if (off.id >= 850 && off.id < 900) {
+                } else if (IsAncientOfficerId(off.id)) {
                     ImGui::TextColored(ImVec4(0.85f, 0.55f, 0.95f, 1.0f), "[고대]");
                     ImGui::SameLine();
                     ImGui::Text("%s", off.name.c_str());

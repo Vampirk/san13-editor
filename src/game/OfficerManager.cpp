@@ -15,7 +15,7 @@ const char* GetFamousOfficerName(uint16_t id) {
 }
 
 OfficerManager::OfficerManager()
-    : m_driver(nullptr), m_rootBase(0), m_officerArrayBase(0), m_protagonistBase(0) {
+    : m_driver(nullptr), m_rootBase(0), m_moduleBase(0), m_officerArrayBase(0), m_protagonistBase(0) {
 }
 
 OfficerManager::~OfficerManager() {
@@ -25,9 +25,15 @@ bool OfficerManager::Initialize(Core::IMemoryDriver* driver, uintptr_t rootBase)
     if (!driver || rootBase == 0) return false;
     m_driver = driver;
     m_rootBase = rootBase;
+    m_moduleBase = driver->GetModuleBase();
     m_officerArrayBase = rootBase + OfficerMemoryLayout::POOL_OFFSET;
     m_protagonistBase = rootBase + ProtagonistMemoryLayout::CHUNK_OFFSET;
     return true;
+}
+
+bool OfficerManager::IsExpectedVTable(uint32_t vtable, uint32_t rva) const {
+    if (m_moduleBase == 0) return false;
+    return vtable == static_cast<uint32_t>(m_moduleBase + rva);
 }
 
 uintptr_t OfficerManager::GetOfficerAddress(uint16_t id) const {
@@ -68,7 +74,8 @@ bool OfficerManager::LoadOfficer(uint16_t id, OfficerRecord& outRecord) {
     }
 
     // 확장 슬롯의 경우 VTable 유효성 검사
-    if (id >= OfficerMemoryLayout::MAX_HISTORICAL_COUNT && header.vtable != 0x7291c510) {
+    // [EDGE-56] VTable 절대 주소는 모듈 로드 베이스에 따라 실행마다 달라지므로 모듈 상대 주소(RVA)로 비교
+    if (id >= OfficerMemoryLayout::MAX_HISTORICAL_COUNT && !IsExpectedVTable(header.vtable, OfficerMemoryLayout::VTABLE_RVA)) {
         return false;
     }
 
@@ -528,7 +535,7 @@ uint16_t OfficerManager::GetProtagonistOfficerId() {
     if (!m_driver || m_protagonistBase == 0) return 0xFFFF;
     San13ProtagonistRaw raw{};
     if (!m_driver->ReadRaw(m_protagonistBase, &raw, sizeof(raw))) return 0xFFFF;
-    if (raw.vtable != ProtagonistMemoryLayout::EXPECTED_VTABLE) return 0xFFFF;
+    if (!IsExpectedVTable(raw.vtable, ProtagonistMemoryLayout::VTABLE_RVA)) return 0xFFFF;
     if (raw.officer_id >= OfficerMemoryLayout::MAX_TOTAL_SLOTS) return 0xFFFF;
     return raw.officer_id;
 }
@@ -543,7 +550,7 @@ bool OfficerManager::GetProtagonistInfo(ProtagonistRecord& outProtagonist) {
 
     San13ProtagonistRaw raw{};
     if (!m_driver->ReadRaw(m_protagonistBase, &raw, sizeof(raw))) return false;
-    if (raw.vtable != ProtagonistMemoryLayout::EXPECTED_VTABLE) return false;
+    if (!IsExpectedVTable(raw.vtable, ProtagonistMemoryLayout::VTABLE_RVA)) return false;
     if (raw.officer_id >= OfficerMemoryLayout::MAX_TOTAL_SLOTS) return false;
 
     outProtagonist.is_valid = true;

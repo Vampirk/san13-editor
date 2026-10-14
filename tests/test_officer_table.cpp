@@ -3,6 +3,7 @@
 #include "core/LinuxMemoryDriver.hpp"
 #include "game/GameVersion.hpp"
 #include "game/OfficerManager.hpp"
+#include "game/OfficerNameTable.hpp"
 #include "imgui.h"
 
 #include <iostream>
@@ -222,23 +223,23 @@ int main(int argc, char** argv) {
         TEST_ASSERT(off && off->id < 800, "역사 무장 ID < 800 확인");
     }
 
-    // 고대 무장 (ID 850 ~ 899)
+    // 고대 무장 (ID 850 ~ 899, 1251 ~ 1263)
     tableView.SetOriginFilter(OfficerOriginFilter::Ancient);
     size_t ancCount = tableView.GetFilteredCount();
-    std::cout << "         -> 고대 무장(ID 850~899) 수: " << ancCount << "명\n";
-    TEST_ASSERT(ancCount > 0 && ancCount <= 50, "고대 무장 1~50명 감지 확인");
+    std::cout << "         -> 고대 무장(ID 850~899, 1251~1263) 수: " << ancCount << "명\n";
+    TEST_ASSERT(ancCount > 0 && ancCount <= 63, "고대 무장 1~63명 감지 확인 (EDGE-56)");
     for (size_t i = 0; i < ancCount; i++) {
         const auto* off = tableView.GetOfficerAt(i);
-        TEST_ASSERT(off && off->id >= 850 && off->id < 900, "고대 무장 ID 850~899 범위 확인");
+        TEST_ASSERT(off && IsAncientOfficerId(off->id), "고대 무장 ID 범위(850~899, 1251~1263) 확인");
     }
 
-    // 등록 신무장 (ID >= 700, 고대무장 850~899 제외)
+    // 등록 신무장 (ID >= 700, 고대무장 제외)
     tableView.SetOriginFilter(OfficerOriginFilter::Created);
     size_t createdCount = tableView.GetFilteredCount();
     std::cout << "         -> 등록 신무장(ID >= 700, 고대 제외) 수: " << createdCount << "명\n";
     for (size_t i = 0; i < std::min(createdCount, (size_t)30); i++) {
         const auto* off = tableView.GetOfficerAt(i);
-        TEST_ASSERT(off && off->id >= 700 && (off->id < 850 || off->id >= 900), "등록 신무장 ID 범위 확인");
+        TEST_ASSERT(off && off->id >= 700 && !IsAncientOfficerId(off->id), "등록 신무장 ID 범위 확인");
     }
 
     // 출신 필터 리셋

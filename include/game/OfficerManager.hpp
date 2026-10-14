@@ -173,8 +173,12 @@ public:
     uintptr_t GetOfficerAddress(uint16_t id) const;
 
 private:
+    // [EDGE-56] VTable 값이 '모듈 베이스 + rva'와 일치하는지 검사 (ASLR/Proton 로드 베이스 변동 대응)
+    bool IsExpectedVTable(uint32_t vtable, uint32_t rva) const;
+
     Core::IMemoryDriver* m_driver;
     uintptr_t m_rootBase;
+    uintptr_t m_moduleBase;       // 게임 모듈 로드 베이스 (VTable 검증용, 실행마다 변동 가능)
     uintptr_t m_officerArrayBase;
     uintptr_t m_protagonistBase;
 };

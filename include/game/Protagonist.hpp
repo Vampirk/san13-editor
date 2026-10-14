@@ -13,7 +13,7 @@ namespace San13::Game {
  * 위치: RootBase + 0x0014BC (실측 확정)
  */
 struct San13ProtagonistRaw {
-    uint32_t vtable;            // +0x00: VTable 포인터 (0x72919c04)
+    uint32_t vtable;            // +0x00: VTable 포인터 (모듈 베이스 + 0xD69C04, 절대 주소는 실행마다 변동)
     uint32_t officer_id;        // +0x04: 플레이어 무장 고유 ID (0 ~ 2164)
     uint32_t personal_gold;     // +0x08: 주인공 개인 소지 금 (화면 실측 2,000금 100% 일치)
     uint32_t pad_0c;            // +0x0C
@@ -28,7 +28,7 @@ static_assert(offsetof(San13ProtagonistRaw, personal_gold) == 0x08, "Protagonist
 
 struct ProtagonistMemoryLayout {
     static constexpr uintptr_t CHUNK_OFFSET = 0x0014BC;
-    static constexpr uint32_t  EXPECTED_VTABLE = 0x72919c04;
+    static constexpr uint32_t  VTABLE_RVA = 0x00D69C04;     // 모듈 상대 주소 (1.0.2, EDGE-56)
 };
 
 /**

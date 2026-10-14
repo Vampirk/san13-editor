@@ -34,7 +34,7 @@ struct San13OfficerLiveStats {
  * @brief 무장 오브젝트 헤더부 (오프셋 +0x00 ~ +0x4F, 실측 검증 완료)
  */
 struct San13OfficerHeader {
-    uint32_t vtable;             // +0x00: VTable 포인터 (0x7291c510)
+    uint32_t vtable;             // +0x00: VTable 포인터 (모듈 베이스 + 0xD6C510, 절대 주소는 실행마다 변동)
     uint32_t officer_id;         // +0x04: 고유 무장 ID
     uint16_t face_id;            // +0x08: 얼굴 CG 번호 (Face ID, Phase 6.0 실측 규명)
     uint16_t city_id;            // +0x0A: 소재 도시 ID
@@ -92,6 +92,7 @@ struct OfficerMemoryLayout {
     static constexpr size_t    RIVALS_OFFSET = 0x129C;         // 원수 3인 슬롯 (uint16_t[3], 6바이트)
     static constexpr uint16_t  MAX_HISTORICAL_COUNT = 800;  // 역사 무장 최대 수
     static constexpr uint16_t  MAX_TOTAL_SLOTS = 2165;      // 신무장/자녀 무장 포함 전체 슬롯 상한
+    static constexpr uint32_t  VTABLE_RVA = 0x00D6C510;     // COfficer VTable 모듈 상대 주소 (1.0.2, EDGE-56)
 };
 
 /**
