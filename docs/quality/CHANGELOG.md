@@ -128,6 +128,7 @@
 - Step 6.10-3 (빌드): `make tools` 전체 빌드 복구 및 도구 VTable RVA화 (TECH-03/06), `vendor/glfw` 이관으로 `make win` 복구, Windows 빌드 `ptraceScope` 미사용 경고 제거.
 - Step 6.10-4 (역분석): 등록 신무장 열전 저장 위치(`editdata_pk.s13` 레코드 +0x35, 메모리 사본 2종 +0x3B) 규명, 무장 미매핑 4.6KB를 무장 ID별 관계 배열 3종 + 후미 필드로 1차 매핑(RE-01), 경과 일수 `RootBase + 0x6` 규명, 읽기 전용 스냅샷 도구 `tools/officer_snapshot.py` 추가.
 - Step 6.10-5 (최종 검증): `make clean` 후 Linux 에디터·테스트 20종·분석 도구 전체 빌드 성공(에디터/테스트 경고 0, 분석 도구 기존 미사용 변수 경고 11건), `make win` 성공(경고 0), `make test_offline` 통과, 에디터 `--smoke-test` 120프레임 정상 종료. 라이브 테스트는 190년 세이브에서 수정 후 개별 실행 시 원본 바이트 동일 확인.
+- Step 6.10-6 (릴리즈 v1.0.1): 앱 버전 v1.0.0 → **v1.0.1** (버그 수정 릴리즈). `Makefile`의 `package_win`이 아직 정의되지 않은 `$(WIN_BIN)`에 의존해 의존성이 비어 있었고, 그 결과 Windows 패키지가 exe를 다시 빌드하지 않고 `bin/win`의 이전 exe를 그대로 담던 문제를 `win` 타깃 의존으로 교정. 두 패키지 모두 내장 버전 문자열 v1.0.1과 신규 UI 문구 포함을 확인하고, Linux 패키지 단독 실행 스모크 테스트(게임 연결 + 120프레임) 통과.
 
 ---
 

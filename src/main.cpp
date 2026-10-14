@@ -31,9 +31,9 @@ using namespace San13::Game;
 using namespace San13::UI;
 
 #ifdef _WIN32
-static const char* APP_VERSION = "v1.0.0 (Windows x86_64)";
+static const char* APP_VERSION = "v1.0.1 (Windows x86_64)";
 #else
-static const char* APP_VERSION = "v1.0.0 (Linux x86_64)";
+static const char* APP_VERSION = "v1.0.1 (Linux x86_64)";
 #endif
 
 static int ReadPtraceScope() {
@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
 
     // 1. UIManager 초기화 (GLFW + OpenGL3 + 번들 나눔고딕 TTF)
     WindowConfig config;
-    config.title = "삼국지 13 PK 한국어 메모리 에디터 & 트레이너 (San13PK Suite v1.0.0)";
+    config.title = "삼국지 13 PK 한국어 메모리 에디터 & 트레이너 (San13PK Suite v1.0.1)";
     config.width = 1280;
     config.height = 820;
     config.fontSize = 18.0f;

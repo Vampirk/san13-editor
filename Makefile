@@ -228,7 +228,8 @@ package: $(APP_BIN)
 	@echo "=== Package Created: $(PACKAGE_TAR) ==="
 	@ls -lh $(PACKAGE_TAR)
 
-package_win: $(WIN_BIN)
+# WIN_BIN 변수는 아래 Windows 섹션에서 정의되므로 여기서 $(WIN_BIN)을 쓰면 빈 의존성이 됨 → 'win' 타깃에 의존
+package_win: win
 	@echo "=== Building Standalone Windows Distribution Package ==="
 	@rm -rf $(PACKAGE_WIN_DIR) $(PACKAGE_WIN_ZIP)
 	@mkdir -p $(PACKAGE_WIN_DIR)/assets/fonts
