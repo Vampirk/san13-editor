@@ -307,6 +307,10 @@ test_tactic: $(TEST_TACTIC_BIN)
 	@echo "=== Running Phase 1 Custom Tactic Unit Tests ==="
 	./$(TEST_TACTIC_BIN)
 
+test_tactic_live: $(TEST_TACTIC_BIN)
+	@echo "=== Running Phase 1 Custom Tactic Live Write/Restore Tests ==="
+	./$(TEST_TACTIC_BIN) --live
+
 test_multi_bonds: $(TEST_MULTI_BONDS_BIN)
 	@echo "=== Running Phase 2 Multi-Bonds Unit Tests ==="
 	./$(TEST_MULTI_BONDS_BIN)
@@ -326,7 +330,7 @@ test_protagonist: $(TEST_PROTAGONIST_BIN)
 test_offline: test_bounds test_hangul test_hangul_widget test_officer_names test_tactic
 	@echo "=== All Offline Unit & Integration Tests Passed (No Live Process Required) ==="
 
-test_live: test_memory test_officer test_city test_settlement test_city_officers test_city_modal test_gui test_officer_table test_officer_edit test_city_table test_batch test_multi_bonds test_force test_item test_protagonist
+test_live: test_memory test_officer test_city test_settlement test_city_officers test_city_modal test_gui test_officer_table test_officer_edit test_city_table test_batch test_multi_bonds test_force test_item test_protagonist test_tactic_live
 	@echo "=== All Live In-Game Memory Tests Passed (Active Process Verified) ==="
 
 test: test_offline test_live

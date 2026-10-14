@@ -30,7 +30,7 @@
 | 2 | `bin/test_hangul_automata` | `HangulAutomata` | 2벌식 조합, 연음, 1자모 백스페이스 역분해 (6/6) | `test_offline` | **불필요 (오프라인 통과)** |
 | 3 | `bin/test_hangul_input_widget` | `HangulInputText` | ImGui 입력 위젯 연동, 대소문자 무시 검색 (헤드리스) | `test_offline` | **불필요 (오프라인 통과)** |
 | 4 | `bin/test_officer_names` | `OfficerNameTable` | 700인 성명, 고대무장, 상태 진리표, 전법/특기/인연 (11/11) | `test_offline` | **불필요 (오프라인 통과)** |
-| 5 | `bin/test_tactic_manager` | `TacticManager` | 바닐라 141종 전법 명칭, `editdata_pk.s13` 등록 전법(ID 250~) 로드 | `test_offline` | 불필요 (⚠ 게임 실행 중이면 라이브 쓰기·원복 수행, TECH-04) |
+| 5 | `bin/test_tactic_manager` | `TacticManager` | 바닐라 141종 전법 명칭, `editdata_pk.s13` 등록 전법(ID 250~) 로드 | `test_offline` (+ `test_tactic_live`) | 불필요. 라이브 쓰기·원복(주인공·조조 전법 250)은 `--live` 실행 시에만 (`test_tactic_live`, `test_live`에 포함) |
 | 6 | `bin/test_memory_driver` | `LinuxMemoryDriver` | 프로세스 바인딩, 포인터 체인 연산, 패턴 스캔 | `test_live` | 필요 (`San13PK_kr.exe`) |
 | 7 | `bin/test_officer_manager` | `OfficerManager` | 800명 무장 로드, 스탯 읽기/쓰기 클램핑 | `test_live` | 필요 (`San13PK_kr.exe`) |
 | 8 | `bin/test_city_manager` | `CityManager` | 60개 도시 자원 읽기/쓰기, 내구도 오버플로 방지 | `test_live` | 필요 (`San13PK_kr.exe`) |

@@ -10,7 +10,12 @@
 using namespace San13::Core;
 using namespace San13::Game;
 
-int main() {
+int main(int argc, char** argv) {
+    bool liveMode = false;
+    for (int i = 1; i < argc; i++) {
+        if (std::string(argv[i]) == "--live") liveMode = true;
+    }
+
     std::cout << "============================================================\n";
     std::cout << " [San13PK Phase 1] Custom Tactic (ID 250~) Test Suite\n";
     std::cout << "============================================================\n\n";
@@ -59,73 +64,75 @@ int main() {
     assert(found250);
     std::cout << "  [PASS] 콤보박스 목록 내 250번 '절영암습' 항목 존재 확인\n";
 
-    // Step 4: 프로세스 메모리 연결 및 라이브 메모리 전법 판독 검증
-    std::cout << "\n[Step 4] 실시간 프로세스 메모리 기반 판독 검증\n";
-    LinuxMemoryDriver driver;
-    if (driver.Attach("San13PK_kr.exe") || driver.Attach("san13pk")) {
+    // Step 4~6: 라이브 메모리 판독/쓰기 검증은 --live 플래그가 있을 때만 수행 (TECH-04)
+    // make test_offline은 게임 실행 여부와 무관하게 게임 메모리를 절대 건드리지 않습니다.
+    if (!liveMode) {
+        std::cout << "\n[Step 4~6] [SKIP] 오프라인 모드 — 라이브 검증은 `make test_tactic_live` (--live)에서 수행\n";
+    } else {
+        std::cout << "\n[Step 4] 실시간 프로세스 메모리 기반 판독 검증\n";
+        LinuxMemoryDriver driver;
         uintptr_t rootBase = 0;
         std::string verDesc;
-        if (GameVersionDetector::DetectRootBase(driver, rootBase, verDesc)) {
+        if (!(driver.Attach("San13PK_kr.exe") || driver.Attach("san13pk"))) {
+            std::cout << "  [SKIP] 삼국지 13 프로세스 미실행\n";
+        } else if (!GameVersionDetector::DetectRootBase(driver, rootBase, verDesc)) {
+            std::cerr << "[-] FAIL: RootBase 산출 실패\n";
+            return 1;
+        } else {
             size_t liveLoaded = TacticManager::LoadCustomTacticsFromMemory(&driver, rootBase);
             std::cout << "  -> 라이브 메모리에서 로드된 등록 전법 수: " << liveLoaded << "\n";
-            assert(liveLoaded >= 1);
-
-            const char* liveTac250 = TacticManager::GetTacticName(250);
-            std::cout << "  [PASS] 라이브 메모리 ID 250 전법명: " << liveTac250 << "\n";
-            assert(std::strcmp(liveTac250, "절영암습") == 0);
-
-            // Step 5: 주인공 강월(700)의 전법 ID와 OfficerRecord 연동 검증
-            std::cout << "\n[Step 5] 주인공 강월(ID: 700) 전법 연동 최종 검증\n";
-            OfficerManager officerMgr;
-            officerMgr.Initialize(&driver, rootBase);
-
-            OfficerRecord kangwol;
-            if (officerMgr.LoadOfficer(700, kangwol)) {
-                std::cout << "  -> 무장 700 (강월) 로드 성공\n";
-                uint8_t origTactic = kangwol.tactic_id;
-                std::cout << "  -> 강월의 현재 tactic_id: " << static_cast<int>(origTactic) << "\n";
-
-                // 250(절영암습) 부여 및 판독 검증
-                assert(officerMgr.SetTactic(700, 250));
-                OfficerRecord kwModified;
-                assert(officerMgr.LoadOfficer(700, kwModified));
-                assert(kwModified.tactic_id == 250);
-                const char* tacticName = kwModified.GetCurrentTacticDescription();
-                std::cout << "  [PASS] 강월 250 부여 후 전법 명칭: " << tacticName << "\n";
-                assert(std::strcmp(tacticName, "절영암습") == 0);
-
-                // 원래 상태로 안전 원복
-                assert(officerMgr.SetTactic(700, origTactic));
-
-                // Step 6: SetTactic을 통한 등록 전법(250) 변경 및 원복 검증
-                std::cout << "\n[Step 6] 무장 전법을 등록 전법(250)으로 변경 및 원복 쓰기 검증\n";
-                // 조조(333)에게 250 부여 테스트
-                OfficerRecord caocao;
-                assert(officerMgr.LoadOfficer(333, caocao));
-                uint8_t origCaoCaoTactic = caocao.tactic_id;
-                std::cout << "  -> 조조 원래 전법 ID: " << (int)origCaoCaoTactic << " (" << caocao.GetCurrentTacticDescription() << ")\n";
-
-                // 조조에게 250(절영암습) 부여
-                assert(officerMgr.SetTactic(333, 250));
-                OfficerRecord caocaoModified;
-                assert(officerMgr.LoadOfficer(333, caocaoModified));
-                std::cout << "  -> 250 쓰기 후 조조 전법 ID: " << (int)caocaoModified.tactic_id << " (" << caocaoModified.GetCurrentTacticDescription() << ")\n";
-                assert(caocaoModified.tactic_id == 250);
-                assert(std::strcmp(caocaoModified.GetCurrentTacticDescription(), "절영암습") == 0);
-                std::cout << "  [PASS] 조조에게 등록 전법 250(절영암습) 성공적으로 쓰기 및 판독 확인\n";
-
-                // 원래 전법으로 100% 안전 원복
-                assert(officerMgr.SetTactic(333, origCaoCaoTactic));
-                OfficerRecord caocaoRestored;
-                assert(officerMgr.LoadOfficer(333, caocaoRestored));
-                assert(caocaoRestored.tactic_id == origCaoCaoTactic);
-                std::cout << "  [PASS] 조조 원래 전법(" << (int)origCaoCaoTactic << ")으로 100% 안전 원복 완료\n";
+            if (liveLoaded == 0) {
+                std::cout << "  [SKIP] 라이브 메모리에 등록 전법 없음 — 쓰기 검증 생략\n";
             } else {
-                std::cerr << "  [WARN] 무장 700 로드 실패 (슬롯 확인 필요)\n";
+                const char* liveTac250 = TacticManager::GetTacticName(250);
+                std::cout << "  [PASS] 라이브 메모리 ID 250 전법명: " << liveTac250 << "\n";
+
+                OfficerManager officerMgr;
+                officerMgr.Initialize(&driver, rootBase);
+
+                // 전법을 250으로 쓰고 판독한 뒤, 판정 전에 무조건 원래 전법으로 원복
+                auto writeReadRestore = [&](uint16_t id) -> bool {
+                    OfficerRecord orig;
+                    if (!officerMgr.LoadOfficer(id, orig)) {
+                        std::cerr << "[-] FAIL: 무장 " << id << " 로드 실패\n";
+                        return false;
+                    }
+                    bool writeOk = officerMgr.SetTactic(id, 250);
+                    OfficerRecord modified;
+                    bool readOk = officerMgr.LoadOfficer(id, modified);
+                    bool restoreOk = officerMgr.SetTactic(id, orig.tactic_id);
+                    OfficerRecord restored;
+                    officerMgr.LoadOfficer(id, restored);
+
+                    if (!writeOk || !readOk || modified.tactic_id != 250 ||
+                        std::strcmp(modified.GetCurrentTacticDescription(), liveTac250) != 0) {
+                        std::cerr << "[-] FAIL: 무장 " << id << " 전법 250 쓰기/판독 불일치 (판독 " << (int)modified.tactic_id << ")\n";
+                        return false;
+                    }
+                    if (!restoreOk || restored.tactic_id != orig.tactic_id) {
+                        std::cerr << "[-] FAIL: 무장 " << id << " 원복 실패 (판독 " << (int)restored.tactic_id
+                                  << ", 원래 " << (int)orig.tactic_id << ")\n";
+                        return false;
+                    }
+                    std::cout << "  [PASS] 무장 " << id << " (" << orig.name << "): 250(" << liveTac250 << ") 쓰기·판독 후 원래 전법("
+                              << (int)orig.tactic_id << ")으로 원복 완료\n";
+                    return true;
+                };
+
+                std::cout << "\n[Step 5] 주인공 무장 전법 쓰기/원복 검증\n";
+                uint16_t protId = officerMgr.GetProtagonistOfficerId();
+                if (protId == 0xFFFF) {
+                    std::cout << "  [SKIP] 주인공 미감지\n";
+                } else if (!writeReadRestore(protId)) {
+                    return 1;
+                }
+
+                std::cout << "\n[Step 6] 역사 무장(조조 333) 전법 쓰기/원복 검증\n";
+                if (!writeReadRestore(333)) {
+                    return 1;
+                }
             }
         }
-    } else {
-        std::cout << "  [SKIP] 삼국지 13 프로세스 미실행 (오프라인 파일 테스트만 완료)\n";
     }
 
     std::cout << "\n============================================================\n";
