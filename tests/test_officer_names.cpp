@@ -223,6 +223,29 @@ int main() {
     }
     std::cout << "  [\033[32mPASS\033[0m] 역사(0~699, 1151~1250) / 신무장(700~849, 1315~2164) 슬롯 경계값 판별 성공 (BUG-01 B-2)\n";
 
+    // [BUG-05] 시나리오 시작일 + 경과 일수 → 현재 일자 계산 (한 달 30일, 1년 360일)
+    {
+        struct DateCase { uint16_t sy, sm, sd; uint32_t elapsed; uint16_t y, m, d; };
+        const DateCase cases[] = {
+            { 190, 1, 1, 0, 190, 1, 1 },     // 시작일
+            { 190, 1, 1, 30, 190, 2, 1 },    // 2월 1일 실측 (경과 30)
+            { 190, 1, 1, 34, 190, 2, 5 },    // 2월 5일 실측 (경과 34)
+            { 190, 1, 1, 359, 190, 12, 30 }, // 연말
+            { 190, 1, 1, 360, 191, 1, 1 },   // 해 넘김
+            { 195, 7, 1, 200, 196, 1, 21 },  // 7월 시작 시나리오
+        };
+        for (const auto& c : cases) {
+            uint16_t y = 0, m = 0, d = 0;
+            ComputeGameDate(c.sy, c.sm, c.sd, c.elapsed, y, m, d);
+            if (y != c.y || m != c.m || d != c.d) {
+                std::cerr << "[-] Error: ComputeGameDate(" << c.sy << "/" << c.sm << "/" << c.sd << " + " << c.elapsed << ") = "
+                          << y << "/" << m << "/" << d << ", 예상 " << c.y << "/" << c.m << "/" << c.d << "\n";
+                return 1;
+            }
+        }
+        std::cout << "  [\033[32mPASS\033[0m] 시작일 + 경과 일수 → 현재 일자 계산 6건 (190/2/1, 2/5 실측 포함) 성공 (BUG-05)\n";
+    }
+
     // 5.5. [PK-EXP] 삼국지 13 PK 공식 추가 사실무장 및 왜국/고대무장 (ID 1151 ~ 1263) 매핑 검증
     std::cout << "\n[Step 5.5] [PK-EXP] PK 공식 추가 사실무장(유의 1242, 채옹 1186) 및 왜국무장(비미호 1263) 매핑 검증\n";
     std::string_view liuyi = GetOfficerKoreanName(1242);

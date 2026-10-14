@@ -42,10 +42,10 @@ uintptr_t OfficerManager::GetOfficerAddress(uint16_t id) const {
     return m_officerArrayBase + (id * OfficerMemoryLayout::OBJECT_STRIDE);
 }
 
-bool OfficerManager::GetGameDate(uint16_t& outYear, uint16_t& outMonth, uint16_t& outDay) {
+bool OfficerManager::GetScenarioStartDate(uint16_t& outYear, uint16_t& outMonth, uint16_t& outDay) {
     if (!m_driver || m_rootBase == 0) return false;
 
-    // [EDGE-25] RootBase + 0x137A (년), +0x137C (월, 0-indexed: 0=1월..11=12월), +0x1380 (일, 1~31)
+    // [EDGE-47] RootBase + 0x137A (년), +0x137C (월, 0-indexed), +0x1380 (일). 게임을 진행해도 변하지 않는 시작일 (BUG-05)
     uint16_t y = 0, raw_m = 0, d = 0;
     if (!m_driver->Read<uint16_t>(m_rootBase + 0x137A, y) ||
         !m_driver->Read<uint16_t>(m_rootBase + 0x137C, raw_m) ||
@@ -55,10 +55,28 @@ bool OfficerManager::GetGameDate(uint16_t& outYear, uint16_t& outMonth, uint16_t
 
     if (y < 100 || y > 400) return false;
     if (raw_m > 11) return false;
-    if (d < 1 || d > 31) return false;
+    if (d < 1 || d > 30) return false;
 
     outYear = y;
     outMonth = raw_m + 1;
+    outDay = d;
+    return true;
+}
+
+bool OfficerManager::GetGameDate(uint16_t& outYear, uint16_t& outMonth, uint16_t& outDay) {
+    uint16_t startY = 0, startM = 0, startD = 0;
+    if (!GetScenarioStartDate(startY, startM, startD)) return false;
+
+    // [BUG-05] RootBase + 0x6 (uint16): 시나리오 시작 이후 경과 일수 (190/2/1 = 30, 2/5 = 34 실측)
+    uint16_t elapsed = 0;
+    if (!m_driver->Read<uint16_t>(m_rootBase + 0x6, elapsed)) return false;
+
+    uint16_t y = 0, m = 0, d = 0;
+    ComputeGameDate(startY, startM, startD, elapsed, y, m, d);
+    if (y > 400) return false;
+
+    outYear = y;
+    outMonth = m;
     outDay = d;
     return true;
 }

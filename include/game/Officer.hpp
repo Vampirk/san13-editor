@@ -103,6 +103,19 @@ struct OfficerMemoryLayout {
 };
 
 /**
+ * @brief 시나리오 시작일 + 경과 일수로 현재 일자를 계산 (BUG-05)
+ * 삼국지 13 달력은 한 달 30일, 1년 360일입니다 (190/1/1 → 2/1 경과 30일 실측).
+ * @param startMonth 1~12, startDay 1~30. 출력 월/일도 1부터 시작
+ */
+inline void ComputeGameDate(uint16_t startYear, uint16_t startMonth, uint16_t startDay, uint32_t elapsedDays,
+                            uint16_t& outYear, uint16_t& outMonth, uint16_t& outDay) {
+    uint32_t total = (startMonth - 1u) * 30u + (startDay - 1u) + elapsedDays;
+    outYear = static_cast<uint16_t>(startYear + total / 360u);
+    outMonth = static_cast<uint16_t>((total % 360u) / 30u + 1u);
+    outDay = static_cast<uint16_t>(total % 30u + 1u);
+}
+
+/**
  * @brief 에디터 UI 및 비즈니스 로직용 고수준 무장 레코드
  */
 struct OfficerRecord {

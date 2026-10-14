@@ -23,9 +23,15 @@ public:
     bool Initialize(Core::IMemoryDriver* driver, uintptr_t rootBase);
 
     /**
-     * @brief [EDGE-25] 실시간 인게임 시나리오 일자 (년/월/일) 읽기
+     * @brief 현재 인게임 일자 (년/월 1~12/일 1~30) 읽기
+     * [BUG-05] 시나리오 시작일 + 경과 일수(RootBase + 0x6)로 계산합니다.
      */
     bool GetGameDate(uint16_t& outYear, uint16_t& outMonth, uint16_t& outDay);
+
+    /**
+     * @brief 시나리오 시작일 (년/월 1~12/일) 읽기 (RootBase + 0x137A / 0x137C / 0x1380, 진행해도 변하지 않음)
+     */
+    bool GetScenarioStartDate(uint16_t& outYear, uint16_t& outMonth, uint16_t& outDay);
 
     /**
      * @brief 특정 무장 ID의 데이터 읽기
